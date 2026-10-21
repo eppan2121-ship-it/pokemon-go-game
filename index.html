@@ -3037,9 +3037,12 @@
     // ---- Supabase cross-device cloud save ----
     const SUPABASE_URL = 'https://vwhogpaxmvzodnawotoy.supabase.co';
     const SUPABASE_KEY_STORAGE = 'pokemonSupabasePublishableKey';
+    // Publishable key는 온라인 저장 메뉴에서 한 번 입력하면 이 브라우저에 저장됩니다.
+    // sb_secret_ 또는 service_role 키는 절대 입력하지 마세요.
     let cloudSupabase = null;
     function getCloudClient() {
-      const key = localStorage.getItem(SUPABASE_KEY_STORAGE) || '';
+      const storedKey = localStorage.getItem(SUPABASE_KEY_STORAGE) || '';
+      const key = storedKey;
       if (!key) return null;
       if (!window.supabase || !window.supabase.createClient) throw new Error('Supabase 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하세요.');
       if (!cloudSupabase) cloudSupabase = window.supabase.createClient(SUPABASE_URL, key);
@@ -3053,7 +3056,7 @@
     }
     async function cloudCurrentUser() {
       const client = getCloudClient();
-      if (!client) throw new Error('먼저 온라인 저장 메뉴에서 Publishable key를 설정하세요.');
+      if (!client) throw new Error('게임 제작자가 HTML에 Supabase Publishable key를 설정해야 합니다.');
       const { data, error } = await client.auth.getUser();
       if (error) throw error;
       if (!data.user) throw new Error('로그인이 필요합니다. 온라인 저장 메뉴에서 로그인하세요.');
@@ -3114,14 +3117,26 @@
         return true;
       } catch(e) { if(showMessage) showToast('온라인 불러오기 실패: '+(e.message||'설정을 확인해 주세요.'),'alert-circle'); return false; }
     }
+    function setupSupabasePublishableKey() {
+      const current = localStorage.getItem(SUPABASE_KEY_STORAGE) || '';
+      const entered = prompt('Supabase Publishable key를 입력하세요. 보통 sb_publishable_ 로 시작합니다.\n\n이 키는 이 브라우저에만 저장됩니다. sb_secret_ 또는 service_role 키는 절대 입력하지 마세요.', current);
+      if (entered === null) return false;
+      const key = entered.trim();
+      if (!key.startsWith('sb_publishable_')) {
+        showToast('올바른 Publishable key인지 확인해 주세요. sb_publishable_ 로 시작해야 합니다.', 'alert-circle');
+        return false;
+      }
+      localStorage.setItem(SUPABASE_KEY_STORAGE, key);
+      cloudSupabase = null;
+      showToast('Publishable key를 저장했어요. 이제 회원가입 또는 로그인을 할 수 있어요.', 'check-circle');
+      return true;
+    }
     async function cloudAuthFlow(mode) {
       try {
         let client=getCloudClient();
         if(!client) {
-          const key=prompt('Supabase의 Publishable key를 붙여 넣으세요. sb_publishable_로 시작하는 공개 키입니다. Secret key는 절대 입력하지 마세요.');
-          if(key===null) return;
-          if(!key.trim().startsWith('sb_publishable_') && !key.trim().startsWith('eyJ')) { showToast('Publishable key 형식을 확인해 주세요.','alert-circle'); return; }
-          localStorage.setItem(SUPABASE_KEY_STORAGE,key.trim()); cloudSupabase=null; client=getCloudClient();
+          showToast('게임 제작자가 HTML에 Supabase Publishable key를 설정해야 합니다.','alert-circle');
+          return;
         }
         if(mode==='signup' || mode==='login') {
           const email=prompt('이메일 주소를 입력하세요.'); if(!email) return;
@@ -3136,25 +3151,28 @@
       } catch(e) { showToast('인증 오류: '+(e.message||'설정을 확인해 주세요.'),'alert-circle'); }
     }
     async function openCloudSaveMenu() {
+      if (!localStorage.getItem(SUPABASE_KEY_STORAGE)) {
+        if (!setupSupabasePublishableKey()) return;
+      }
       const key=localStorage.getItem(SUPABASE_KEY_STORAGE);
       const client=key ? getCloudClient() : null;
       let logged=false;
       if(client) { try { const {data}=await client.auth.getUser(); logged=!!data.user; } catch(e){} }
       const choices=logged
         ? '1 = 온라인 저장하기\n2 = 온라인 저장 불러오기\n3 = 로그아웃\n4 = Publishable key 다시 설정'
-        : '1 = Publishable key 설정\n2 = 새 계정 만들기\n3 = 로그인\n4 = Publishable key 다시 설정';
+        : '1 = 새 계정 만들기\n2 = 로그인\n3 = Publishable key 설정/변경';
       const answer=prompt('☁️ 온라인 저장\n상태: '+(logged?'로그인됨':'로그아웃')+'\n\n'+choices+'\n\n번호를 입력하세요.');
       if(answer===null) return;
       if(logged) {
         if(answer==='1') { await cloudUpload(true); }
         else if(answer==='2') { if(confirm('온라인 저장 데이터를 현재 기기에 불러옵니다. 현재 기기의 진행 상황을 덮어쓸 수 있어요. 계속할까요?')) await cloudDownload(true); }
         else if(answer==='3') await cloudAuthFlow('logout');
-        else if(answer==='4') { const k=prompt('새 Publishable key를 입력하세요. Secret key는 입력하지 마세요.'); if(k){localStorage.setItem(SUPABASE_KEY_STORAGE,k.trim());cloudSupabase=null;showToast('키 설정을 업데이트했어요.');} }
+        else if(answer==='4') setupSupabasePublishableKey();
+
       } else {
-        if(answer==='1') { const k=prompt('Supabase Publishable key를 붙여 넣으세요. sb_publishable_로 시작하는 공개 키입니다. Secret key는 절대 입력하지 마세요.'); if(k){localStorage.setItem(SUPABASE_KEY_STORAGE,k.trim());cloudSupabase=null;showToast('키를 저장했어요. 다시 온라인 저장 메뉴를 열어 계정을 만들거나 로그인하세요.','check-circle');} }
-        else if(answer==='2') await cloudAuthFlow('signup');
-        else if(answer==='3') await cloudAuthFlow('login');
-        else if(answer==='4') { const k=prompt('Supabase Publishable key를 입력하세요.'); if(k){localStorage.setItem(SUPABASE_KEY_STORAGE,k.trim());cloudSupabase=null;showToast('키를 업데이트했어요.');} }
+        if(answer==='1') await cloudAuthFlow('signup');
+        else if(answer==='2') await cloudAuthFlow('login');
+        else if(answer==='3') setupSupabasePublishableKey();
       }
     }
 
