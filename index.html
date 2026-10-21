@@ -3037,6 +3037,10 @@
     // ---- Supabase cross-device cloud save ----
     const SUPABASE_URL = 'https://vwhogpaxmvzodnawotoy.supabase.co';
     const SUPABASE_KEY_STORAGE = 'pokemonSupabasePublishableKey';
+    // 공개 Publishable key: 온라인 저장 메뉴에서 확인/복사할 수 있습니다.
+    const DEFAULT_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_rQajK-r9EC6dHagVp5LHxg_E7HxQ32_';
+    // 기존 브라우저 설정이 없으면 HTML에 설정된 공개 키를 자동 사용합니다.
+    try { if (!localStorage.getItem(SUPABASE_KEY_STORAGE)) localStorage.setItem(SUPABASE_KEY_STORAGE, DEFAULT_SUPABASE_PUBLISHABLE_KEY); } catch(e) {}
     // Publishable key는 온라인 저장 메뉴에서 한 번 입력하면 이 브라우저에 저장됩니다.
     // sb_secret_ 또는 service_role 키는 절대 입력하지 마세요.
     let cloudSupabase = null;
@@ -3118,8 +3122,8 @@
       } catch(e) { if(showMessage) showToast('온라인 불러오기 실패: '+(e.message||'설정을 확인해 주세요.'),'alert-circle'); return false; }
     }
     function setupSupabasePublishableKey() {
-      const current = localStorage.getItem(SUPABASE_KEY_STORAGE) || '';
-      const entered = prompt('Supabase Publishable key를 입력하세요. 보통 sb_publishable_ 로 시작합니다.\n\n이 키는 이 브라우저에만 저장됩니다. sb_secret_ 또는 service_role 키는 절대 입력하지 마세요.', current);
+      const current = localStorage.getItem(SUPABASE_KEY_STORAGE) || DEFAULT_SUPABASE_PUBLISHABLE_KEY;
+      const entered = prompt('Supabase Publishable key 설정\n아래 키를 사용하거나 변경할 수 있습니다.\n\n이 키는 공개용 키입니다. sb_secret_ 또는 service_role 키는 절대 입력하지 마세요.', current);
       if (entered === null) return false;
       const key = entered.trim();
       if (!key.startsWith('sb_publishable_')) {
@@ -3159,20 +3163,21 @@
       let logged=false;
       if(client) { try { const {data}=await client.auth.getUser(); logged=!!data.user; } catch(e){} }
       const choices=logged
-        ? '1 = 온라인 저장하기\n2 = 온라인 저장 불러오기\n3 = 로그아웃\n4 = Publishable key 다시 설정'
-        : '1 = 새 계정 만들기\n2 = 로그인\n3 = Publishable key 설정/변경';
+        ? '1 = 온라인 저장하기\n2 = 온라인 저장 불러오기\n3 = 로그아웃\n4 = Publishable key 보기/복사 또는 변경'
+        : '1 = 새 계정 만들기\n2 = 로그인\n3 = Publishable key 설정/변경\n4 = Publishable key 보기/복사';
       const answer=prompt('☁️ 온라인 저장\n상태: '+(logged?'로그인됨':'로그아웃')+'\n\n'+choices+'\n\n번호를 입력하세요.');
       if(answer===null) return;
       if(logged) {
         if(answer==='1') { await cloudUpload(true); }
         else if(answer==='2') { if(confirm('온라인 저장 데이터를 현재 기기에 불러옵니다. 현재 기기의 진행 상황을 덮어쓸 수 있어요. 계속할까요?')) await cloudDownload(true); }
         else if(answer==='3') await cloudAuthFlow('logout');
-        else if(answer==='4') setupSupabasePublishableKey();
+        else if(answer==='4') { const k=localStorage.getItem(SUPABASE_KEY_STORAGE)||DEFAULT_SUPABASE_PUBLISHABLE_KEY; prompt('Publishable key (선택한 뒤 Ctrl+C로 복사할 수 있어요):', k); }
 
       } else {
         if(answer==='1') await cloudAuthFlow('signup');
         else if(answer==='2') await cloudAuthFlow('login');
         else if(answer==='3') setupSupabasePublishableKey();
+        else if(answer==='4') { const k=localStorage.getItem(SUPABASE_KEY_STORAGE)||DEFAULT_SUPABASE_PUBLISHABLE_KEY; prompt('Publishable key (선택한 뒤 Ctrl+C로 복사할 수 있어요):', k); }
       }
     }
 
