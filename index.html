@@ -191,6 +191,17 @@
 
   <!-- MAIN GAME CANVAS & OVERLAY CONTAINER -->
   <div id="game-container" class="relative w-full h-full overflow-hidden">
+  <div id="home-screen" class="fixed inset-0 z-[200] flex items-center justify-center p-5" style="background:radial-gradient(circle at 50% 20%,#a7f3d0,#166534 75%);">
+    <div class="w-full max-w-md rounded-3xl bg-white/95 p-7 text-center shadow-2xl border-4 border-white">
+      <h1 class="text-3xl font-black text-emerald-800">포켓몬 모험</h1>
+      <p class="text-sm text-slate-600 mt-2 mb-6">나만의 포켓몬을 만나고 배틀을 시작해 보세요!</p>
+      <div class="grid gap-3"><button onclick="homeStartExisting()" class="rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white p-4 font-black text-lg">시작하기</button><button onclick="homeOpenTutorial()" class="rounded-2xl bg-sky-600 hover:bg-sky-700 text-white p-4 font-black text-lg">새 플레이어</button></div>
+      <p class="text-xs text-slate-500 mt-5">‘시작하기’는 기존 게임 화면으로 이동합니다.</p>
+    </div>
+  </div>
+  <div id="tutorial-screen" class="fixed inset-0 z-[210] hidden items-center justify-center p-5" style="background:#0f172add;">
+    <div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl"><div class="flex items-center justify-between"><span id="tutorial-count" class="text-xs font-black text-emerald-700">안내 1 / 5</span><button onclick="homeCloseTutorial()" class="rounded-lg bg-slate-100 px-3 py-1 font-bold">닫기 ×</button></div><div id="tutorial-icon" class="text-5xl text-center my-5">🧭</div><h2 id="tutorial-title" class="text-2xl font-black text-center">게임 화면</h2><p id="tutorial-text" class="text-slate-600 leading-7 text-center mt-3 min-h-28">맵을 이동하며 포켓몬을 찾아보세요.</p><div class="flex gap-2 mt-6"><button id="tutorial-prev" onclick="tutorialStep(-1)" class="hidden flex-1 rounded-xl bg-slate-200 p-3 font-bold">이전</button><button id="tutorial-next" onclick="tutorialStep(1)" class="flex-1 rounded-xl bg-emerald-600 text-white p-3 font-black">다음</button></div></div>
+  </div>
     
     <!-- 2D Canvas for Map -->
     <canvas id="mapCanvas" class="w-full h-full block bg-emerald-500 cursor-grab active:cursor-grabbing"></canvas>
@@ -198,7 +209,7 @@
     <!-- TOP HUD STATUS BAR -->
     <div class="absolute top-3 left-3 right-3 flex justify-between items-center z-20 pointer-events-none">
       <!-- Player Info Card -->
-      <div class="glass-panel px-3 py-2 rounded-2xl flex items-center gap-3 pointer-events-auto shadow-md">
+      <div onclick="openTrainerProfile()" role="button" tabindex="0" class="glass-panel px-3 py-2 rounded-2xl flex items-center gap-3 pointer-events-auto shadow-md cursor-pointer active:scale-95" title="트레이너 프로필 열기">
         <div class="relative">
           <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-yellow-400 to-amber-500 flex items-center justify-center text-white font-black text-xl border-2 border-white shadow">
             <i data-lucide="user" class="w-6 h-6"></i>
@@ -226,6 +237,11 @@
           </div>
           <span id="hud-stardust" class="font-extrabold text-xs text-purple-900">1,000</span>
         </div>
+        <!-- PokéCoins -->
+        <button onclick="openShopModal()" class="flex items-center gap-1.5 border-l border-gray-300 pl-2.5 pointer-events-auto" title="상점 열기">
+          <span class="w-6 h-6 rounded-full bg-yellow-400 border-2 border-yellow-600 text-yellow-900 flex items-center justify-center font-black text-xs">¢</span>
+          <span id="hud-pokecoins" class="font-extrabold text-xs text-yellow-900">0</span>
+        </button>
         <!-- PokéBalls Count -->
         <div class="flex items-center gap-1.5 border-l border-gray-300 pl-2.5">
           <div class="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center border border-white shadow-sm">
@@ -241,6 +257,7 @@
       <button onclick="openBattleModal()" class="mobile-action glass-panel px-3 py-2 rounded-2xl text-indigo-700 font-black text-xs shadow-lg border border-indigo-200 flex items-center gap-2"><span class="text-lg">⚔️</span><span>배틀</span></button>
       <button onclick="saveGame(true)" class="mobile-action glass-panel px-3 py-2 rounded-2xl text-emerald-700 font-black text-xs shadow-lg border border-emerald-200 flex items-center gap-2"><span class="text-lg">💾</span><span>저장</span></button>
       <button onclick="loadGame(true)" class="mobile-action glass-panel px-3 py-2 rounded-2xl text-blue-700 font-black text-xs shadow-lg border border-blue-200 flex items-center gap-2"><span class="text-lg">📂</span><span>불러오기</span></button>
+      <button onclick="openShopModal()" class="mobile-action glass-panel px-3 py-2 rounded-2xl text-amber-700 font-black text-xs shadow-lg border border-amber-200 flex items-center gap-2"><span class="text-lg">🛒</span><span>상점</span></button>
       <button onclick="openCloudSaveMenu()" class="mobile-action glass-panel px-3 py-2 rounded-2xl text-violet-700 font-black text-xs shadow-lg border border-violet-200 flex items-center gap-2"><span class="text-lg">☁️</span><span>온라인 저장</span></button>
     </div>
 
@@ -272,6 +289,12 @@
 
     <!-- MAIN ACTION MENU BUTTONS (BOTTOM-RIGHT / CENTER-BOTTOM) -->
     <div class="absolute bottom-6 right-6 z-20 flex gap-3 pointer-events-auto">
+      <!-- Research Button -->
+      <button onclick="openModal('research-modal')" class="glass-panel w-12 h-12 rounded-full flex flex-col items-center justify-center text-violet-600 hover:scale-105 active:scale-95 transition shadow-lg border-2 border-violet-200">
+        <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+        <span class="text-[9px] font-black mt-0.5">리서치</span>
+      </button>
+
       <!-- Pokédex Button -->
       <button onclick="openModal('pokedex-modal')" class="glass-panel w-12 h-12 rounded-full flex flex-col items-center justify-center text-red-600 hover:scale-105 active:scale-95 transition shadow-lg border-2 border-red-200">
         <i data-lucide="book-open" class="w-5 h-5"></i>
@@ -506,6 +529,13 @@
         <div class="text-[11px] text-slate-500 mt-1">기술머신은 가방에서 사용합니다. RPG 배틀 기술은 기존 방식 그대로입니다.</div>
       </div>
 
+      <!-- Mega evolution details in the Pokémon detail screen -->
+      <div id="detail-mega-panel" class="hidden w-full rounded-2xl border border-fuchsia-200 bg-fuchsia-50 p-3 mb-3 text-sm">
+        <div class="font-black text-fuchsia-900 mb-2">메가진화 정보</div>
+        <div class="flex items-center gap-3"><img id="detail-mega-img" class="w-20 h-20 object-contain" alt="메가진화 스프라이트"><div id="detail-mega-status" class="flex-1 text-slate-700"></div></div>
+        <button id="detail-mega-btn" onclick="window.megaEvolvePokemon(activeDetailPokemon && activeDetailPokemon.uniqueId)" class="mt-3 w-full rounded-xl bg-fuchsia-600 text-white font-black py-2">메가진화 (에너지 200)</button>
+      </div>
+
       <!-- Actions (Power Up / Evolve / Transfer) -->
       <div class="w-full flex flex-col gap-2.5">
         <button id="btn-powerup" onclick="powerUpPokemon()" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-black text-sm shadow-md hover:brightness-105 active:scale-98 flex justify-between px-5 items-center">
@@ -543,6 +573,35 @@
       <!-- Pokédex List Grid -->
       <div id="pokedex-grid" class="p-4 overflow-y-auto grid grid-cols-3 sm:grid-cols-5 gap-3 flex-1 bg-slate-50">
         <!-- 151 Pokédex Entries -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AI GYM -->
+  <div id="gym-modal" onclick="if(event.target===this)closeGymModal()" class="fixed inset-0 z-[66] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4"><div class="w-full max-w-md rounded-3xl bg-white overflow-hidden shadow-2xl"><div class="p-5 bg-gradient-to-r from-orange-500 to-red-600 text-white"><h2 class="text-2xl font-black">AI 체육관</h2><p class="mt-1 text-sm">관장의 강력한 포켓몬에 도전하세요!</p></div><div class="p-5"><p class="text-sm leading-6 text-slate-600">관장 포켓몬은 CP 10,000~20,000입니다. 전설 포켓몬이 나올 확률은 90%예요. 승리하면 포켓코인(도전 시간에 따라 최대 60개)을 받고, 관장의 포켓몬을 직접 포획할 수 있어요. 승리한 체육관은 사라집니다.</p><div class="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-bold">남은 패스: <span id="gym-pass-count">2</span>개 · 오늘 무료 도전: 최대 2회</div><div class="mt-5 flex gap-2"><button onclick="closeGymModal()" class="flex-1 rounded-xl bg-slate-200 p-3 font-bold">나가기</button><button onclick="beginGymChallenge()" class="flex-1 rounded-xl bg-orange-600 p-3 font-black text-white">도전하기</button></div></div></div></div>
+
+  <!-- MODAL: SHOP -->
+  <div id="research-modal" class="fixed inset-0 z-[75] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4" onclick="if(event.target===this)closeModal('research-modal')">
+    <div class="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-3xl bg-white shadow-2xl">
+      <div class="p-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white flex items-center justify-between"><div><h2 class="text-2xl font-black">필드 리서치</h2><p class="text-sm mt-1">태스크를 완료하고 보상을 받으세요!</p></div><button onclick="closeModal('research-modal')" class="w-9 h-9 rounded-full bg-white/20 font-black">✕</button></div>
+      <div class="p-4 space-y-3">
+        <div class="grid grid-cols-3 gap-2"><button id="research-tab-daily" onclick="setResearchTab('daily')" class="rounded-xl bg-violet-600 text-white p-2 font-black">데일리</button><button id="research-tab-event" onclick="setResearchTab('event')" class="rounded-xl bg-slate-100 text-slate-500 p-2 font-black">이벤트</button><button id="research-tab-main" onclick="setResearchTab('main')" class="rounded-xl bg-slate-100 text-slate-500 p-2 font-black">메인</button></div>
+        <div id="welcome-research-card" class="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-100 p-4"></div>
+        <div id="research-stamp-panel" class="rounded-2xl bg-amber-50 border border-amber-200 p-3"></div><div id="research-tab-content"><div class="text-xs font-black uppercase tracking-wide text-slate-500">데일리 태스크</div><div class="space-y-3" id="research-task-list"></div></div>
+      </div>
+      <p class="px-5 pb-5 text-xs text-slate-500">리서치 진행도와 보상 수령 상태는 게임 저장 데이터에 포함됩니다.</p>
+    </div>
+  </div>
+
+  <div id="shop-modal" class="fixed inset-0 z-[65] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="glass-panel w-full max-w-lg max-h-[90dvh] rounded-3xl flex flex-col overflow-hidden border-2 border-white shadow-2xl">
+      <div class="p-4 bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 flex justify-between items-center"><div><h2 class="text-xl font-black">상점</h2><p class="text-sm font-bold">보유 포켓코인: <span id="shop-coin-count">0</span>개</p></div><button onclick="closeModal('shop-modal')" class="w-9 h-9 rounded-full bg-black/10 font-black">✕</button></div>
+      <div class="p-4 bg-white overflow-y-auto flex flex-col gap-3">
+        <div class="flex items-center justify-between gap-3 rounded-2xl border p-3"><div><b>몬스터볼 ×10</b><p class="text-xs text-gray-500">포켓몬 포획용 · 20코인</p></div><button onclick="buyShopItem('pokeball',10,20)" class="rounded-xl bg-amber-500 px-4 py-2 font-black text-white">구매</button></div>
+        <div class="flex items-center justify-between gap-3 rounded-2xl border p-3"><div><b>수퍼볼 ×5</b><p class="text-xs text-gray-500">포획률이 높은 볼 · 25코인</p></div><button onclick="buyShopItem('greatball',5,25)" class="rounded-xl bg-amber-500 px-4 py-2 font-black text-white">구매</button></div>
+        <div class="flex items-center justify-between gap-3 rounded-2xl border p-3"><div><b>하이퍼볼 ×3</b><p class="text-xs text-gray-500">강력한 포획용 볼 · 30코인</p></div><button onclick="buyShopItem('ultraball',3,30)" class="rounded-xl bg-amber-500 px-4 py-2 font-black text-white">구매</button></div>
+        <div class="flex items-center justify-between gap-3 rounded-2xl border p-3"><div><b>라즈열매 ×5</b><p class="text-xs text-gray-500">포획과 파트너 친밀도에 사용 · 15코인</p></div><button onclick="buyShopItem('berry',5,15)" class="rounded-xl bg-amber-500 px-4 py-2 font-black text-white">구매</button></div>
+        <div class="flex items-center justify-between gap-3 rounded-2xl border-2 border-indigo-200 bg-indigo-50 p-3"><div><b>체육관 패스 ×1</b><p class="text-xs text-gray-600">AI 체육관 도전 1회 · 50코인</p><p class="text-xs font-bold text-indigo-700">매일 무료 패스 2개 지급</p></div><button onclick="buyShopItem('gymPass',1,50)" class="rounded-xl bg-indigo-600 px-4 py-2 font-black text-white">구매</button></div>
       </div>
     </div>
   </div>
@@ -668,9 +727,9 @@
           <label for="battle-mode-select" class="block text-sm font-extrabold">배틀 방식</label>
           <select id="battle-mode-select" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-bold"><option value="go">⚡ Pokémon GO 방식 — 연속 노말 어택과 차지 어택</option><option value="classic">🎮 공식 RPG 방식 — 턴제 기술 선택</option></select>
           <label class="block text-sm font-extrabold">내 출전 포켓몬 3마리 (서로 다른 포켓몬을 선택하세요)</label>
-          <select id="battle-pokemon-select" aria-label="첫 번째 출전 포켓몬" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-bold"></select>
-          <select id="battle-pokemon-select-2" aria-label="두 번째 출전 포켓몬" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-bold"></select>
-          <select id="battle-pokemon-select-3" aria-label="세 번째 출전 포켓몬" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-bold"></select>
+          <select id="battle-pokemon-select" aria-label="첫 번째 출전 포켓몬" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-bold text-slate-900" style="color:#0f172a;background-color:#fff" ></select>
+          <select id="battle-pokemon-select-2" aria-label="두 번째 출전 포켓몬" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-bold text-slate-900" style="color:#0f172a;background-color:#fff" ></select>
+          <select id="battle-pokemon-select-3" aria-label="세 번째 출전 포켓몬" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-bold text-slate-900" style="color:#0f172a;background-color:#fff" ></select>
           <p id="battle-team-hint" class="text-xs text-slate-500">보유 포켓몬이 3마리 이상 있어야 3대3 배틀을 시작할 수 있습니다.</p>
           <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 space-y-2"><div class="font-black text-emerald-900">📋 내 배틀 파티</div><p class="text-xs text-emerald-800">위에서 포켓몬 3마리를 고른 뒤 파티 저장을 누르세요. 다음 배틀부터 저장한 포켓몬이 자동 선택됩니다.</p><button type="button" onclick="saveBattleParty()" class="w-full rounded-xl bg-emerald-600 text-white font-black py-2">현재 선택한 3마리를 파티로 저장</button><button type="button" onclick="clearBattleParty()" class="w-full rounded-xl bg-white border border-emerald-300 text-emerald-900 font-bold py-2">저장한 파티 지우기</button><p id="battle-party-status" class="text-xs text-emerald-800">저장한 파티가 없습니다.</p></div>
           <div id="battle-rank-panel" class="rounded-xl border border-violet-200 bg-violet-50 p-3 text-sm"><div class="flex justify-between font-black"><span>🏆 트레이너 랭킹</span><span id="battle-rank-label">랭크 1 / 20</span></div><div class="mt-2 h-2 rounded-full bg-white overflow-hidden"><div id="battle-rank-bar" class="h-full bg-violet-600" style="width:0%"></div></div><p id="battle-set-label" class="mt-2 text-xs text-slate-600">세트 1 · 0/5 경기 · 승리 0회</p><p class="mt-1 text-xs text-slate-600">보상은 승리 후 아래에서 직접 눌러 받아요. 포켓몬 보상은 야생 포켓몬으로 나타나 직접 잡아야 합니다.</p><div id="battle-pending-rewards" class="mt-2 flex flex-col gap-2"></div></div>
@@ -1563,14 +1622,29 @@
     const GEN7_EVOLUTION_LINKS = {722:723,723:724,725:726,726:727,728:729,729:730,731:732,732:733,734:735,736:737,737:738,739:740,742:743,744:745,747:748,749:750,751:752,753:754,755:756,757:758,759:760,761:762,762:763,767:768,769:770,772:773,782:783,783:784,789:790,790:791,803:804,808:809};
     GEN1_POKEMON.forEach(p => { if (GEN2_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN2_EVOLUTION_LINKS[p.id]; if (GEN4_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN4_EVOLUTION_LINKS[p.id]; if (GEN5_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN5_EVOLUTION_LINKS[p.id]; if (GEN6_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN6_EVOLUTION_LINKS[p.id]; if (GEN7_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN7_EVOLUTION_LINKS[p.id]; });
 
-    /* Sprite URL uses the National Pokédex number directly; Gen I–VII IDs follow official dex order. */
+    /* Sprite lookup: prefer animated Gen V pixel sprites, then static Gen V pixel sprites,
+       then the repository's default pixel sprites. Avoid switching to modern 3D artwork. */
     function getPokemonSpriteUrl(id, shiny = false) {
-      if (shiny) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${id}.png`;
-      return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+      const root = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
+      return shiny ? `${root}shiny/${id}.png` : `${root}${id}.png`;
     }
     function getPokemonAnimatedUrl(id, shiny = false) {
       const root = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/';
       return shiny ? `${root}shiny/${id}.gif` : `${root}${id}.gif`;
+    }
+    function getPokemonRetroStaticUrl(id, shiny = false) {
+      const root = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/';
+      return shiny ? `${root}shiny/${id}.png` : `${root}${id}.png`;
+    }
+    function setRetroFallback(img, id, shiny = false, finalFallbackId = id) {
+      if (!img) return;
+      let step = 0;
+      const candidates = [getPokemonRetroStaticUrl(id, shiny), getPokemonSpriteUrl(finalFallbackId, shiny)];
+      img.onerror = function() {
+        step++;
+        if (step < candidates.length) this.src = candidates[step];
+        else { this.onerror = null; this.style.visibility = 'hidden'; }
+      };
     }
     // Build a single canonical lookup for all 809 species. Sprite URLs use
     // National Pokédex IDs, not Korean display names, so localized names can
@@ -1589,11 +1663,16 @@
     function setAnimatedPokemonImage(img, pokemon) {
       if (!img || !pokemon) return;
       const spriteId = getPokemonSpriteId(pokemon);
-      img.onerror = () => {
-        img.onerror = null;
-        img.src = getPokemonSpriteUrl(spriteId, !!pokemon.shiny);
-      };
-      img.src = getPokemonAnimatedUrl(spriteId, !!pokemon.shiny);
+      const megaActive = Number(pokemon.megaActiveUntil || 0) > Date.now() && typeof window.__megaSpriteUrl === 'function' && window.__canMegaPokemon && window.__canMegaPokemon(pokemon);
+      if (megaActive) {
+        const info = window.__megaInfoForSprite ? window.__megaInfoForSprite(pokemon) : null;
+        const megaId = info && info.sprite ? Number(info.sprite) : spriteId;
+        setRetroFallback(img, megaId, !!pokemon.shiny, spriteId);
+        img.src = getPokemonAnimatedUrl(megaId, !!pokemon.shiny);
+      } else {
+        setRetroFallback(img, spriteId, !!pokemon.shiny);
+        img.src = getPokemonAnimatedUrl(spriteId, !!pokemon.shiny);
+      }
       img.classList.add('pokemon-lively');
     }
     function getPokemonImage(pokemon) { return getPokemonSpriteUrl(getPokemonSpriteId(pokemon), !!pokemon.shiny); }
@@ -1609,6 +1688,7 @@
         xp: 0,
         nextXp: 1000,
         stardust: 1200,
+        pokecoins: 0,
         candies: {} // pokemonId -> count
       },
       inventory: {
@@ -1619,8 +1699,10 @@
         fastTM: 0,
         chargedTM: 0,
         eliteFastTM: 0,
-        eliteChargedTM: 0
+        eliteChargedTM: 0,
+        gymPass: 2
       },
+      gymDaily: { date: new Date().toISOString().slice(0,10), used: 0 },
       pokedexCaught: new Set(),
       myPokemon: [], // Array of owned pokemon objects
       selectedBall: 'pokeball',
@@ -1713,11 +1795,77 @@
       if (id === 'pokedex-modal') renderPokedexGrid();
       if (id === 'pokemon-modal') renderPokemonBox();
       if (id === 'bag-modal') renderBag();
+      if (id === 'shop-modal') renderShop();
+      if (id === 'research-modal') renderResearch();
       document.getElementById(id).classList.remove('hidden');
+      if (id === 'shop-modal') document.getElementById(id).classList.add('flex');
     }
     function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
+      const el=document.getElementById(id); if(!el)return; el.classList.add('hidden'); el.classList.remove('flex');
     }
+    const DAILY_RESEARCH_POOL = [
+      {id:'catch1',title:'첫 포획!',description:'야생 포켓몬 1마리 잡기',goal:1,reward:{type:'pokeball',amount:5,label:'몬스터볼 5개'}},
+      {id:'catch3',title:'포획 전문가',description:'야생 포켓몬 3마리 잡기',goal:3,reward:{type:'stardust',amount:500,label:'별의모래 500개'}},
+      {id:'spin1',title:'주변 탐험',description:'포켓스톱 1회 돌리기',goal:1,reward:{type:'berry',amount:3,label:'라즈열매 3개'}},
+      {id:'catch5',title:'연속 포획',description:'야생 포켓몬 5마리 잡기',goal:5,reward:{type:'stardust',amount:800,label:'별의모래 800개'}},
+      {id:'spin3',title:'탐험가',description:'포켓스톱 3회 돌리기',goal:3,reward:{type:'greatball',amount:5,label:'수퍼볼 5개'}},
+      {id:'catch2',title:'새로운 만남',description:'야생 포켓몬 2마리 잡기',goal:2,reward:{type:'berry',amount:5,label:'라즈열매 5개'}},
+      {id:'spin2',title:'산책 중 발견',description:'포켓스톱 2회 돌리기',goal:2,reward:{type:'pokeball',amount:8,label:'몬스터볼 8개'}},
+      {id:'catch8',title:'숙련된 포켓몬 트레이너',description:'야생 포켓몬 8마리 잡기',goal:8,reward:{type:'stardust',amount:1200,label:'별의모래 1,200개'}}
+    ];
+    const RESEARCH_TASKS = DAILY_RESEARCH_POOL;
+    const MYTHICAL_RESEARCHES = [
+      {id:'mew',name:'뮤',stages:['신비한 흔적','숲의 탐험','다양한 포획','강한 유대','배틀의 길','환상의 만남']},
+      {id:'celebi',name:'세레비',stages:['시간의 흔적','풀숲 탐험','열매와 포획','친구와 성장','숲의 수호자','시간 너머의 만남']},
+      {id:'jirachi',name:'지라치',stages:['별의 소원','밤하늘 관찰','꾸준한 탐험','포켓몬과 교감','도전의 별빛','천년의 소원']},
+      {id:'shaymin',name:'쉐이미',stages:['꽃의 향기','초원의 산책','풀타입 포획','평화의 배틀','감사의 마음','꽃밭의 환상']},
+      {id:'victini',name:'비크티니',stages:['승리의 불꽃','열정의 포획','배틀 도전','파트너 훈련','승리의 길','승리의 환상']}
+    ];
+    const DAILY_RESET_HOUR=21;
+    function dailyResearchKey(){const d=new Date();if(d.getHours()<DAILY_RESET_HOUR)d.setDate(d.getDate()-1);return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();}
+    function ensureResearchState(){
+      if(!gameState.player.research||typeof gameState.player.research!=='object')gameState.player.research={progress:{},claimed:{},welcomeClaimed:false};
+      const r=gameState.player.research;if(typeof r.welcomeClaimed!=='boolean')r.welcomeClaimed=false;
+      if(!r.progress)r.progress={};if(!r.claimed)r.claimed={};if(!r.daily)r.daily={key:'',ids:[],progress:{},claimed:{},stamp:0,boxClaimed:false,cycle:0};
+      const d=r.daily;if(d.key!==dailyResearchKey()){d.key=dailyResearchKey();d.cycle=Number(d.cycle||0)+1;d.ids=[];for(let i=0;i<5;i++){let idx=(d.cycle*5+i)%DAILY_RESEARCH_POOL.length;d.ids.push(DAILY_RESEARCH_POOL[idx].id);}d.progress={};d.claimed={};}
+      d.ids.forEach(id=>{if(!Number.isFinite(Number(d.progress[id])))d.progress[id]=0;});
+    }
+    let currentResearchTab='daily';
+    function setResearchTab(tab){currentResearchTab=tab;renderResearch();}
+    function advanceResearch(id,amount=1){ensureResearchState();const d=gameState.player.research.daily;const t=DAILY_RESEARCH_POOL.find(x=>x.id===id);if(t&&d.ids.includes(id)&&!d.claimed[id])d.progress[id]=Math.min(t.goal,(Number(d.progress[id])||0)+amount);saveGame(false);}
+    function renderResearch(){
+      ensureResearchState();const r=gameState.player.research,d=r.daily;const welcome=document.getElementById('welcome-research-card');if(welcome){const claimed=r.welcomeClaimed;welcome.innerHTML=`<div class="text-xs font-black text-amber-800">환영 리서치 · 무료</div><h3 class="mt-1 text-lg font-black text-slate-900">전설 포켓몬을 만나자!</h3><p class="mt-1 text-sm text-slate-700">랜덤 전설 포켓몬 · CP 1000 · IV 100%</p><button ${claimed?'disabled':''} onclick="claimWelcomeResearch()" class="mt-3 w-full rounded-xl px-4 py-3 font-black ${claimed?'bg-slate-200 text-slate-500':'bg-amber-500 text-amber-950'}">${claimed?'이미 보상을 받았어요':'무료 보상 받기'}</button>`;}
+      ['daily','event','main'].forEach(t=>{const b=document.getElementById('research-tab-'+t);if(b)b.className='rounded-xl p-2 font-black '+(currentResearchTab===t?'bg-violet-600 text-white':'bg-slate-100 text-slate-500');});
+      const panel=document.getElementById('research-stamp-panel');if(panel)panel.innerHTML=`<div class="font-black">데일리 도장 ${d.stamp||0}/6</div><div class="flex gap-1 my-2">${Array.from({length:6},(_,i)=>`<span class="flex-1 text-center rounded-lg p-2 ${i<(d.stamp||0)?'bg-amber-400':'bg-white border'}">${i<(d.stamp||0)?'★':'☆'}</span>`).join('')}</div><button onclick="claimResearchBox()" ${d.stamp<6||d.boxClaimed?'disabled':''} class="w-full rounded-xl p-2 font-black ${d.stamp>=6&&!d.boxClaimed?'bg-amber-500':'bg-slate-200 text-slate-400'}">${d.boxClaimed?'오늘의 리서치 박스 수령 완료':'리서치 박스 열기 (도장 6개)'}</button><p class="text-xs text-slate-500 mt-1">매일 밤 9시에 데일리 태스크가 갱신돼요.</p>`;
+      const host=document.getElementById('research-task-list'),content=document.getElementById('research-tab-content');if(!host||!content)return;
+      if(currentResearchTab==='event'){content.innerHTML='<div class="rounded-2xl bg-slate-50 p-6 text-center text-slate-500">현재 진행 중인 이벤트가 없어요.</div>';return;}
+      if(currentResearchTab==='main'){content.innerHTML=MYTHICAL_RESEARCHES.map(m=>{const state=r.main?.[m.id]||{stage:0,progress:{},claimed:false};return `<div class="rounded-2xl border p-4"><div class="font-black">${m.name} 환상 리서치 · ${Math.min(6,state.stage+1)}/6</div><p class="text-sm text-slate-600 mt-1">${m.stages[Math.min(5,state.stage)]} — 포획·탐험·배틀 과제를 완료하세요.</p><div class="text-xs text-violet-700 mt-2">각 단계에 과제 5개 · 완료 시 다음 단계 해금</div><button onclick="showToast('메인 리서치 과제는 단계별 진행 기능을 준비 중이에요.','info')" class="mt-3 rounded-xl bg-violet-600 text-white px-3 py-2 font-bold">리서치 보기</button></div>`;}).join('');return;}
+      content.innerHTML='<div class="text-xs font-black uppercase tracking-wide text-slate-500">데일리 태스크 · 최대 5개</div><div class="space-y-3" id="research-task-list"></div>';const h=document.getElementById('research-task-list');h.innerHTML=d.ids.map(id=>{const t=DAILY_RESEARCH_POOL.find(x=>x.id===id);const n=Number(d.progress[id])||0,claimed=!!d.claimed[id],done=n>=t.goal;return `<div class="rounded-2xl border border-slate-200 p-4"><div class="flex justify-between gap-3"><div><h3 class="font-black">${t.title}</h3><p class="text-sm text-slate-600">${t.description}</p></div><span class="text-xs font-black">${claimed?'완료':`${n}/${t.goal}`}</span></div><div class="h-2 bg-slate-100 rounded-full overflow-hidden mt-3"><div class="h-full bg-violet-500" style="width:${Math.min(100,n/t.goal*100)}%"></div></div><div class="flex justify-between items-center mt-3"><span class="text-sm font-bold text-amber-700">🎁 ${t.reward.label}</span><button ${(!done||claimed)?'disabled':''} onclick="claimResearchReward('${t.id}')" class="rounded-xl px-4 py-2 text-sm font-black ${done&&!claimed?'bg-violet-600 text-white':'bg-slate-200 text-slate-400'}">${claimed?'수령 완료':done?'보상 받기':'진행 중'}</button></div></div>`;}).join('');
+    }
+    function claimResearchBox(){ensureResearchState();const d=gameState.player.research.daily;if(d.stamp<6||d.boxClaimed)return;d.boxClaimed=true;gameState.player.stardust=(Number(gameState.player.stardust)||0)+2000;gameState.inventory.rareCandy=(Number(gameState.inventory.rareCandy)||0)+1;saveGame(false);updateHUD();renderResearch();showToast('리서치 박스 보상: 별의모래 2000개와 이상한사탕 1개!','gift');}
+    function claimWelcomeResearch(){
+      ensureResearchState();
+      if(gameState.player.research.welcomeClaimed){showToast('환영 리서치 보상은 한 번만 받을 수 있어요.','alert-circle');return;}
+      const legendaryIds=[144,145,146,150,243,244,245,249,250,377,378,379,380,381,382,383,384,480,481,482,483,484,487,488,638,639,640,641,642,643,644,645,646,647,648,649,716,717,718,772,773,785,786,787,788,800,801,802,888,889,890,891,892];
+      const pool=GEN1_POKEMON.filter(p=>legendaryIds.includes(Number(p.id)));
+      if(!pool.length){showToast('전설 포켓몬 데이터를 찾지 못했어요.','alert-circle');return;}
+      const base=pool[Math.floor(Math.random()*pool.length)];
+      const pokemon={uniqueId:Date.now()+Math.random(),baseId:base.id,name:base.name,type:base.type,cp:1000,ivAtk:15,ivDef:15,ivHp:15,ivPct:100,shiny:false,fromWelcomeResearch:true};
+      if(typeof ensureGOMoves==='function')ensureGOMoves(pokemon);
+      gameState.player.research.welcomeClaimed=true;
+      saveGame(false);renderResearch();closeModal('research-modal');startEncounter(pokemon);
+      showToast('환영 리서치! 전설 포켓몬을 포획해 보세요.','gift');
+    }
+
+    function claimResearchReward(id){ensureResearchState();const d=gameState.player.research.daily,t=DAILY_RESEARCH_POOL.find(x=>x.id===id);if(!t||!d.ids.includes(id))return;if(d.claimed[id]||Number(d.progress[id]||0)<t.goal){showToast('아직 완료하지 않은 리서치예요.','alert-circle');return;}d.claimed[id]=true;d.stamp=Math.min(6,(Number(d.stamp)||0)+1);if(t.reward.type==='pokeball')gameState.inventory.pokeball=(Number(gameState.inventory.pokeball)||0)+t.reward.amount;else if(t.reward.type==='berry')gameState.inventory.berry=(Number(gameState.inventory.berry)||0)+t.reward.amount;else if(t.reward.type==='stardust')gameState.player.stardust=(Number(gameState.player.stardust)||0)+t.reward.amount;else if(t.reward.type==='greatball')gameState.inventory.greatball=(Number(gameState.inventory.greatball)||0)+t.reward.amount;updateHUD();renderResearch();saveGame(false);showToast(`리서치 보상 획득! ${t.reward.label} · 도장 +1`,'gift');}
+    function openShopModal(){openModal('shop-modal');}
+    function renderShop(){const a=document.getElementById('shop-coin-count'),b=document.getElementById('hud-pokecoins');if(a)a.textContent=Number(gameState.player.pokecoins||0).toLocaleString();if(b)b.textContent=Number(gameState.player.pokecoins||0).toLocaleString();}
+    function buyShopItem(key,amount,cost){
+      const coins=Number(gameState.player.pokecoins||0); if(coins<cost){showToast('포켓코인이 부족합니다.','alert-circle');return;}
+      if(key==='gymPass')gameState.inventory.gymPass=(Number(gameState.inventory.gymPass)||0)+amount;else gameState.inventory[key]=(Number(gameState.inventory[key])||0)+amount;
+      gameState.player.pokecoins=coins-cost;updateHUD();renderShop();saveGame(false);showToast(`구매 완료! ${key==='gymPass'?'체육관 패스':key==='berry'?'라즈열매':key==='pokeball'?'몬스터볼':key==='greatball'?'수퍼볼':'하이퍼볼'} +${amount}`,'check-circle');
+    }
+    function refreshDailyGymPasses(){const today=new Date().toISOString().slice(0,10);if(!gameState.gymDaily||gameState.gymDaily.date!==today){gameState.gymDaily={date:today,used:0};gameState.inventory.gymPass=2;saveGame(false);showToast('오늘의 무료 체육관 패스 2개를 받았어요!','gift');}}
 
     /* ==========================================================================
        3. MAP CANVAS & INFINITE GRASSY PLAINS WORLD
@@ -1789,6 +1937,27 @@
       const sta = Math.max(1, Number(base.baseHp) || 1) + 15;
       return Math.max(10, Math.floor((atk * Math.sqrt(def) * Math.sqrt(sta) * MAX_CP_CPM_L50 * MAX_CP_CPM_L50) / 10));
     }
+    // 희귀도 기반 야생 출현: 환상은 사실상 출현하지 않고, 전설/울트라비스트도 극히 드뭅니다.
+    const MYTHICAL_POKEMON_IDS = new Set([151,251,385,386,489,490,491,492,493,494,647,648,649,719,720,721, 801,802,807].filter(Number.isFinite));
+    const ULTRA_BEAST_IDS = new Set([793,794,795,796,797,798,799,800,803,804,805,806]);
+    function wildSpawnWeight(species) {
+      const id=Number(species.id);
+      if (MYTHICAL_POKEMON_IDS.has(id)) return 0.000001;
+      if (ULTRA_BEAST_IDS.has(id)) return 0.0008;
+      if (LEGENDARY_POKEMON_IDS.has(id)) return 0.0015;
+      const hasPreEvolution=GEN1_POKEMON.some(x=>Number(x.evolveTo)===id);
+      const hasEvolution=Number(species.evolveTo)>0;
+      if (hasPreEvolution && !hasEvolution) return 0.28; // 최종 진화형은 덜 흔함
+      if (hasPreEvolution && hasEvolution) return 0.62; // 중간 진화형
+      return 1;
+    }
+    function chooseWildSpeciesByRarity() {
+      const list=GEN1_POKEMON; const weights=list.map(wildSpawnWeight); const total=weights.reduce((a,b)=>a+b,0);
+      let roll=Math.random()*total;
+      for(let i=0;i<list.length;i++){roll-=weights[i];if(roll<=0)return list[i];}
+      return list[0];
+    }
+
     function calculateWildSpawnCP(base, ivAtk, ivDef, ivHp) {
       const atkBase = Math.max(1, Number(base.baseAtk) || 1);
       const defBase = Math.max(1, Number(base.baseDef) || 1);
@@ -1848,7 +2017,7 @@
         const py = gameState.player.y + Math.sin(angle) * dist;
 
         // Random Pokémon selection (Generations I–VI)
-        const base = GEN1_POKEMON[Math.floor(Math.random() * GEN1_POKEMON.length)];
+        const base = chooseWildSpeciesByRarity();
         
         // Random IV generation
         const ivAtk = Math.floor(Math.random() * 16);
@@ -1895,7 +2064,14 @@
         });
       }
 
+      // AI 체육관은 주변에 드물게 생성되며, 승리한 체육관은 다시 생성하지 않습니다.
+      if (!Array.isArray(gameState.mapElements.gyms)) gameState.mapElements.gyms=[];
+      if (gameState.mapElements.gyms.filter(g=>!g.defeated).length < 2) {
+        const angle=Math.random()*Math.PI*2, dist=360+Math.random()*520;
+        gameState.mapElements.gyms.push({id:'gym-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),x:gameState.player.x+Math.cos(angle)*dist,y:gameState.player.y+Math.sin(angle)*dist,defeated:false});
+      }
       // Clean up far entities
+      gameState.mapElements.gyms=gameState.mapElements.gyms.filter(g=>g.defeated || Math.hypot(g.x-gameState.player.x,g.y-gameState.player.y)<radius*2.5);
       gameState.mapElements.pokemon = gameState.mapElements.pokemon.filter(p => Math.hypot(p.x - gameState.player.x, p.y - gameState.player.y) < radius * 1.5);
       gameState.mapElements.pokestops = gameState.mapElements.pokestops.filter(p => Math.hypot(p.x - gameState.player.x, p.y - gameState.player.y) < radius * 1.5);
     }
@@ -1990,7 +2166,16 @@
         }
       }
 
-      /* 2. DRAW POKÉSTOPS */
+      /* 2. DRAW AI GYMS */
+      (gameState.mapElements.gyms||[]).filter(g=>!g.defeated).forEach(g=>{
+        const sx=g.x-camX+centerX, sy=g.y-camY+centerY;
+        ctx.beginPath();ctx.ellipse(sx,sy+19,24,8,0,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,.22)';ctx.fill();
+        ctx.fillStyle='#f97316';ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(sx,sy,22,0,Math.PI*2);ctx.fill();ctx.stroke();
+        ctx.fillStyle='#fff';ctx.font='bold 23px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('★',sx,sy+1);
+        ctx.font='bold 10px sans-serif';ctx.fillText('체육관',sx,sy+34);
+      });
+
+      /* 3. DRAW POKÉSTOPS */
       gameState.mapElements.pokestops.forEach(ps => {
         const sx = ps.x - camX + centerX;
         const sy = ps.y - camY + centerY;
@@ -2118,10 +2303,13 @@
           if (gainedUltraBalls) stopRewards.push(`하이퍼볼 +${gainedUltraBalls}`);
           stopRewards.push(`열매 +${gainedBerries}`);
           showToast(`포켓스톱! ${stopRewards.join(', ')}`, 'gift');
+          advanceResearch('spin1',1);
           updateHUD();
           saveGame(false);
         }
       });
+
+      // 체육관은 자동으로 팝업하지 않습니다. 맵에서 체육관 아이콘을 직접 눌러 열 수 있습니다.
 
       // Check collision/click proximity to wild Pokémon
       gameState.mapElements.pokemon.forEach((p, index) => {
@@ -2234,6 +2422,15 @@
 
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
+
+      // 체육관은 직접 눌렀을 때만 참가 화면을 엽니다.
+      const tappedGym = (gameState.mapElements.gyms || []).find(g => {
+        if (g.defeated) return false;
+        const sx = g.x - gameState.player.x + centerX;
+        const sy = g.y - gameState.player.y + centerY;
+        return Math.hypot(clickX - sx, clickY - sy) < 34;
+      });
+      if (tappedGym) { openGymModal(tappedGym); return; }
 
       gameState.mapElements.pokemon.forEach((p, index) => {
         const sx = p.x - gameState.player.x + centerX;
@@ -2585,9 +2782,11 @@
           ensureGOMoves(gameState.myPokemon[gameState.myPokemon.length-1]);
 
           gameState.pokedexCaught.add(p.baseId);
+          try { if (window.__grantMegaCatchEnergy) window.__grantMegaCatchEnergy(p.baseId); } catch(e) {}
 
           // Reward XP & Candy
           addXP(150);
+          advanceResearch('catch1',1); advanceResearch('catch3',1);
           gameState.player.stardust += 100;
           gameState.player.candies[p.baseId] = (gameState.player.candies[p.baseId] || 0) + 3;
 
@@ -2632,6 +2831,8 @@
       // Currencies
       document.getElementById('hud-stardust').innerText = gameState.player.stardust.toLocaleString();
       document.getElementById('hud-pokeballs').innerText = gameState.inventory.pokeball;
+      const coinHud=document.getElementById('hud-pokecoins');if(coinHud)coinHud.innerText=Number(gameState.player.pokecoins||0).toLocaleString();
+      const shopCoin=document.getElementById('shop-coin-count');if(shopCoin)shopCoin.innerText=Number(gameState.player.pokecoins||0).toLocaleString();
 
       // Encounter HUD Counts
       document.getElementById('count-pokeball').innerText = `x${gameState.inventory.pokeball}`;
@@ -2671,13 +2872,14 @@
 
         card.innerHTML = `
           <div class="text-[11px] font-black text-emerald-600">CP ${p.cp}</div>
-          <img src="${getPokemonAnimatedUrl(getPokemonSpriteId(p), !!p.shiny)}" onerror="this.onerror=null;this.src='${getPokemonSpriteUrl(getPokemonSpriteId(p), !!p.shiny)}'" class="pokemon-lively w-16 h-16 object-contain my-1 ${p.shiny ? 'drop-shadow-[0_0_8px_rgba(250,204,21,0.95)]' : ''}">
+          <img src="${p.megaActiveUntil>Date.now() && window.__megaSpriteUrl ? window.__megaSpriteUrl(p) : getPokemonAnimatedUrl(getPokemonSpriteId(p), !!p.shiny)}" onerror="if(!this.dataset.retroFallback){this.dataset.retroFallback='1';this.src='${getPokemonRetroStaticUrl(getPokemonSpriteId(p), !!p.shiny)}'}else{this.onerror=null;this.src='${getPokemonSpriteUrl(getPokemonSpriteId(p), !!p.shiny)}'}" class="pokemon-lively w-16 h-16 object-contain my-1 ${p.shiny ? 'drop-shadow-[0_0_8px_rgba(250,204,21,0.95)]' : ''}">
           <div class="text-xs font-black text-gray-800 truncate w-full text-center">${p.shiny ? '✨ ' : ''}${p.name}</div>
           ${p.shiny ? '<span class="text-[9px] font-black text-amber-600">이로치</span>' : ''}
           <span class="text-[9px] font-bold px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded mt-0.5">IV ${p.ivPct}%</span>
           <div class="text-[9px] font-bold text-rose-600 text-center mt-1">❤️ HP ${getPokemonDisplayStats(p).hp}</div>
           <div class="text-[9px] text-slate-600 text-center mt-1 leading-tight w-full">⚡ ${p.fastMove} · 위력 ${getFastMovePower(p.fastMove)}<br>💥 ${p.chargedMoves.map(m=>`${m.name} · 위력 ${Number(m.power)||55}`).join('<br>')}</div>
-          <button onclick="event.stopPropagation(); transferPokemonById(${Number(p.uniqueId)})" class="mt-2 w-full rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 text-[10px] font-extrabold py-1.5">박사에게 보내기</button>
+          ${window.__canMegaPokemon && window.__canMegaPokemon(p) ? `<button onclick="event.stopPropagation(); window.megaEvolvePokemon('${String(p.uniqueId).replace(/'/g,'')}')" class="mt-2 w-full rounded-lg bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-[10px] font-extrabold py-1.5">${p.megaActiveUntil>Date.now()?'메가진화 중':'⚡ 메가진화'}</button>` : ''}
+          <button onclick="event.stopPropagation(); transferPokemonById(${Number(p.uniqueId)})" class="mt-1 w-full rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 text-[10px] font-extrabold py-1.5">박사에게 보내기</button>
         `;
         grid.appendChild(card);
       });
@@ -2693,6 +2895,7 @@
 
     function openDetailModal(pokemon) {
       activeDetailPokemon = pokemon;
+      try { if(window.renderDetailMega) window.renderDetailMega(pokemon); } catch(e) {}
       const baseInfo = GEN1_POKEMON.find(x => x.id === pokemon.baseId);
 
       document.getElementById('detail-name').innerText = pokemon.name;
@@ -2956,6 +3159,39 @@
     function teachSecondChargedMove(){const p=activeDetailPokemon;if(!p)return;ensureGOMoves(p);if(p.chargedMoves.length>=2){showToast('이미 스페셜 어택을 2개 배웠습니다.','alert-circle');return;}const need=grantSecondMoveCost(p),have=Number(gameState.player.candies[p.baseId]||0);if(have<need){showToast(`사탕이 부족합니다. ${need}개 필요 (현재 ${have}개)`,'alert-circle');return;}gameState.player.candies[p.baseId]=have-need;p.chargedMoves.push(chooseGOCharged(p,p.chargedMoves.map(m=>m.name)));openDetailModal(p);updateHUD();saveGame(false);showToast(`${p.name}이(가) 두 번째 스페셜 어택을 배웠습니다!`,'sparkles');}
     function useTM(type){const count=Number(gameState.inventory[type]||0);if(count<=0){showToast(`${type==='fastTM'?'노말':'스페셜'} 기술머신이 없습니다.`,'alert-circle');return;}const sel=document.getElementById('tm-pokemon'),p=gameState.myPokemon[Number(sel&&sel.value)];if(!p){showToast('기술머신을 사용할 포켓몬을 선택하세요.','alert-circle');return;}ensureGOMoves(p);if(type==='fastTM'){p.fastMove=chooseGOFast(p,p.fastMove);}else{const answer=p.chargedMoves.length>1?prompt('변경할 스페셜 기술 번호를 입력하세요: 1 또는 2','1'):'1';if(answer===null)return;const idx=Number(answer)-1;if(idx<0||idx>=p.chargedMoves.length||!Number.isFinite(idx)){return;}p.chargedMoves[idx]=chooseGOCharged(p,p.chargedMoves.filter((_,i)=>i!==idx).map(m=>m.name));}gameState.inventory[type]--;updateHUD();renderBag();renderPokemonBox();if(activeDetailPokemon===p)openDetailModal(p);saveGame(false);showToast('기술머신을 사용해 기술을 변경했습니다!','sparkles');}
 
+    // GO 졸업기(레거시/특별 기술): 오직 대단한 스페셜 기술머신 선택지에만 추가됩니다.
+    const ELITE_ONLY_CHARGED_MOVES = {
+      3: [['하드플랜트', 100]], 6: [['블라스트번', 110]], 9: [['하이드로캐논', 80]],
+      65: [['사이코키네시스', 90]], 94: [['섀도펀치', 40]], 130: [['아쿠아테일', 45]],
+      143: [['누르기', 40]], 150: [['사이코브레이크', 60]], 154: [['하드플랜트', 100]],
+      157: [['블라스트번', 110]], 160: [['하이드로캐논', 80]], 181: [['용의파동', 90]],
+      212: [['덤벼들기', 60]], 230: [['하이드로캐논', 80]], 248: [['떨어뜨리기', 12]],
+      254: [['하드플랜트', 100]], 257: [['블라스트번', 110]], 260: [['하이드로캐논', 80]],
+      282: [['싱크로노이즈', 80]], 303: [['누르기', 40]], 306: [['코멧펀치', 100]],
+      350: [['미러코트', 60]], 359: [['보복', 110]], 373: [['폭풍', 110]],
+      376: [['코멧펀치', 100]], 380: [['용성군', 150]], 381: [['용성군', 150]],
+      382: [['근원의파동', 130]], 383: [['단애의칼', 130]], 384: [['화룡점정', 120]],
+      386: [['사이코부스트', 70]], 428: [['불꽃펀치', 55]], 445: [['대지의힘', 90]],
+      448: [['파동탄', 90]], 461: [['눈사태', 90]], 464: [['암석포', 110]],
+      468: [['공중날기', 80]], 473: [['10만마력', 100]], 475: [['사이코키네시스', 90]],
+      487: [['섀도다이브', 120]], 488: [['문포스', 110]], 491: [['악의파동', 80]],
+      492: [['시드플레어', 120]], 493: [['심판의뭉치', 100]], 494: [['푸른불꽃', 130]],
+      495: [['번개', 100]], 498: [['블라스트번', 110]], 501: [['하이드로캐논', 80]],
+      530: [['드릴라이너', 65]], 534: [['폭발펀치', 90]], 555: [['오버히트', 130]],
+      571: [['사이코팽', 40]], 609: [['불태우기', 110]], 635: [['용성군', 150]],
+      637: [['블루플레어', 130]], 638: [['성스러운칼', 60]], 639: [['성스러운칼', 60]],
+      640: [['성스러운칼', 60]], 641: [['폭풍', 110]], 642: [['번개', 100]],
+      643: [['크로스플레임', 130]], 644: [['크로스썬더', 130]], 646: [['얼어붙은세계', 60]],
+      649: [['테크노버스터', 120]], 652: [['하드플랜트', 100]], 655: [['블라스트번', 110]],
+      658: [['하이드로캐논', 80]], 663: [['불태우기', 110]], 668: [['오버히트', 130]],
+      700: [['사이코쇼크', 70]], 706: [['용성군', 150]], 717: [['데스윙', 120]],
+      718: [['천룡의역린', 100]], 719: [['문포스', 110]], 720: [['사이코키네시스', 90]],
+      721: [['화염방사', 55]], 724: [['하드플랜트', 100]], 727: [['블라스트번', 110]],
+      730: [['하이드로캐논', 80]], 800: [['섀도레이', 120]],
+      483: [['시간의포효', 160]], // 디아루가
+      484: [['공간절단', 160]] // 펄기아
+    };
+
     function useEliteTM(type){
       if(Number(gameState.inventory[type]||0)<=0){showToast('대단한 기술머신이 없습니다.','alert-circle');return;}
       const sel=document.getElementById('tm-pokemon'),p=gameState.myPokemon[Number(sel&&sel.value)];
@@ -2967,7 +3203,7 @@
         const choice=prompt('배울 노말 기술 번호를 선택하세요:\n'+moves.map((m,i)=>`${i+1}. ${m}${m===p.fastMove?' (현재 기술)':''}`).join('\n'),'1');
         if(choice===null)return;const idx=Number(choice)-1;if(!Number.isInteger(idx)||idx<0||idx>=moves.length){showToast('올바른 번호를 입력하세요.','alert-circle');return;}p.fastMove=moves[idx];
       }else{
-        const pool=[...(GO_SPECIES_CHARGED[p.baseId]||[]),...(GO_CHARGED_POOLS[goTypeKey(p)]||GO_CHARGED_POOLS['노말'])];
+        const pool=[...(GO_SPECIES_CHARGED[p.baseId]||[]),...(GO_CHARGED_POOLS[goTypeKey(p)]||GO_CHARGED_POOLS['노말']),...(ELITE_ONLY_CHARGED_MOVES[p.baseId]||[])];
         const unique=pool.filter((m,i)=>pool.findIndex(x=>x[0]===m[0])===i);if(!unique.length){showToast('선택 가능한 스페셜 기술이 없습니다.','alert-circle');return;}
         const slotAnswer=p.chargedMoves.length>1?prompt('변경할 스페셜 기술 칸을 선택하세요: 1 또는 2','1'):'1';if(slotAnswer===null)return;const slot=Number(slotAnswer)-1;if(!Number.isInteger(slot)||slot<0||slot>=p.chargedMoves.length){showToast('해당 스페셜 기술 칸이 없습니다. 먼저 두 번째 기술을 배워야 할 수 있어요.','alert-circle');return;}
         const options=unique.map(m=>({name:m[0],cost:Math.max(35,Math.min(80,Math.round(Number(m[1])*.7))),power:Number(m[1]),fastEnergy:9}));
@@ -3230,7 +3466,7 @@
 
     function cloudSavePayload() {
       const code = getAccountCode();
-      return { version: 4, accountCode: code, player: gameState.player, inventory: gameState.inventory,
+      return { version: 5, accountCode: code, player: gameState.player, inventory: gameState.inventory, gymDaily: gameState.gymDaily,
         pokedexCaught: [...gameState.pokedexCaught], myPokemon: gameState.myPokemon,
         mapElements: { pokemon: gameState.mapElements.pokemon.map(({img, ...p}) => p), pokestops: gameState.mapElements.pokestops, gyms: gameState.mapElements.gyms }, savedAt: new Date().toISOString() };
     }
@@ -3360,7 +3596,7 @@
     function saveGame(showMessage = true) {
       try {
         const code = getAccountCode();
-        const data = { version: 4, accountCode: code, player: gameState.player, inventory: gameState.inventory,
+        const data = { version: 5, accountCode: code, player: gameState.player, inventory: gameState.inventory, gymDaily: gameState.gymDaily,
           pokedexCaught: [...gameState.pokedexCaught], myPokemon: gameState.myPokemon,
           mapElements: { pokemon: gameState.mapElements.pokemon.map(({img, ...p}) => p), pokestops: gameState.mapElements.pokestops, gyms: gameState.mapElements.gyms }, savedAt: new Date().toISOString() };
         const serialized = JSON.stringify(data);
@@ -3391,7 +3627,7 @@
         if (!raw) { if (showMessage) showToast('이 브라우저에서 해당 코드의 저장 데이터를 찾을 수 없습니다.', 'alert-circle'); return false; }
         const data = JSON.parse(raw);
         if (!data || !data.player || !Array.isArray(data.myPokemon)) throw new Error('invalid save');
-        Object.assign(gameState.player, data.player); Object.assign(gameState.inventory, data.inventory || {});
+        Object.assign(gameState.player, data.player); Object.assign(gameState.inventory, data.inventory || {}); gameState.gymDaily=data.gymDaily||{date:new Date().toISOString().slice(0,10),used:0}; if(gameState.player.pokecoins==null)gameState.player.pokecoins=0; if(gameState.inventory.gymPass==null)gameState.inventory.gymPass=2;
         gameState.pokedexCaught = new Set(data.pokedexCaught || []); gameState.myPokemon = data.myPokemon.map(p => { const species = GEN1_POKEMON.find(x => x.name === p.name); const ivAtk = Math.max(0, Math.min(15, Number(p.ivAtk) || 0)); const ivDef = Math.max(0, Math.min(15, Number(p.ivDef) || 0)); const ivHp = Math.max(0, Math.min(15, Number(p.ivHp) || 0)); return {...p, ...(species ? {baseId: species.id, type: species.type} : {}), ivAtk, ivDef, ivHp, ivPct: Math.round((ivAtk + ivDef + ivHp) / 45 * 100)}; });
         const savedMap = data.mapElements || {};
         gameState.mapElements.pokemon = (savedMap.pokemon || []).map(p => { const species = GEN1_POKEMON.find(x => x.name === p.name); if (species) p = {...p, baseId: species.id, type: species.type}; const ivAtk = Math.max(0, Math.min(15, Number(p.ivAtk) || 0)); const ivDef = Math.max(0, Math.min(15, Number(p.ivDef) || 0)); const ivHp = Math.max(0, Math.min(15, Number(p.ivHp) || 0)); p = {...p, ivAtk, ivDef, ivHp, ivPct: Math.round((ivAtk + ivDef + ivHp) / 45 * 100)}; const img = new Image(); img.src = getPokemonAnimatedUrl(p.baseId, !!p.shiny); img.onerror = () => { img.onerror = null; img.src = getPokemonSpriteUrl(p.baseId, !!p.shiny); }; return {...p, img}; });
@@ -3405,6 +3641,67 @@
       try { prompt('이 브라우저에 연결된 고정 계정 코드입니다. 코드 자체는 저장을 반복해도 바뀌지 않습니다.', code); }
       catch(e) { showToast(`계정 코드: ${code}`); }
     }
+    let activeGym=null, gymBattleStartedAt=0, gymBossToCatch=null;
+    function openGymModal(gym){
+      if(!gym||gym.defeated)return;
+      activeGym=gym;refreshDailyGymPasses();
+      const c=document.getElementById('gym-pass-count');if(c)c.textContent=Number(gameState.inventory.gymPass||0);
+      const m=document.getElementById('gym-modal');if(m){m.classList.remove('hidden');m.classList.add('flex');}
+    }
+    function closeGymModal(){
+      const m=document.getElementById('gym-modal');if(m){m.classList.add('hidden');m.classList.remove('flex');}
+      window.__gymPromptOpen=false;
+      // Closing the participation panel only dismisses it; it never reopens automatically.
+      activeGym=null;
+    }
+    function beginGymChallenge(){
+      try{
+        refreshDailyGymPasses();
+        if(!activeGym){showToast('체육관을 찾을 수 없습니다. 화면을 닫고 다시 접근해 주세요.','alert-circle');closeGymModal();return;}
+        if(gameState.myPokemon.length<1){showToast('체육관 도전에는 포켓몬이 최소 1마리 필요합니다.','alert-circle');return;}
+        if(Number(gameState.inventory.gymPass||0)<=0){showToast('체육관 패스가 없습니다. 상점에서 50코인으로 구매할 수 있어요.','alert-circle');return;}
+        const gym=activeGym;
+        // 체육관 도전은 파티 선택 화면을 건너뛰고 바로 GO 배틀 화면으로 진입한다.
+        window.__gymChallenge={gym,startedAt:Date.now()};
+        gymBattleStartedAt=window.__gymChallenge.startedAt;
+        // 체육관은 배틀 준비 화면을 생략하고, 저장해 둔 기존 배틀 파티를 우선 사용합니다.
+        let savedIds=[];try{savedIds=JSON.parse(localStorage.getItem(BATTLE_PARTY_KEY)||'[]');}catch(e){}
+        let gymParty=savedIds.map(id=>gameState.myPokemon.findIndex(p=>String(p.uniqueId)===String(id))).filter(i=>i>=0);
+        gymParty=[...new Set(gymParty)];
+        if(gymParty.length<3) gymParty=gameState.myPokemon.slice(0,3).map((p)=>gameState.myPokemon.indexOf(p));
+        const slots=[document.getElementById('battle-pokemon-select'),document.getElementById('battle-pokemon-select-2'),document.getElementById('battle-pokemon-select-3')];
+        slots.forEach((el,i)=>{if(el)el.value=String(gymParty[i]??i);});
+        const modeSelect=document.getElementById('battle-mode-select');if(modeSelect)modeSelect.value='go';
+        // startTrainerBattle normally runs from the already-open battle setup modal.
+        // Gym challenges skip setup, so explicitly reveal the battle modal before starting.
+        closeGymModal();
+        const battleModal=document.getElementById('battle-modal');
+        if(battleModal){battleModal.classList.remove('hidden');battleModal.classList.add('flex');}
+        startTrainerBattle();
+        if(!battleState){
+          window.__gymChallenge=null;
+          if(battleModal){battleModal.classList.add('hidden');battleModal.classList.remove('flex');}
+          showToast('체육관 배틀을 시작하지 못했습니다. 파티와 포켓몬을 확인해 주세요.','alert-circle');
+          return;
+        }
+        gameState.inventory.gymPass=Math.max(0,Number(gameState.inventory.gymPass||0)-1);
+        gameState.gymDaily.used=(Number(gameState.gymDaily.used)||0)+1;
+        updateHUD();saveGame(false);
+      }catch(err){
+        console.error('Gym challenge start failed:',err);
+        window.__gymChallenge=null;
+        const bm=document.getElementById('battle-modal');if(bm){bm.classList.add('hidden');bm.classList.remove('flex');}
+        closeGymModal();showToast('체육관 배틀을 시작하지 못했습니다. 다시 시도해 주세요.','alert-circle');
+      }
+    }
+    // 모바일에서 체육관 화면이 열려 있어도 뒤로 가기/배경 탭으로 닫을 수 있게 합니다.
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!document.getElementById('gym-modal')?.classList.contains('hidden'))closeGymModal();});
+    function makeGymBoss(){
+      const all=GEN1_POKEMON.filter(p=>p&&p.id);const isLegendary=Math.random()<0.9;const pool=isLegendary?all.filter(p=>LEGENDARY_POKEMON_IDS.has(Number(p.id))):all.filter(p=>!LEGENDARY_POKEMON_IDS.has(Number(p.id)));
+      const base=pool[Math.floor(Math.random()*Math.max(1,pool.length))]||all[Math.floor(Math.random()*all.length)];const ivAtk=Math.floor(Math.random()*16),ivDef=Math.floor(Math.random()*16),ivHp=Math.floor(Math.random()*16);
+      const boss={baseId:base.id,name:base.name,type:base.type,cp:10000+Math.floor(Math.random()*10001),ivAtk,ivDef,ivHp,ivPct:Math.round((ivAtk+ivDef+ivHp)/45*100),shiny:false};ensureGOMoves(boss);return boss;
+    }
+
     function openBattleModal() {
       updateRankUI();
       const modal = document.getElementById('battle-modal'); modal.classList.remove('hidden'); modal.classList.add('flex'); resetBattleView();
@@ -3461,18 +3758,22 @@
       };
     }
     function startTrainerBattle() {
+      document.getElementById('battle-finish-btn')?.classList.add('hidden');
       const mode = document.getElementById('battle-mode-select').value || 'go';
-      if (gameState.myPokemon.length < 3) { showToast('3대3 배틀을 하려면 포켓몬이 3마리 이상 필요합니다.', 'alert-circle'); return; }
-      const chosen = [0,1,2].map(i => Number(document.getElementById(i === 0 ? 'battle-pokemon-select' : `battle-pokemon-select-${i+1}`).value));
-      if (new Set(chosen).size !== 3) { showToast('서로 다른 포켓몬 3마리를 선택해주세요.', 'alert-circle'); return; }
+      if (gameState.myPokemon.length < (window.__gymChallenge ? 1 : 3)) { showToast(window.__gymChallenge ? '체육관 도전에는 포켓몬이 최소 1마리 필요합니다.' : '3대3 배틀을 하려면 포켓몬이 3마리 이상 필요합니다.', 'alert-circle'); return; }
+      const gymChallenge=window.__gymChallenge;
+      let chosen = [0,1,2].map(i => Number(document.getElementById(i === 0 ? 'battle-pokemon-select' : `battle-pokemon-select-${i+1}`).value));
+      if(gymChallenge){let ids=[];try{ids=JSON.parse(localStorage.getItem(BATTLE_PARTY_KEY)||'[]');}catch(e){}const saved=ids.map(id=>gameState.myPokemon.findIndex(p=>String(p.uniqueId)===String(id))).filter(i=>i>=0);const uniqueSaved=[...new Set(saved)];const uniqueOwned=gameState.myPokemon.map((p,i)=>i);chosen=uniqueSaved.length?uniqueSaved:uniqueOwned.slice(0,3);if(chosen.length===0)chosen=[0];}
+      if (!gymChallenge && new Set(chosen).size !== 3) { showToast('서로 다른 포켓몬 3마리를 선택해주세요.', 'alert-circle'); return; }
       const playerTeam = chosen.map(i => gameState.myPokemon[i]);
+      if(gymChallenge) gymChallenge.startedAt=Date.now();
       const enemyBases = [...GEN1_POKEMON].sort(() => Math.random() - 0.5).slice(0,3);
       const difficulty = Math.max(0.58, Math.min(2.0, 0.72 + (rankData.level - 1) * 0.035 + rankData.totalSets * 0.005));
-      const enemyTeam = enemyBases.map(base => ({ baseId: base.id, name: base.name, type: base.type, cp: Math.max(10, Math.floor((playerTeam.reduce((sum,p)=>sum+(Number(p.cp)||200),0)/3) * difficulty * (0.72 + Math.random()*0.36))), shiny: false }));
+      const enemyTeam = gymChallenge ? [makeGymBoss()] : enemyBases.map(base => ({ baseId: base.id, name: base.name, type: base.type, cp: Math.max(10, Math.floor((playerTeam.reduce((sum,p)=>sum+(Number(p.cp)||200),0)/3) * difficulty * (0.72 + Math.random()*0.36))), shiny: false }));
       const mine = playerTeam[0], enemy = enemyTeam[0];
       const ps = battleStats(mine), es = battleStats(enemy);
       const move=moveProfile(mine), enemyMove=moveProfile(enemy);
-      battleState = { mine, enemy, playerTeam, enemyTeam, playerIndex:0, enemyIndex:0, mode, move, enemyMove, playerStats: ps, enemyStats: es, playerHp: ps.hp, enemyHp: es.hp, energy: 0, enemyEnergy: 0, chargedMoves: ensureGOMoves(mine).chargedMoves, enemyChargedMoves: ensureGOMoves(enemy).chargedMoves, shields: 2, enemyShields: 2, pendingEnemyCharge:false, over: false, difficulty, lastMessage: '' };
+      battleState = { mine, enemy, playerTeam, enemyTeam, playerIndex:0, enemyIndex:0, mode, move, enemyMove, playerStats: ps, enemyStats: es, playerHp: ps.hp, enemyHp: es.hp, energy: 0, enemyEnergy: 0, chargedMoves: ensureGOMoves(mine).chargedMoves, enemyChargedMoves: ensureGOMoves(enemy).chargedMoves, shields: 2, enemyShields: gymChallenge ? 1 : 2, pendingEnemyCharge:false, over: false, difficulty, lastMessage: '' };
       document.getElementById('battle-setup').classList.add('hidden'); document.getElementById('battle-arena').classList.remove('hidden'); document.getElementById('battle-leave-btn').classList.remove('hidden');
       document.getElementById('battle-controls').classList.toggle('hidden', mode === 'classic');
       document.getElementById('battle-incoming-charge').classList.remove('active');
@@ -3487,7 +3788,7 @@
       setAnimatedPokemonImage(document.getElementById('battle-player-img'), mine); setAnimatedPokemonImage(document.getElementById('battle-enemy-img'), enemy);
       document.getElementById('battle-player-name').textContent = `${mine.shiny ? '✨ ' : ''}${mine.name} (1/3)`; document.getElementById('battle-player-cp').textContent = `CP ${mine.cp}`;
       document.getElementById('battle-enemy-name').textContent = `${enemy.name} (1/3)`; document.getElementById('battle-enemy-cp').textContent = `CP ${enemy.cp}`;
-      document.getElementById('battle-log').textContent = `3대3 배틀 시작! 상대의 ${enemy.name}이(가) 나왔다. 내 포켓몬이 쓰러지면 다음 포켓몬이 자동으로 출전합니다.`;
+      document.getElementById('battle-log').textContent = gymChallenge ? `체육관 배틀 시작! 관장 포켓몬 1마리 · 관장 실드 1개` : `3대3 배틀 시작! 상대의 ${enemy.name}이(가) 나왔다. 내 포켓몬이 쓰러지면 다음 포켓몬이 자동으로 출전합니다.`;
       updateBattleBars();
       if (mode === 'go') { stopGoEnemyAI(); goEnemyTimer = setInterval(() => { if (battleState && !battleState.over && battleState.mode === 'go' && !battleState.pendingEnemyCharge && !battleState.chargeMiniGameActive) { const msg = enemyTurn(); if (msg) document.getElementById('battle-log').textContent = msg; updateBattleBars(); } }, 900); }
     }
@@ -3703,15 +4004,22 @@
       saveGame(false);
     }
 
-    function classicRun() { if(battleState && !battleState.over) { stopGoEnemyAI(); battleState.over=true; document.getElementById('battle-controls').classList.add('hidden'); document.getElementById('battle-classic-controls').classList.add('hidden'); document.getElementById('battle-finish-btn').classList.remove('hidden'); document.getElementById('battle-log').textContent='무사히 배틀에서 도망쳤다.'; } }
+    function classicRun() { if(battleState && !battleState.over) { stopGoEnemyAI(); battleState.over=true; document.getElementById('battle-controls').classList.add('hidden'); document.getElementById('battle-classic-controls').classList.add('hidden'); if(!window.__gymChallenge) document.getElementById('battle-finish-btn').classList.remove('hidden'); document.getElementById('battle-log').textContent='무사히 배틀에서 도망쳤다.'; } }
 
     function finishBattle(won, message) {
       if (!battleState || battleState.over) return; battleState.over = true; stopGoEnemyAI();
       if (won) { trainerBattleWins++; localStorage.setItem('gen1TrainerBattleWins', String(trainerBattleWins)); }
       if (battleState && !battleState.rankRecorded) { battleState.rankRecorded = true; recordRankBattle(won); }
-      document.getElementById('battle-controls').classList.add('hidden'); document.getElementById('battle-classic-controls').classList.add('hidden'); document.getElementById('battle-finish-btn').classList.remove('hidden');
+      document.getElementById('battle-controls').classList.add('hidden'); document.getElementById('battle-classic-controls').classList.add('hidden');
+      const gymChallenge=window.__gymChallenge;
+      if(!gymChallenge) document.getElementById('battle-finish-btn').classList.remove('hidden'); else document.getElementById('battle-finish-btn').classList.add('hidden');
       document.getElementById('battle-log').textContent = `${message} ${won ? '🎉 승리! XP 250과 별의모래 300을 획득했다!' : '😵 패배… 포켓몬을 강화하고 다시 도전해 보자!'}`;
       if (won) { addXP(250); gameState.player.stardust += 300; playSound('catch'); }
+      if(gymChallenge){
+        if(won){const elapsed=Math.max(1,Math.ceil((Date.now()-gymChallenge.startedAt)/60000));const coins=Math.min(60,elapsed);gameState.player.pokecoins=(Number(gameState.player.pokecoins)||0)+coins;const g=gymChallenge.gym;if(g){g.defeated=true;gameState.mapElements.gyms=gameState.mapElements.gyms.filter(x=>x.id!==g.id);}const last=battleState&&battleState.enemyTeam&&battleState.enemyTeam[battleState.enemyTeam.length-1];const boss=last||makeGymBoss();const base=GEN1_POKEMON.find(x=>x.id===boss.baseId)||GEN1_POKEMON[0];const cp=calculateWildSpawnCP(base,boss.ivAtk||0,boss.ivDef||0,boss.ivHp||0);gymBossToCatch={...boss,cp,uniqueId:Date.now()+Math.random()};document.getElementById('battle-log').textContent+=` 체육관 보상: 포켓코인 ${coins}개! 관장의 ${boss.name}을(를) 포획할 수 있어요.`;setTimeout(()=>{const modal=document.getElementById('battle-modal');modal.classList.add('hidden');modal.classList.remove('flex');closeGymModal();if(gymBossToCatch){const b=gymBossToCatch;gymBossToCatch=null;startEncounter(b);}},900);}
+        else {document.getElementById('battle-log').textContent+=' 이번 도전은 패배로 끝났습니다.';}
+        window.__gymChallenge=null;window.__gymPromptOpen=false;
+      }
       updateHUD(); saveGame(false);
     }
 
@@ -3729,29 +4037,37 @@
         });ensureGOMoves(gameState.myPokemon[0]);
         gameState.pokedexCaught.add(25);
       }
-      // One-time bonus for the player's box: Dialga, Palkia, and Arceus.
-      // The marker prevents duplicates on later reloads while the save remains intact.
-      const boxBonusKey = 'pokemon-go-sinnoh-legendary-box-bonus-v1';
-      if (!localStorage.getItem(boxBonusKey)) {
-        [
-          { id: 483, name: '디아루가', type: '강철/드래곤' },
-          { id: 484, name: '펄기아', type: '물/드래곤' },
-          { id: 493, name: '아르세우스', type: '노말' }
-        ].forEach((species, index) => {
-          const pokemon = {
-            uniqueId: Date.now() + index + Math.random(), baseId: species.id,
-            name: species.name, type: species.type, cp: 4000,
-            ivPct: 100, ivAtk: 15, ivDef: 15, ivHp: 15,
-            shiny: false, caughtAt: '특별 보너스'
-          };
-          gameState.myPokemon.push(pokemon);
-          gameState.pokedexCaught.add(species.id);
-          ensureGOMoves(pokemon);
-        });
-        try { localStorage.setItem(boxBonusKey, 'claimed'); } catch (e) {}
+      // One-time welcome grant: existing and new saves receive 100 coins once.
+      // The claim flag is stored in player data, so it travels with local/online saves.
+      if (!gameState.player.startingCoinsClaimed) {
+        gameState.player.pokecoins = Math.max(0, Number(gameState.player.pokecoins) || 0) + 100;
+        gameState.player.startingCoinsClaimed = true;
+        window.__welcomeCoinsGrantedNow = true;
       }
       window.__gameReady = true;
-      updateHUD(); renderPokemonBox(); renderPokedexGrid();
+      refreshDailyGymPasses(); updateHUD(); renderPokemonBox(); renderPokedexGrid();
+      if (window.__welcomeCoinsGrantedNow) showToast('처음 시작 보너스 포켓코인 100개를 받았어요!','gift');
+      // 체육관 테스트용 포켓코인 100개: 세이브당 1회 지급합니다.
+      if (!gameState.player.gymTestCoins100Claimed) {
+        gameState.player.pokecoins = Math.max(0, Number(gameState.player.pokecoins) || 0) + 100;
+        gameState.player.gymTestCoins100Claimed = true;
+        saveGame(false); updateHUD(); renderShop();
+        showToast('체육관 테스트용 포켓코인 100개 지급!','gift');
+      }
+      // Recovery safeguard: make sure the map is painted immediately on startup,
+      // and that a loaded save with an empty/invalid nearby-spawn list gets fresh wild Pokémon.
+      try {
+        if (!gameState.mapElements) gameState.mapElements = { pokemon: [], pokestops: [] };
+        if (!Array.isArray(gameState.mapElements.pokemon)) gameState.mapElements.pokemon = [];
+        if (!Array.isArray(gameState.mapElements.pokestops)) gameState.mapElements.pokestops = [];
+        if (typeof canvas !== 'undefined' && canvas) {
+          canvas.width = Math.max(1, window.innerWidth);
+          canvas.height = Math.max(1, window.innerHeight);
+        }
+        if (gameState.mapElements.pokemon.length < 6) updateSpawns();
+        if (gameState.mapElements.pokemon.length === 0) updateSpawns();
+        renderMap();
+      } catch (mapRecoveryError) { console.warn('Map startup recovery:', mapRecoveryError); }
       saveGame(false);
       gameLoopRunning = true;
       requestAnimationFrame(gameLoop);
@@ -3759,5 +4075,233 @@
       window.addEventListener('beforeunload', () => saveGame(false));
     };
   </script>
+
+  <style id="mobile-scroll-profile-style">
+    html,body{width:100%;height:100%;overflow:hidden}
+    .modal-scroll-fix{overflow-y:auto!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;max-height:calc(100dvh - 20px)}
+    @media(max-width:700px),(orientation:portrait){
+      #game-container{min-height:100dvh}
+      #pokemon-modal,#detail-modal,#pokedex-modal,#bag-modal,#battle-modal,#trainer-profile-modal,#buddy-modal{align-items:flex-start!important;overflow-y:auto!important;overscroll-behavior-y:contain;padding:10px!important;-webkit-overflow-scrolling:touch;}
+      #pokemon-modal>div,#detail-modal>div,#pokedex-modal>div,#bag-modal>div,#battle-modal>div,#trainer-profile-modal>div,#buddy-modal>div{max-height:calc(100dvh - 20px)!important;overflow-y:auto!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+      #pokemon-modal button,#detail-modal button,#pokedex-modal button,#bag-modal button,#battle-modal button{touch-action:manipulation}
+    }
+  </style>
+
+  <style id="battle-setup-scroll-hard-fix">
+    /* Keep the battle setup page vertically scrollable on mobile browsers. */
+    #battle-modal { overflow-x:hidden !important; overflow-y:auto !important; -webkit-overflow-scrolling:touch !important; overscroll-behavior-y:contain; touch-action:pan-y; }
+    #battle-modal:not(:has(#battle-arena.go-mode)) .battle-panel { height:100dvh !important; max-height:100dvh !important; min-height:0 !important; overflow:hidden !important; display:flex !important; flex-direction:column !important; }
+    #battle-modal:not(:has(#battle-arena.go-mode)) .battle-panel > div:nth-child(2) { flex:1 1 auto !important; min-height:0 !important; height:auto !important; max-height:none !important; overflow-x:hidden !important; overflow-y:scroll !important; -webkit-overflow-scrolling:touch !important; overscroll-behavior-y:contain; touch-action:pan-y !important; }
+    #battle-modal:not(:has(#battle-arena.go-mode)) #battle-setup { padding-bottom:calc(24px + env(safe-area-inset-bottom)) !important; }
+    #battle-modal:not(:has(#battle-arena.go-mode)) .battle-panel > div:nth-child(2) * { touch-action:pan-y; }
+    #battle-modal:not(:has(#battle-arena.go-mode)) .battle-panel > div:nth-child(2) button,
+    #battle-modal:not(:has(#battle-arena.go-mode)) .battle-panel > div:nth-child(2) select { touch-action:manipulation; }
+  </style>
+
+  <style id="battle-setup-scroll-final-fix">
+    /* Final mobile fix: make the whole setup modal the scroll container. */
+    #battle-modal:not(.hidden):has(#battle-setup:not(.hidden)) {
+      display:flex !important; align-items:flex-start !important; justify-content:flex-start !important;
+      overflow-x:hidden !important; overflow-y:auto !important; height:100dvh !important;
+      max-height:100dvh !important; padding:0 0 calc(18px + env(safe-area-inset-bottom)) !important;
+      -webkit-overflow-scrolling:touch !important; overscroll-behavior-y:contain !important;
+      touch-action:pan-y !important;
+    }
+    #battle-modal:not(.hidden):has(#battle-setup:not(.hidden)) .battle-panel {
+      display:flex !important; flex:0 0 auto !important; flex-direction:column !important;
+      width:100% !important; height:auto !important; min-height:100dvh !important;
+      max-height:none !important; overflow:visible !important;
+    }
+    #battle-modal:not(.hidden):has(#battle-setup:not(.hidden)) .battle-panel > div:nth-child(2) {
+      display:block !important; flex:0 0 auto !important; height:auto !important;
+      min-height:0 !important; max-height:none !important; overflow:visible !important;
+      touch-action:pan-y !important; padding-bottom:calc(30px + env(safe-area-inset-bottom)) !important;
+    }
+    #battle-modal:not(.hidden):has(#battle-setup:not(.hidden)) #battle-setup {
+      overflow:visible !important; height:auto !important; padding-bottom:12px !important;
+    }
+    #battle-modal:has(#battle-setup:not(.hidden)) #battle-setup * { touch-action:pan-y; }
+    #battle-modal:has(#battle-setup:not(.hidden)) #battle-setup button,
+    #battle-modal:has(#battle-setup:not(.hidden)) #battle-setup select { touch-action:manipulation; }
+  </style>
+  <div id="trainer-profile-modal" class="fixed inset-0 z-[80] hidden items-start justify-center bg-black/65 backdrop-blur-sm p-3" onclick="if(event.target===this)closeTrainerProfile()">
+    <div class="w-full max-w-lg bg-slate-50 rounded-3xl shadow-2xl overflow-y-auto modal-scroll-fix">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 flex items-center justify-between sticky top-0 z-10"><div><div class="text-xs opacity-80 font-bold">TRAINER PROFILE</div><h2 class="text-2xl font-black">내 아바타</h2></div><button onclick="closeTrainerProfile()" class="text-2xl px-3 py-1 rounded-xl bg-white/20">×</button></div>
+      <div class="p-4 space-y-4">
+        <div class="flex items-center gap-4 bg-white p-4 rounded-2xl border"><div class="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-orange-500 grid place-items-center text-4xl">🧢</div><div><div class="font-black text-xl">트레이너</div><div id="profile-level" class="font-bold text-blue-700">레벨 1</div><div id="profile-xp" class="text-sm text-slate-500">XP 0 / 1000</div></div></div>
+        <div class="grid grid-cols-2 gap-3"><div class="bg-white p-4 rounded-2xl border"><div class="text-sm text-slate-500">⭐ 별의모래</div><div id="profile-stardust" class="text-xl font-black text-purple-700">0</div></div><div class="bg-white p-4 rounded-2xl border"><div class="text-sm text-slate-500">📘 잡은 포켓몬 종류</div><div id="profile-caught" class="text-xl font-black">0</div></div><div class="bg-white p-4 rounded-2xl border"><div class="text-sm text-slate-500">🎒 보유 포켓몬</div><div id="profile-owned" class="text-xl font-black">0</div></div><div class="bg-white p-4 rounded-2xl border"><div class="text-sm text-slate-500">🍓 라즈열매</div><div id="profile-berries" class="text-xl font-black">0</div></div></div>
+        <button onclick="openBuddyScreen()" class="w-full rounded-2xl bg-emerald-600 text-white p-4 text-left font-black shadow"><span class="text-xl">🐾 파트너</span><div id="profile-buddy-status" class="font-medium text-sm opacity-90 mt-1">파트너를 선택하세요</div><div class="text-xs opacity-80 mt-1">파트너 선택 · 간식 주기 · 사탕 획득</div></button>
+        <button onclick="closeTrainerProfile();openModal('pokemon-modal')" class="w-full rounded-xl bg-white border p-3 font-bold">포켓몬 보관함 보기</button>
+      </div>
+    </div>
+  </div>
+  <div id="buddy-modal" class="fixed inset-0 z-[90] hidden items-start justify-center bg-black/65 backdrop-blur-sm p-3" onclick="if(event.target===this)closeBuddyScreen()">
+    <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-y-auto modal-scroll-fix">
+      <div class="bg-emerald-600 text-white p-4 flex justify-between items-center sticky top-0 z-10"><div><div class="text-xs font-bold opacity-80">BUDDY POKÉMON</div><h2 class="text-2xl font-black">파트너 포켓몬</h2></div><button onclick="closeBuddyScreen()" class="text-2xl px-3 py-1 rounded-xl bg-white/20">×</button></div>
+      <div class="p-4 space-y-3"><div id="buddy-current-card" class="rounded-2xl bg-emerald-50 border border-emerald-200 p-4">아직 파트너가 없습니다.</div><div class="grid grid-cols-2 gap-2"><button onclick="feedBuddyBerry()" class="rounded-xl bg-rose-500 text-white font-black p-3">🍓 라즈열매 주기</button><button onclick="unsetBuddy()" class="rounded-xl bg-slate-100 border font-bold p-3">파트너 해제</button></div><p class="text-sm text-slate-500">라즈열매 3개를 주면 30분 동안 파트너가 캐릭터를 따라다녀요. 파트너와 함께 이동한 거리 500 단위마다 해당 포켓몬의 사탕 1개를 얻습니다.</p><h3 class="font-black text-lg">파트너 선택</h3><div id="buddy-pokemon-list" class="grid grid-cols-1 gap-2"></div><div class="border-t pt-4 mt-4 space-y-3"><h3 class="font-black text-lg">⚡ 메가진화</h3><div id="mega-summary" class="text-sm text-slate-600">메가진화 가능한 포켓몬을 선택하세요.</div><div id="mega-energy-list" class="grid grid-cols-1 gap-2"></div><button id="mega-evolve-btn" onclick="megaEvolveBuddy()" class="w-full rounded-xl bg-fuchsia-600 text-white font-black p-3">메가진화</button><p class="text-xs text-slate-500">첫 메가진화는 메가 에너지 200개가 필요해요. 메가진화는 18시간 유지되며, 최초 진화 후 메가 레벨에 따라 무료 재진화 대기 시간이 줄어들어요.</p></div></div>
+    </div>
+  </div>
+  <div id="buddy-follow-sprite" class="hidden absolute z-10 pointer-events-none drop-shadow-lg" style="left:calc(50% - 82px);top:calc(50% + 8px);width:64px;height:64px" aria-label="따라오는 파트너"><img id="buddy-follow-img" alt="파트너 포켓몬" style="width:100%;height:100%;object-fit:contain;image-rendering:auto" /></div>
+  <script>
+  (function(){
+    const $=id=>document.getElementById(id);
+    const BUDDY_KEY='gen1BuddyStateV1';
+    let buddy={id:null,walked:0,lastX:null,lastY:null,activeUntil:0};
+    try{buddy=Object.assign(buddy,JSON.parse(localStorage.getItem(BUDDY_KEY)||'{}'));}catch(e){}
+    function persistBuddy(){try{localStorage.setItem(BUDDY_KEY,JSON.stringify(buddy));}catch(e){} try{if(typeof saveGame==='function')saveGame(false);}catch(e){}}
+    function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+    window.openTrainerProfile=function(){
+      const p=gameState.player,owned=gameState.myPokemon||[];
+      $('profile-level').textContent='레벨 '+(p.level||1);$('profile-xp').textContent=`XP ${(p.xp||0).toLocaleString()} / ${(p.nextXp||1000).toLocaleString()}`;
+      $('profile-stardust').textContent=(p.stardust||0).toLocaleString();$('profile-caught').textContent=(gameState.pokedexCaught?.size||0).toLocaleString();$('profile-owned').textContent=owned.length.toLocaleString();$('profile-berries').textContent=(gameState.inventory.berry||0).toLocaleString();
+      const b=owned.find(x=>String(x.uniqueId)===String(buddy.id));$('profile-buddy-status').textContent=b?`현재 파트너: ${b.name}${buddy.activeUntil>Date.now()?' · 따라오는 중':''}`:'파트너를 선택하세요';
+      $('trainer-profile-modal').classList.remove('hidden');$('trainer-profile-modal').classList.add('flex');
+    };
+    window.closeTrainerProfile=function(){$('trainer-profile-modal').classList.add('hidden');$('trainer-profile-modal').classList.remove('flex');};
+    window.openBuddyScreen=function(){closeTrainerProfile();renderBuddyScreen();$('buddy-modal').classList.remove('hidden');$('buddy-modal').classList.add('flex');};
+    window.closeBuddyScreen=function(){$('buddy-modal').classList.add('hidden');$('buddy-modal').classList.remove('flex');openTrainerProfile();};
+    function renderBuddyScreen(){
+      const owned=gameState.myPokemon||[],cur=owned.find(x=>String(x.uniqueId)===String(buddy.id));
+      $('buddy-current-card').innerHTML=cur?`<div class="flex items-center gap-3"><div class="text-4xl">${cur.shiny?'✨':''}🐾</div><div class="flex-1"><div class="font-black text-lg">${esc(cur.name)}</div><div class="text-sm text-slate-600">CP ${Number(cur.cp)||0} · 사탕 진행도 ${Math.floor(buddy.walked||0)}/500</div><div class="text-xs ${buddy.activeUntil>Date.now()?'text-emerald-700':'text-slate-500'}">${buddy.activeUntil>Date.now()?'🍓 '+Math.ceil((buddy.activeUntil-Date.now())/60000)+'분 동안 따라오는 중':'간식을 주면 30분 동안 따라와요'}</div></div></div>`:'<div class="font-bold">파트너가 선택되지 않았어요. 아래 목록에서 골라 주세요.</div>';
+      $('buddy-pokemon-list').innerHTML=owned.length?owned.map(p=>`<button class="w-full flex items-center gap-3 p-3 rounded-xl border text-left ${String(p.uniqueId)===String(buddy.id)?'border-emerald-500 bg-emerald-50':'bg-white'}" onclick="selectBuddy('${String(p.uniqueId).replace(/'/g,'')}')"><span class="text-2xl">${p.shiny?'✨':''}🐾</span><span class="flex-1"><b>${esc(p.name)}</b><span class="block text-xs text-slate-500">CP ${Number(p.cp)||0}</span></span><span class="font-bold text-emerald-700">${String(p.uniqueId)===String(buddy.id)?'선택됨':'선택'}</span></button>`).join(''):'<div class="text-sm text-slate-500 p-3">보유 포켓몬이 없어요. 먼저 포켓몬을 잡아 주세요.</div>';
+    }
+    window.selectBuddy=function(id){const p=gameState.myPokemon.find(x=>String(x.uniqueId)===String(id));if(!p){showToast('해당 포켓몬을 찾을 수 없어요.');return;}buddy.id=p.uniqueId;buddy.walked=0;buddy.lastX=gameState.player.x;buddy.lastY=gameState.player.y;persistBuddy();renderBuddyScreen();showToast(`${p.name}이(가) 파트너가 되었어요!`);};
+    window.unsetBuddy=function(){buddy.id=null;buddy.activeUntil=0;persistBuddy();renderBuddyScreen();showToast('파트너를 해제했어요.');};
+    window.feedBuddyBerry=function(){if(!buddy.id||!gameState.myPokemon.some(x=>String(x.uniqueId)===String(buddy.id))){showToast('먼저 파트너 포켓몬을 선택해 주세요.');return;}if((gameState.inventory.berry||0)<3){showToast('라즈열매가 3개 필요해요.');return;}gameState.inventory.berry-=3;buddy.activeUntil=Date.now()+30*60*1000;persistBuddy();updateHUD();renderBuddyScreen();showToast('라즈열매 3개를 줬어요! 파트너가 30분 동안 따라와요.');};
+    // Track world movement independent of the existing movement loop.
+    setInterval(()=>{try{
+      if(!gameState||!buddy.id)return;
+      const x=Number(gameState.player.x)||0,y=Number(gameState.player.y)||0;
+      if(buddy.lastX===null||buddy.lastY===null){buddy.lastX=x;buddy.lastY=y;return;}
+      const d=Math.hypot(x-buddy.lastX,y-buddy.lastY);buddy.lastX=x;buddy.lastY=y;
+      if(d>0&&d<100){buddy.walked=(Number(buddy.walked)||0)+d;while(buddy.walked>=500){buddy.walked-=500;const p=gameState.myPokemon.find(q=>String(q.uniqueId)===String(buddy.id));if(!p){buddy.id=null;break;}gameState.player.candies=gameState.player.candies||{};const cid=String(p.baseId||p.id||p.name);gameState.player.candies[cid]=(Number(gameState.player.candies[cid])||0)+1;showToast(`${p.name} 파트너 사탕 +1!`,'gift');if(MEGA_IDS[Number(p.baseId||p.id)]){const eid=String(p.baseId||p.id);megaData.energy[eid]=megaEnergy(eid)+200;showToast(`${p.name} 메가 에너지 +200!`,'gift');saveMega();}try{saveGame(false);}catch(e){}}persistBuddy();}
+      (gameState.myPokemon||[]).forEach(q=>{if(q.megaActiveUntil&&q.megaActiveUntil<=Date.now()){const r=megaRecord(q);q.cp=Number(r.baseCp)||q.cp;delete q.megaActiveUntil;delete q.megaName;saveMega();}});
+      const sprite=$('buddy-follow-sprite');if(sprite){if(buddy.id&&buddy.activeUntil>Date.now()){sprite.classList.remove('hidden');const elapsed=Date.now()/650;sprite.style.left=`calc(50% - ${68+Math.sin(elapsed)*13}px)`;sprite.style.top=`calc(50% + ${8+Math.cos(elapsed)*5}px)`;}else sprite.classList.add('hidden');}
+    }catch(e){}},1000);
+    // Mega Evolution system: species energy + per-Pokemon Mega Level and cooldown.
+    const MEGA_KEY='gen1MegaProgressV1';
+    const MEGA_IDS={
+      3:{name:'메가이상해꽃',sprite:10033},6:{name:'메가리자몽 X',sprite:10034},9:{name:'메가거북왕',sprite:10036},
+      15:{name:'메가독침붕',sprite:10040},18:{name:'메가피죤투',sprite:10073},
+      65:{name:'메가후딘',sprite:10065},80:{name:'메가야도란',sprite:10080},94:{name:'메가팬텀',sprite:10038},
+      115:{name:'메가캥카',sprite:10039},127:{name:'메가쁘사이저',sprite:10078},130:{name:'메가갸라도스',sprite:10041},142:{name:'메가프테라',sprite:10049},
+      181:{name:'메가전룡',sprite:10045},208:{name:'메가강철톤',sprite:10072},212:{name:'메가핫삼',sprite:10046},214:{name:'메가헤라크로스',sprite:10070},
+      229:{name:'메가헬가',sprite:10048},248:{name:'메가마기라스',sprite:10049},
+      254:{name:'메가나무킹',sprite:10065},257:{name:'메가번치코',sprite:10050},260:{name:'메가대짱이',sprite:10064},282:{name:'메가가디안',sprite:10051},
+      302:{name:'메가깜까미',sprite:10066},303:{name:'메가입치트',sprite:10052},306:{name:'메가보스로라',sprite:10053},308:{name:'메가요가램',sprite:10054},310:{name:'메가썬더볼트',sprite:10055},
+      319:{name:'메가샤크니아',sprite:10070},323:{name:'메가폭타',sprite:10087},334:{name:'메가파비코리',sprite:10067},
+      354:{name:'메가다크펫',sprite:10069},359:{name:'메가앱솔',sprite:10065},362:{name:'메가얼음귀신',sprite:10074},373:{name:'메가보만다',sprite:10089},376:{name:'메가메타그로스',sprite:10076},
+      380:{name:'메가라티아스',sprite:10062},381:{name:'메가라티오스',sprite:10063},384:{name:'메가레쿠쟈',sprite:10079},
+      428:{name:'메가이어롭',sprite:10088},445:{name:'메가한카리아스',sprite:10071},448:{name:'메가루카리오',sprite:10059},460:{name:'메가눈설왕',sprite:10060},
+      475:{name:'메가엘레이드',sprite:10068},531:{name:'메가다부니',sprite:10069},719:{name:'메가디안시',sprite:10075}
+    };
+    let megaData={energy:{},pokemon:{}};try{megaData=Object.assign(megaData,JSON.parse(localStorage.getItem(MEGA_KEY)||'{}'));}catch(e){}
+    const megaEnergy=id=>Number(megaData.energy[String(id)]||0);
+    function saveMega(){try{localStorage.setItem(MEGA_KEY,JSON.stringify(megaData));}catch(e){} try{if(typeof saveGame==='function')saveGame(false);}catch(e){}}
+    function megaInfo(p){return p?MEGA_IDS[Number(p.baseId||p.id)]||null:null;}
+    function megaRecord(p){const k=String(p.uniqueId);if(!megaData.pokemon[k])megaData.pokemon[k]={level:0,count:0,activeUntil:0,readyAt:0,baseCp:Number(p.cp)||0};return megaData.pokemon[k];}
+    function renderMega(){const p=(gameState.myPokemon||[]).find(x=>String(x.uniqueId)===String(buddy.id));const info=megaInfo(p);const sum=$('mega-summary'),list=$('mega-energy-list'),btn=$('mega-evolve-btn');if(!sum||!list||!btn)return;
+      if(!p||!info){sum.textContent='현재 파트너는 메가진화를 할 수 없어요. 메가진화 가능한 포켓몬을 파트너로 선택하세요.';list.innerHTML=Object.keys(MEGA_IDS).map(id=>{const q=(gameState.myPokemon||[]).find(x=>Number(x.baseId||x.id)===Number(id));return q?`<div class="rounded-xl border p-3 flex items-center gap-3"><img src="${getPokemonImage(q)}" style="width:42px;height:42px;object-fit:contain"><div class="flex-1"><b>${esc(q.name)}</b><div class="text-xs text-slate-500">${MEGA_IDS[id].name} · 에너지 ${megaEnergy(id)}</div></div><button onclick="selectBuddy('${String(q.uniqueId).replace(/'/g,'')}')" class="rounded-lg bg-emerald-600 text-white px-3 py-2 text-sm font-bold">파트너</button></div>`:''}).filter(Boolean).join('')||'<div class="text-sm text-slate-500">보유 중인 메가진화 가능 포켓몬이 없어요.</div>';btn.disabled=true;btn.classList.add('opacity-50');return;}
+      const r=megaRecord(p),remaining=Math.max(0,r.readyAt-Date.now()),active=r.activeUntil>Date.now();sum.innerHTML=`<div class="flex items-center gap-3"><img src="${getPokemonAnimatedUrl(info.sprite,!!p.shiny)}" onerror="this.src='${getPokemonImage(p)}'" style="width:70px;height:70px;object-fit:contain"><div><b class="text-base">${info.name}</b><div>메가 레벨 ${r.level||0} · 진화 횟수 ${r.count||0}</div><div>메가 에너지: <b>${megaEnergy(p.baseId||p.id)}</b></div><div>${active?'메가진화 중 · '+Math.ceil((r.activeUntil-Date.now())/60000)+'분 남음':remaining>0?'무료 재진화까지 '+Math.ceil(remaining/3600000)+'시간':'재진화 가능'}</div></div></div>`;
+      list.innerHTML=`<div class="rounded-xl bg-fuchsia-50 border border-fuchsia-200 p-3 text-sm">첫 진화 비용: 200 에너지 · 포획 보너스: 해당 종 에너지 +10 · 파트너 거리 보상: 사탕 +1 및 에너지 +200</div>`;
+      btn.disabled=active;btn.classList.toggle('opacity-50',active);btn.textContent=active?'메가진화 중':r.level===0?'메가진화 (에너지 200)':remaining>0?'메가진화 (에너지 200 또는 대기)':'메가진화 (무료)';
+    }
+    window.megaEvolveBuddy=function(){const p=(gameState.myPokemon||[]).find(x=>String(x.uniqueId)===String(buddy.id)),info=megaInfo(p);if(!p||!info){showToast('메가진화 가능한 파트너를 선택해 주세요.');return;}const r=megaRecord(p);if(r.activeUntil>Date.now()){showToast('이미 메가진화 중이에요.');return;}const energyId=String(p.baseId||p.id),left=Math.max(0,r.readyAt-Date.now());if(r.level===0||left>0){if(megaEnergy(energyId)<200){showToast('메가 에너지 200개가 필요해요.');return;}megaData.energy[energyId]=megaEnergy(energyId)-200;}else{ /* ready after rest: free */ }
+      r.count=(r.count||0)+1;r.level=r.count>=30?4:r.count>=7?3:r.count>=2?2:1;r.activeUntil=Date.now()+18*60*60*1000;const days=[5,3,2,1][Math.max(0,Math.min(3,r.level-1))];r.readyAt=r.activeUntil+days*24*60*60*1000;
+      p.megaActiveUntil=r.activeUntil;p.cp=Math.round((Number(r.baseCp)||Number(p.cp)||0)*1.3);p.megaName=info.name;saveMega();try{renderBuddyScreen();}catch(e){}renderMega();updateHUD();renderPokemonBox();showToast(`${info.name} 메가진화! CP가 상승했고 18시간 유지돼요.`,'gift');};
+    // Allow Mega Evolution directly from any eligible Pokémon in the Box (not only the buddy).
+    window.renderDetailMega=function(p){
+      const panel=document.getElementById('detail-mega-panel'),img=document.getElementById('detail-mega-img'),status=document.getElementById('detail-mega-status'),btn=document.getElementById('detail-mega-btn');
+      if(!panel||!img||!status||!btn)return;const info=megaInfo(p);if(!info){panel.classList.add('hidden');return;}panel.classList.remove('hidden');
+      const r=megaRecord(p),active=(r.activeUntil||p.megaActiveUntil||0)>Date.now(),left=Math.max(0,(r.readyAt||0)-Date.now());
+      img.src=active?window.__megaSpriteUrl(p):getPokemonImage(p);img.onerror=function(){this.onerror=null;this.src=getPokemonImage(p);};
+      status.innerHTML=`<b>${info.name}</b><div>메가진화 가능 · 메가 레벨 ${r.level||0}</div><div>메가 에너지 ${megaEnergy(p.baseId||p.id)}개</div><div>${active?'메가진화 중 · '+Math.ceil(((r.activeUntil||p.megaActiveUntil)-Date.now())/60000)+'분 남음':left>0?'무료 재진화까지 '+Math.ceil(left/3600000)+'시간':'현재 일반 모습 · 메가진화 가능'}</div><div>진화 유지 시간: 18시간</div>`;
+      btn.disabled=active;btn.textContent=active?'메가진화 중':(r.level===0||left>0?'메가진화 (에너지 200)':'메가진화 (무료)');btn.classList.toggle('opacity-50',active);
+    };
+    window.__canMegaPokemon=function(p){return !!megaInfo(p);};
+    window.__megaSpriteUrl=function(p){const info=megaInfo(p);return info?getPokemonAnimatedUrl(info.sprite,!!p.shiny):getPokemonImage(p);};
+    window.__megaInfoForSprite=function(p){return megaInfo(p);};
+    window.megaEvolvePokemon=function(uniqueId){
+      const p=(gameState.myPokemon||[]).find(x=>String(x.uniqueId)===String(uniqueId)),info=megaInfo(p);if(!p||!info){showToast('이 포켓몬은 메가진화를 할 수 없어요.');return;}
+      const r=megaRecord(p);if(r.activeUntil>Date.now()){showToast('이미 메가진화 중이에요.');return;}
+      const energyId=String(p.baseId||p.id),left=Math.max(0,r.readyAt-Date.now());
+      if(r.level===0||left>0){if(megaEnergy(energyId)<200){showToast(`${info.name} 에너지 200개가 필요해요. 현재 ${megaEnergy(energyId)}개입니다.`);return;}megaData.energy[energyId]=megaEnergy(energyId)-200;}
+      r.baseCp=Number(r.baseCp)||Number(p.cp)||0;r.count=(r.count||0)+1;r.level=r.count>=30?4:r.count>=7?3:r.count>=2?2:1;r.activeUntil=Date.now()+18*60*60*1000;const days=[5,3,2,1][Math.max(0,Math.min(3,r.level-1))];r.readyAt=r.activeUntil+days*24*60*60*1000;
+      p.megaActiveUntil=r.activeUntil;p.cp=Math.round(r.baseCp*1.3);p.megaName=info.name;saveMega();renderPokemonBox();try{renderBuddyScreen();}catch(e){}updateHUD();saveGame(false);try{window.renderDetailMega(p);document.getElementById("detail-img").src=window.__megaSpriteUrl(p);document.getElementById("detail-name").textContent=info.name;document.getElementById("detail-cp").textContent=`CP ${p.cp}`;}catch(e){} showToast(`${info.name} 메가진화! 18시간 동안 유지됩니다.`,'gift');
+    };
+    // Capture rewards: +10 species Mega Energy for catchable Mega species.
+    const oldCatchReward=(function(){return null;})();
+    const originalRenderBuddyScreen=renderBuddyScreen;
+    renderBuddyScreen=function(){originalRenderBuddyScreen();renderMega();};
+    // Buddy walking rewards: retain candy and add 200 Mega Energy for eligible partner every 500 movement units.
+    const oldBuddyId=buddy.id;
+    const originalFeedBuddyBerry=window.feedBuddyBerry;
+    // Actual sprite follows the player; it is the selected Pokémon's artwork, not a paw/footstep symbol.
+    const oldFollowInterval=setInterval(()=>{try{const p=(gameState.myPokemon||[]).find(q=>String(q.uniqueId)===String(buddy.id));const img=$('buddy-follow-img');const wrap=$('buddy-follow-sprite');if(img&&wrap){if(p&&buddy.activeUntil>Date.now()){wrap.classList.remove('hidden');const info=megaInfo(p);const sid=(p.megaActiveUntil>Date.now()&&info)?Number(info.sprite):getPokemonSpriteId(p);img.dataset.spriteFallback='0';img.onerror=function(){const n=Number(this.dataset.spriteFallback||0);if(n===0){this.dataset.spriteFallback='1';this.src=getPokemonRetroStaticUrl(sid,!!p.shiny);}else if(n===1){this.dataset.spriteFallback='2';this.src=getPokemonSpriteUrl(sid,!!p.shiny);}else{this.onerror=null;this.style.display='none';}};img.style.display='block';img.src=getPokemonAnimatedUrl(sid,!!p.shiny);img.style.transform=`translateY(${Math.sin(Date.now()/170)*3}px)`;}else{wrap.classList.add('hidden');img.removeAttribute('src');}}}catch(e){}},250);
+    // The capture code calls this hook after registering a catch.
+    window.__grantMegaCatchEnergy=function(baseId){if(MEGA_IDS[Number(baseId)]){megaData.energy[String(baseId)]=megaEnergy(baseId)+10;saveMega();}};
+    const oldRenderBox=window.renderPokemonBox;
+    
+    // Home screen and explanation-only, swipe-like tutorial slides (no game mechanics added).
+    const tutorialSlides=[
+      ['🧭','게임 화면','맵에서 캐릭터를 이동해 주변을 탐험하세요. 시작하기를 누르면 기존 게임 화면으로 들어갑니다.'],
+      ['🐾','야생 포켓몬 잡기','맵에 나타난 포켓몬을 선택하고 포획 버튼을 눌러 보관함에 추가하세요. 포켓몬마다 CP와 능력치가 달라요.'],
+      ['🎒','포켓몬 박스와 배틀','보관함에서 포켓몬의 능력치를 확인하고 팀을 준비할 수 있어요. 배틀 메뉴에서 전투 모드를 선택하세요.'],
+      ['','온라인 저장과 Gmail 권한 허용','Supabase 온라인 저장을 이용하려면 계정/로그인 메뉴에서 로그인하세요. Gmail 주소로 가입하거나 로그인할 때 Google 권한 동의 화면이 나오면 계정 선택 후 허용/계속을 눌러야 로그인이 완료될 수 있어요. 권한 화면이 나오지 않으면 현재 로그인 방식의 안내를 따르세요. 브라우저마다 로그인 상태는 별개일 수 있어요.'],
+      ['💾','진행 상황 저장','가능하면 온라인 저장을 이용해 다른 기기에서도 불러오세요. 같은 브라우저에서도 자동 저장이 작동하지만, 온라인 저장은 계정 로그인과 Supabase 설정이 필요합니다.']
+    ];let tutorialIndex=0;
+    window.homeStartExisting=function(){const h=document.getElementById('home-screen');if(h)h.classList.add('hidden');const t=document.getElementById('tutorial-screen');if(t){t.classList.add('hidden');t.classList.remove('flex');}const bm=document.getElementById('battle-modal');if(bm){bm.classList.add('hidden');bm.classList.remove('flex');}['pokemon-modal','detail-modal','pokedex-modal','bag-modal','trainer-profile-modal','buddy-modal'].forEach(id=>{const el=document.getElementById(id);if(el){el.classList.add('hidden');el.classList.remove('flex');}});document.body.classList.remove('modal-open');};
+    window.homeOpenTutorial=function(){tutorialIndex=0;const t=document.getElementById('tutorial-screen');t.classList.remove('hidden');t.classList.add('flex');paintTutorial();};
+    window.homeCloseTutorial=function(){const t=document.getElementById('tutorial-screen');t.classList.add('hidden');t.classList.remove('flex');};
+    function paintTutorial(){const a=tutorialSlides[tutorialIndex];document.getElementById('tutorial-count').textContent=`안내 ${tutorialIndex+1} / ${tutorialSlides.length}`;document.getElementById('tutorial-icon').textContent=a[0];document.getElementById('tutorial-icon').classList.toggle('hidden',!a[0]);document.getElementById('tutorial-title').textContent=a[1];document.getElementById('tutorial-text').textContent=a[2];document.getElementById('tutorial-prev').classList.toggle('hidden',tutorialIndex===0);document.getElementById('tutorial-next').textContent=tutorialIndex===tutorialSlides.length-1?'게임 시작':'다음';}
+    window.tutorialStep=function(delta){if(delta<0){tutorialIndex=Math.max(0,tutorialIndex-1);paintTutorial();return;}if(tutorialIndex<tutorialSlides.length-1){tutorialIndex++;paintTutorial();}else{homeCloseTutorial();homeStartExisting();}};
+    let tutorialTouchX=null;document.getElementById('tutorial-screen').addEventListener('touchstart',e=>{tutorialTouchX=e.changedTouches[0].clientX;},{passive:true});document.getElementById('tutorial-screen').addEventListener('touchend',e=>{if(tutorialTouchX===null)return;const dx=e.changedTouches[0].clientX-tutorialTouchX;tutorialTouchX=null;if(Math.abs(dx)>55)window.tutorialStep(dx<0?1:-1);},{passive:true});
+    // Make tall modal content reachable on touch devices; preserve map's full-screen layout.
+    document.querySelectorAll('#pokemon-modal>div,#detail-modal>div,#pokedex-modal>div,#bag-modal>div,#battle-modal>div').forEach(el=>el.classList.add('modal-scroll-fix'));
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('buddy-modal').classList.contains('hidden'))closeBuddyScreen();else if(!$('trainer-profile-modal').classList.contains('hidden'))closeTrainerProfile();}});
+  })();
+  </script>
+
+
+  <style id="final-modal-visibility-and-select-fix">
+    #battle-modal.hidden { display:none !important; }
+    #battle-modal:not(.hidden) { display:flex; }
+    #battle-modal select, #battle-modal select option { color:#0f172a !important; background-color:#ffffff !important; opacity:1 !important; }
+    #battle-modal select:disabled { color:#475569 !important; -webkit-text-fill-color:#475569 !important; opacity:1 !important; }
+    /* Keep Pokédex, Pokémon box, and item bag overlays centered in the current viewport. */
+    #pokedex-modal:not(.hidden), #pokemon-modal:not(.hidden), #bag-modal:not(.hidden) {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      max-width: none !important;
+      max-height: none !important;
+      margin: 0 !important;
+      padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)) !important;
+      box-sizing: border-box !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
+    #pokedex-modal.hidden, #pokemon-modal.hidden, #bag-modal.hidden { display: none !important; }
+    #pokedex-modal > .glass-panel, #pokemon-modal > .glass-panel, #bag-modal > .glass-panel {
+      position: relative !important;
+      inset: auto !important;
+      margin: auto !important;
+      flex: 0 1 auto !important;
+      width: 100% !important;
+      max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+      transform: none !important;
+    }
+    #pokemon-modal > .glass-panel, #pokedex-modal > .glass-panel { overflow: hidden !important; }
+    #pokedex-grid { min-height: 0 !important; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  </style>
+
 </body>
 </html>
