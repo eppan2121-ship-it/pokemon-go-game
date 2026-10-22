@@ -643,6 +643,28 @@
       <div class="p-3 sm:p-5 space-y-3 flex-1 overflow-y-auto">
         <div id="battle-setup" class="space-y-3">
           <p class="text-sm text-slate-600">배틀 스타일을 선택하세요. 두 방식 모두 전체 화면으로 진행됩니다.</p>
+          <div class="rounded-xl border border-indigo-200 bg-indigo-50 p-3 space-y-2">
+            <div class="font-black text-indigo-950">🌐 친구와 온라인 대전</div>
+            <p class="text-xs text-indigo-900">Supabase 로그인 후 방을 만들거나 친구의 방 코드로 참가하세요. AI 대전은 아래에서 기존처럼 시작할 수 있어요.</p>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" onclick="createPvpRoom()" class="rounded-xl bg-indigo-600 text-white font-black py-2">방 만들기</button>
+              <button type="button" onclick="openPvpJoinChoices()" class="rounded-xl bg-white border border-indigo-300 text-indigo-950 font-black py-2">참가</button>
+            </div>
+            <div id="pvp-join-choices" class="hidden rounded-xl border border-indigo-200 bg-white p-3 space-y-2">
+              <div class="font-black text-indigo-950">어떤 방법으로 참가할까요?</div>
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" onclick="findNearbyPvpRooms()" class="rounded-xl bg-emerald-600 text-white font-black py-2">📡 근처 방 찾기</button>
+                <button type="button" onclick="showPvpCodeEntry()" class="rounded-xl bg-indigo-600 text-white font-black py-2">🔑 코드 입력</button>
+              </div>
+              <div id="pvp-nearby-rooms" class="hidden space-y-2"></div>
+              <div id="pvp-code-entry" class="hidden space-y-2">
+                <div class="flex gap-2"><input id="pvp-room-code" maxlength="6" autocomplete="off" placeholder="방 코드 6자리" class="min-w-0 flex-1 rounded-xl border border-indigo-200 p-2 uppercase font-black tracking-widest" /><button type="button" onclick="joinPvpRoom()" class="rounded-xl bg-indigo-600 text-white font-black px-3">참가</button><button type="button" onclick="copyPvpRoomCode()" class="rounded-xl bg-slate-700 text-white font-bold px-3">복사</button></div>
+              </div>
+            </div>
+            <p id="pvp-room-status" class="text-xs text-indigo-900" aria-live="polite">온라인 대전방에 연결할 수 있어요.</p>
+            <div class="grid grid-cols-2 gap-2"><button type="button" onclick="pvpStartBattle()" class="rounded-xl bg-emerald-600 text-white font-black py-2">3마리 선택 후 대전 시작</button><button type="button" onclick="pvpLeaveRoom()" class="rounded-xl bg-white border border-rose-300 text-rose-700 font-bold py-2">방 나가기</button></div>
+            <div id="pvp-battle-panel" class="hidden rounded-xl bg-slate-950 text-white p-3 space-y-2"><div class="font-black">⚔️ 친구 대전</div><div id="pvp-opponent-label" class="text-sm">상대 연결 대기 중</div><div class="h-3 rounded bg-slate-700 overflow-hidden"><div id="pvp-hp-bar" class="h-full bg-emerald-500" style="width:100%"></div></div><div id="pvp-hp-text" class="text-xs">상대 HP: 100 / 100</div><div id="pvp-active-pokemon" class="font-bold">내 포켓몬: 준비 중</div><div class="grid grid-cols-2 gap-2"><button onclick="pvpAttack('fast')" class="rounded-lg bg-blue-600 p-2 font-bold">노말 공격</button><button onclick="pvpAttack('charge')" class="rounded-lg bg-orange-500 p-2 font-bold">차지 공격</button></div><div id="pvp-battle-log" class="text-xs">상대가 준비하면 대전을 시작하세요.</div></div>
+          </div>
           <label for="battle-mode-select" class="block text-sm font-extrabold">배틀 방식</label>
           <select id="battle-mode-select" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-bold"><option value="go">⚡ Pokémon GO 방식 — 연속 노말 어택과 차지 어택</option><option value="classic">🎮 공식 RPG 방식 — 턴제 기술 선택</option></select>
           <label class="block text-sm font-extrabold">내 출전 포켓몬 3마리 (서로 다른 포켓몬을 선택하세요)</label>
@@ -3052,6 +3074,160 @@
       if (!cloudSupabase) cloudSupabase = window.supabase.createClient(SUPABASE_URL, key);
       return cloudSupabase;
     }
+    // ---- Online friend-battle room bootstrap (Supabase) ----
+    let activePvpRoomCode = '';
+    let activePvpRoomChannel = null;
+    function setPvpRoomStatus(message) {
+      const el = document.getElementById('pvp-room-status');
+      if (el) el.textContent = message;
+    }
+    function makePvpRoomCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for (let i=0;i<6;i++) code += chars[Math.floor(Math.random()*chars.length)];
+      return code;
+    }
+    async function createPvpRoom() {
+      try {
+        const {client,user} = await cloudCurrentUser();
+        setPvpRoomStatus('대전방을 만드는 중…');
+        let created = null, lastError = null;
+        for (let attempt=0; attempt<5 && !created; attempt++) {
+          const room_code = makePvpRoomCode();
+          const result = await client.from('pvp_rooms').insert({room_code,host_user_id:user.id,status:'waiting',battle_mode:document.getElementById('battle-mode-select')?.value || 'go'}).select('room_code,status').single();
+          if (!result.error) created = result.data; else lastError = result.error;
+          if (lastError && lastError.code !== '23505') break;
+        }
+        if (!created) throw lastError || new Error('방을 만들지 못했습니다.');
+        activePvpRoomCode = created.room_code;
+        const input = document.getElementById('pvp-room-code'); if (input) input.value = created.room_code;
+        setPvpRoomStatus(`방 생성 완료! 친구에게 코드 ${created.room_code}를 알려주세요. 친구가 참가하면 상태가 갱신됩니다.`);
+        if (activePvpRoomChannel) await client.removeChannel(activePvpRoomChannel);
+        activePvpRoomChannel = client.channel('pvp-room-'+created.room_code).on('postgres_changes',{event:'UPDATE',schema:'public',table:'pvp_rooms',filter:'room_code=eq.'+created.room_code},payload=>{
+          const row=payload.new || {};
+          if (row.guest_user_id) setPvpRoomStatus(`친구가 참가했어요! 방 ${created.room_code} · 상태: ${row.status}. 실시간 대전 채널에 연결 중입니다.`);
+        }).subscribe();
+      } catch (e) {
+        setPvpRoomStatus('방 생성 실패: '+(e?.message || '알 수 없는 오류')+' · 먼저 Supabase SQL 설정을 실행하고 로그인 상태를 확인하세요.');
+      }
+    }
+    function openPvpJoinChoices() {
+      const panel=document.getElementById('pvp-join-choices');
+      if(panel) panel.classList.toggle('hidden');
+      const rooms=document.getElementById('pvp-nearby-rooms'); if(rooms) rooms.classList.add('hidden');
+      const code=document.getElementById('pvp-code-entry'); if(code) code.classList.add('hidden');
+    }
+    function showPvpCodeEntry() {
+      const code=document.getElementById('pvp-code-entry'); if(code) code.classList.remove('hidden');
+      const rooms=document.getElementById('pvp-nearby-rooms'); if(rooms) rooms.classList.add('hidden');
+      document.getElementById('pvp-room-code')?.focus();
+    }
+    async function findNearbyPvpRooms() {
+      const host=document.getElementById('pvp-nearby-rooms');
+      if(!host) return;
+      host.classList.remove('hidden'); host.innerHTML='<p class="text-sm text-slate-600">참가 가능한 공개 대기 방을 찾는 중…</p>';
+      const code=document.getElementById('pvp-code-entry'); if(code) code.classList.add('hidden');
+      try {
+        const {client,user}=await cloudCurrentUser();
+        const {data,error}=await client.from('pvp_rooms').select('room_code,host_user_id,status,battle_mode,created_at').eq('status','waiting').is('guest_user_id',null).order('created_at',{ascending:false}).limit(20);
+        if(error) throw error;
+        const rooms=(data||[]).filter(r=>r.host_user_id!==user.id);
+        host.innerHTML='';
+        if(!rooms.length){host.innerHTML='<p class="text-sm text-slate-600">지금 참가 가능한 방이 없어요. 친구에게 방을 만들도록 하거나 코드 입력을 이용하세요.</p>';return;}
+        rooms.forEach(r=>{
+          const item=document.createElement('div'); item.className='flex items-center justify-between gap-2 rounded-lg border border-slate-200 p-2';
+          const info=document.createElement('div'); info.className='min-w-0';
+          const title=document.createElement('div'); title.className='font-black text-slate-900'; title.textContent='방 '+r.room_code;
+          const desc=document.createElement('div'); desc.className='text-xs text-slate-500'; desc.textContent=(r.battle_mode==='classic'?'RPG 턴제':'GO 방식')+' · 대기 중';
+          info.append(title,desc);
+          const btn=document.createElement('button'); btn.type='button'; btn.className='shrink-0 rounded-lg bg-emerald-600 px-3 py-2 font-bold text-white'; btn.textContent='참가'; btn.onclick=()=>{const input=document.getElementById('pvp-room-code');if(input)input.value=r.room_code;joinPvpRoom();};
+          item.append(info,btn);host.appendChild(item);
+        });
+        setPvpRoomStatus(`참가 가능한 대기 방 ${rooms.length}개를 찾았어요. ‘근처’는 실제 GPS가 아니라 온라인 공개 대기 방을 뜻해요.`);
+      } catch(e) {
+        host.innerHTML='<p class="text-sm text-rose-700">방 목록을 불러오지 못했어요. Supabase의 pvp_rooms 읽기 정책을 확인하거나 코드 입력을 이용하세요.</p>';
+        setPvpRoomStatus('근처 방 검색 실패: '+(e?.message||'알 수 없는 오류'));
+      }
+    }
+
+    async function joinPvpRoom() {
+      try {
+        const {client,user} = await cloudCurrentUser();
+        const input = document.getElementById('pvp-room-code');
+        const room_code = String(input?.value || '').trim().toUpperCase();
+        if (!/^[A-Z0-9]{6}$/.test(room_code)) { setPvpRoomStatus('방 코드는 영문/숫자 6자리로 입력하세요.'); return; }
+        setPvpRoomStatus('방을 찾는 중…');
+        const {data:room,error:findError} = await client.from('pvp_rooms').select('id,room_code,host_user_id,guest_user_id,status,battle_mode').eq('room_code',room_code).maybeSingle();
+        if (findError) throw findError;
+        if (!room) throw new Error('해당 방을 찾을 수 없습니다. 코드를 확인해 주세요.');
+        if (room.host_user_id === user.id) throw new Error('자신이 만든 방에는 참가할 수 없습니다.');
+        if (room.guest_user_id && room.guest_user_id !== user.id) throw new Error('이미 다른 참가자가 들어온 방입니다.');
+        if (room.status !== 'waiting') throw new Error('현재 참가할 수 있는 대기 방이 아닙니다.');
+        const {error:joinError} = await client.from('pvp_rooms').update({guest_user_id:user.id,status:'ready',updated_at:new Date().toISOString()}).eq('id',room.id).is('guest_user_id',null).eq('status','waiting');
+        if (joinError) throw joinError;
+        activePvpRoomCode = room_code;
+        setPvpRoomStatus(`방 ${room_code} 참가 요청을 보냈어요. 방 주인이 확인할 수 있습니다. 실시간 대전 채널에 연결 중입니다.`);
+        if (activePvpRoomChannel) await client.removeChannel(activePvpRoomChannel);
+        activePvpRoomChannel = client.channel('pvp-room-'+room_code).on('postgres_changes',{event:'UPDATE',schema:'public',table:'pvp_rooms',filter:'room_code=eq.'+room_code},payload=>{
+          const row=payload.new || {};
+          setPvpRoomStatus(`방 ${room_code} · 상태: ${row.status || '확인 중'}. 실시간 대전 채널에 연결 중입니다.`);
+        }).subscribe();
+      } catch (e) {
+        setPvpRoomStatus('참가 실패: '+(e?.message || '알 수 없는 오류')+' · SQL 설정과 로그인 상태를 확인하세요.');
+      }
+    }
+    async function copyPvpRoomCode() {
+      const code = String(document.getElementById('pvp-room-code')?.value || activePvpRoomCode || '').trim().toUpperCase();
+      if (!code) { setPvpRoomStatus('먼저 방을 만들거나 방 코드를 입력하세요.'); return; }
+      try { await navigator.clipboard.writeText(code); setPvpRoomStatus(`방 코드 ${code}를 복사했어요.`); }
+      catch (_) { const input=document.getElementById('pvp-room-code'); if(input){input.focus();input.select();setPvpRoomStatus('코드를 선택했어요. 복사(Ctrl+C)하세요.');} }
+    }
+
+    // Realtime friend battle uses Supabase Broadcast; it does not touch cloud-save rows.
+    let pvpBattle = {team:[], index:0, hp:100, maxHp:100, enemyHp:100, enemyMaxHp:100, started:false, role:'', channel:null, lastAction:0};
+    function pvpRender(){
+      const panel=document.getElementById('pvp-battle-panel'); if(panel) panel.classList.toggle('hidden',!pvpBattle.started);
+      const active=pvpBattle.team[pvpBattle.index];
+      const label=document.getElementById('pvp-active-pokemon'); if(label) label.textContent=active?`내 포켓몬: ${active.name} · CP ${active.cp||'?'} · ${pvpBattle.hp}/${pvpBattle.maxHp} HP`:'포켓몬을 선택하세요';
+      const bar=document.getElementById('pvp-hp-bar'); if(bar) bar.style.width=(Math.max(0,pvpBattle.enemyHp)/Math.max(1,pvpBattle.enemyMaxHp)*100)+'%';
+      const hp=document.getElementById('pvp-hp-text'); if(hp) hp.textContent=`상대 HP: ${Math.max(0,pvpBattle.enemyHp)} / ${pvpBattle.enemyMaxHp}`;
+    }
+    function pvpLog(t){const e=document.getElementById('pvp-battle-log');if(e)e.textContent=t;setPvpRoomStatus(t);}
+    async function pvpEnsureChannel(){
+      const {client}=await cloudCurrentUser();
+      if(!activePvpRoomCode) throw new Error('먼저 대전방을 만들거나 참가하세요.');
+      if(activePvpRoomChannel) { try{await client.removeChannel(activePvpRoomChannel)}catch(e){} }
+      activePvpRoomChannel=client.channel('pvp-room-'+activePvpRoomCode,{config:{broadcast:{self:false}}});
+      activePvpRoomChannel.on('broadcast',{event:'pvp'},({payload})=>{
+        if(!payload||payload.sender===pvpBattle.role)return;
+        if(payload.kind==='ready'){document.getElementById('pvp-opponent-label').textContent='친구 준비 완료!';pvpLog('친구가 대전 준비를 마쳤어요.');}
+        if(payload.kind==='attack'&&pvpBattle.started){const dmg=Math.max(1,Number(payload.damage)||1);pvpBattle.hp=Math.max(0,pvpBattle.hp-dmg);pvpRender();pvpLog(`상대 ${payload.move||'공격'}! 내 포켓몬이 ${dmg} 피해를 받았어요.`);if(pvpBattle.hp<=0){pvpBattle.index++;if(pvpBattle.index<pvpBattle.team.length){pvpBattle.hp=pvpBattle.maxHp=Math.max(40,Math.round((pvpBattle.team[pvpBattle.index].cp||500)*.12));pvpRender();pvpLog(`${pvpBattle.team[pvpBattle.index].name} 출전!`);}else{pvpLog('패배했습니다. 친구가 승리했어요.');pvpBattle.started=false;pvpRender();}}}
+        if(payload.kind==='switch'){pvpBattle.enemyHp=Number(payload.hp)||100;pvpBattle.enemyMaxHp=pvpBattle.enemyHp;pvpRender();}
+        if(payload.kind==='leave'){pvpLog('상대가 방을 나갔어요.');}
+      }).subscribe(status=>{if(status==='SUBSCRIBED')setPvpRoomStatus(`방 ${activePvpRoomCode} · 실시간 대전 채널 연결 완료`);});
+    }
+    async function pvpBroadcast(payload){if(!activePvpRoomChannel) await pvpEnsureChannel();await activePvpRoomChannel.send({type:'broadcast',event:'pvp',payload:{...payload,sender:pvpBattle.role,at:Date.now()}});}
+    async function pvpStartBattle(){
+      try{
+        const {user}=await cloudCurrentUser(); if(!activePvpRoomCode)throw new Error('먼저 방을 만들거나 참가하세요.');
+        const ids=['battle-pokemon-select','battle-pokemon-select-2','battle-pokemon-select-3'].map(id=>document.getElementById(id)?.value).filter(Boolean);
+        const team=ids.map(id=>gameState.myPokemon.find(p=>String(p.uniqueId)===String(id)||String(p.baseId)===String(id))).filter(Boolean);
+        if(team.length!==3)throw new Error('출전 포켓몬 3마리를 서로 다르게 선택한 뒤 시작하세요.');
+        if(new Set(team.map(p=>p.uniqueId)).size!==3)throw new Error('서로 다른 포켓몬 3마리를 선택하세요.');
+        pvpBattle.role=user.id; pvpBattle.team=team; pvpBattle.index=0; pvpBattle.maxHp=Math.max(40,Math.round((team[0].cp||500)*.12));pvpBattle.hp=pvpBattle.maxHp;pvpBattle.enemyMaxHp=100;pvpBattle.enemyHp=100;pvpBattle.started=true;
+        await pvpEnsureChannel();pvpRender();await pvpBroadcast({kind:'ready',team:team.map(p=>({name:p.name,cp:p.cp}))});await pvpBroadcast({kind:'switch',hp:pvpBattle.maxHp});pvpLog('대전 시작! 노말 공격 또는 차지 공격을 눌러 공격하세요.');
+      }catch(e){setPvpRoomStatus('대전 시작 실패: '+(e.message||e));}
+    }
+    async function pvpAttack(kind){
+      if(!pvpBattle.started)return;const p=pvpBattle.team[pvpBattle.index];if(!p)return;
+      const cp=Math.max(100,Number(p.cp)||500);const damage=Math.max(5,Math.round(cp*(kind==='charge'?.045:.018)*(0.8+Math.random()*.4)));
+      pvpBattle.enemyHp=Math.max(0,pvpBattle.enemyHp-damage);pvpRender();
+      try{await pvpBroadcast({kind:'attack',move:kind==='charge'?'차지 공격':'노말 공격',damage});}catch(e){pvpLog('상대에게 공격을 보내지 못했어요: '+e.message);return;}
+      pvpLog(`${p.name}의 ${kind==='charge'?'차지 공격':'노말 공격'}! 상대에게 ${damage} 피해!`);
+      if(pvpBattle.enemyHp<=0){pvpLog('승리! 상대 팀의 HP가 0이 되었어요.');pvpBattle.started=false;pvpRender();}
+    }
+    async function pvpLeaveRoom(){try{if(activePvpRoomChannel)await activePvpRoomChannel.send({type:'broadcast',event:'pvp',payload:{kind:'leave',sender:pvpBattle.role}});const {client}=await cloudCurrentUser();if(activePvpRoomChannel)await client.removeChannel(activePvpRoomChannel);}catch(e){}activePvpRoomChannel=null;activePvpRoomCode='';pvpBattle.started=false;pvpRender();setPvpRoomStatus('방에서 나왔어요.');}
+
     function cloudSavePayload() {
       const code = getAccountCode();
       return { version: 4, accountCode: code, player: gameState.player, inventory: gameState.inventory,
