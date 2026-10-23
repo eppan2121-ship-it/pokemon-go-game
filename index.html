@@ -3446,10 +3446,16 @@
     async function pvpStartBattle(){
       try{
         const {user}=await cloudCurrentUser(); if(!activePvpRoomCode)throw new Error('먼저 방을 만들거나 참가하세요.');
-        const ids=['battle-pokemon-select','battle-pokemon-select-2','battle-pokemon-select-3'].map(id=>document.getElementById(id)?.value).filter(Boolean);
-        const team=ids.map(id=>gameState.myPokemon.find(p=>String(p.uniqueId)===String(id)||String(p.baseId)===String(id))).filter(Boolean);
-        if(team.length!==3)throw new Error('출전 포켓몬 3마리를 서로 다르게 선택한 뒤 시작하세요.');
-        if(new Set(team.map(p=>p.uniqueId)).size!==3)throw new Error('서로 다른 포켓몬 3마리를 선택하세요.');
+        // 온라인 대전 선택창의 option.value는 uniqueId/baseId가 아니라 보유 목록의 배열 인덱스입니다.
+        // 기존 코드에서 이를 ID로 검색해 포켓몬을 찾지 못해, 정상적으로 3마리를 골라도 오류가 났습니다.
+        const selectedValues=['battle-pokemon-select','battle-pokemon-select-2','battle-pokemon-select-3']
+          .map(id=>document.getElementById(id)?.value ?? '');
+        if(selectedValues.some(v=>v==='')) throw new Error('온라인 대전에 출전할 포켓몬 3마리를 선택하세요.');
+        const indexes=selectedValues.map(v=>Number(v));
+        if(indexes.some(i=>!Number.isInteger(i)||i<0||i>=gameState.myPokemon.length)) throw new Error('선택한 포켓몬을 찾을 수 없습니다. 배틀 화면을 닫고 다시 열어 주세요.');
+        if(new Set(indexes).size!==3) throw new Error('서로 다른 포켓몬 3마리를 선택하세요.');
+        const team=indexes.map(i=>gameState.myPokemon[i]);
+        if(team.some(p=>!p)) throw new Error('선택한 포켓몬 정보를 읽지 못했습니다. 다시 선택해 주세요.');
         pvpBattle.role=user.id; pvpBattle.team=team; pvpBattle.index=0; pvpBattle.maxHp=Math.max(40,Math.round((team[0].cp||500)*.12));pvpBattle.hp=pvpBattle.maxHp;pvpBattle.enemyMaxHp=100;pvpBattle.enemyHp=100;pvpBattle.started=true;
         await pvpEnsureChannel();pvpRender();await pvpBroadcast({kind:'ready',team:team.map(p=>({name:p.name,cp:p.cp}))});await pvpBroadcast({kind:'switch',hp:pvpBattle.maxHp});pvpLog('대전 시작! 노말 공격 또는 차지 공격을 눌러 공격하세요.');
       }catch(e){setPvpRoomStatus('대전 시작 실패: '+(e.message||e));}
