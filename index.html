@@ -198,7 +198,15 @@
       background: rgba(0, 0, 0, 0.2);
       border-radius: 10px;
     }
-  </style>
+  
+    /* Full-screen real-time friend PvP arena */
+    #pvp-battle-panel.pvp-live { position:fixed!important; inset:0!important; z-index:9990!important; width:100vw!important; height:100dvh!important; max-height:100dvh!important; overflow:auto!important; border-radius:0!important; padding: max(12px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom))!important; display:flex!important; flex-direction:column!important; justify-content:space-between!important; background:radial-gradient(ellipse at 50% 40%,#244b48 0%,#0b1724 68%,#020617 100%)!important; }
+    #pvp-battle-panel.pvp-live .pvp-sprite { width:clamp(110px,29vw,190px); height:clamp(110px,29vw,190px); object-fit:contain; image-rendering:auto; filter:drop-shadow(0 8px 12px #0008); }
+    #pvp-battle-panel.pvp-live .pvp-battlefield { display:flex; flex:1; flex-direction:column; justify-content:space-around; min-height:0; }
+    #pvp-charge-overlay { position:fixed; inset:0; z-index:10000; background:#020617ed; display:none; touch-action:manipulation; color:white; }
+    #pvp-charge-overlay.active {display:block}
+    .pvp-bubble {position:absolute;width:clamp(48px,13vw,72px);height:clamp(48px,13vw,72px);border-radius:50%;border:3px solid #e0f2fe;background:radial-gradient(circle at 30% 25%,#fff 0 8%,#7dd3fc 15%,#2563eb 75%);box-shadow:0 0 18px #38bdf8;}
+</style>
 </head>
 <body class="bg-gray-900 text-gray-800 overflow-hidden w-screen h-screen select-none overscroll-none">
 
@@ -735,7 +743,7 @@
             </div>
             <p id="pvp-room-status" class="text-xs text-indigo-900" aria-live="polite">온라인 대전방에 연결할 수 있어요.</p>
             <div class="grid grid-cols-2 gap-2"><button type="button" onclick="pvpStartBattle()" class="rounded-xl bg-emerald-600 text-white font-black py-2">3마리 선택 후 대전 시작</button><button type="button" onclick="pvpLeaveRoom()" class="rounded-xl bg-white border border-rose-300 text-rose-700 font-bold py-2">방 나가기</button></div>
-            <div id="pvp-battle-panel" class="hidden rounded-xl bg-slate-950 text-white p-3 space-y-2"><div class="font-black">⚔️ 친구 대전</div><div id="pvp-opponent-label" class="text-sm">상대 연결 대기 중</div><div class="h-3 rounded bg-slate-700 overflow-hidden"><div id="pvp-hp-bar" class="h-full bg-emerald-500" style="width:100%"></div></div><div id="pvp-hp-text" class="text-xs">상대 HP: 100 / 100</div><div id="pvp-active-pokemon" class="font-bold">내 포켓몬: 준비 중</div><div class="grid grid-cols-2 gap-2"><button onclick="pvpAttack('fast')" class="rounded-lg bg-blue-600 p-2 font-bold">노말 공격</button><button onclick="pvpAttack('charge')" class="rounded-lg bg-orange-500 p-2 font-bold">차지 공격</button></div><div id="pvp-battle-log" class="text-xs">상대가 준비하면 대전을 시작하세요.</div></div>
+            <div id="pvp-battle-panel" class="hidden rounded-xl bg-slate-950 text-white p-3 space-y-2"><div class="flex items-center justify-between"><div class="font-black">⚔️ 실시간 친구 대전 · 3 VS 3</div><button onclick="pvpLeaveRoom()" class="rounded-lg bg-rose-600 px-3 py-2 font-black">나가기 ✕</button></div><div id="pvp-opponent-label" class="text-sm">상대 연결 대기 중</div><div class="pvp-battlefield"><div class="flex items-center gap-3"><img id="pvp-enemy-sprite" class="pvp-sprite" alt="상대 포켓몬"><div class="flex-1"><b id="pvp-enemy-name">상대 포켓몬</b><div class="h-3 rounded bg-slate-700 overflow-hidden mt-2"><div id="pvp-hp-bar" class="h-full bg-emerald-400" style="width:100%"></div></div><div id="pvp-hp-text" class="text-xs mt-1">상대 HP: 100 / 100</div><div id="pvp-enemy-team" class="text-xs mt-1">상대 팀 3마리</div></div></div><div class="flex items-center gap-3"><img id="pvp-player-sprite" class="pvp-sprite" alt="내 포켓몬"><div class="flex-1"><b id="pvp-active-pokemon">내 포켓몬: 준비 중</b><div class="h-3 rounded bg-slate-700 overflow-hidden mt-2"><div id="pvp-own-hp-bar" class="h-full bg-emerald-500" style="width:100%"></div></div><div id="pvp-own-hp-text" class="text-xs mt-1">내 HP</div><div id="pvp-own-team" class="text-xs mt-1">내 팀 3마리</div><div class="h-2 rounded bg-slate-700 overflow-hidden mt-2"><div id="pvp-energy-bar" class="h-full bg-violet-400" style="width:0%"></div></div><div id="pvp-energy-text" class="text-xs">스페셜 에너지 0%</div></div></div></div><div class="grid grid-cols-2 gap-2"><button onclick="pvpAttack('fast')" class="rounded-xl bg-blue-600 p-4 font-black text-lg">⚡ 화면 탭 · 노말 어택</button><button id="pvp-charge-btn" onclick="pvpAttack('charge')" class="rounded-xl bg-orange-500 p-4 font-black text-lg" disabled>💥 스페셜 어택</button></div><div id="pvp-battle-log" class="rounded-lg bg-white/10 p-2 text-sm">상대가 준비하면 대전을 시작하세요.</div></div><div id="pvp-charge-overlay" aria-label="스페셜 어택 버블 미니게임"><div class="p-5 text-center"><div class="text-2xl font-black">💥 스페셜 어택!</div><div id="pvp-charge-instruction" class="mt-2">버블을 빠르게 터뜨려!</div><div id="pvp-charge-score" class="font-black text-xl mt-2">0 / 12</div></div><div id="pvp-charge-bubbles"></div></div>
           </div>
           <label for="battle-mode-select" class="block text-sm font-extrabold">배틀 방식</label>
           <select id="battle-mode-select" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-bold"><option value="go">⚡ Pokémon GO 방식 — 연속 노말 어택과 차지 어택</option><option value="classic">🎮 공식 RPG 방식 — 턴제 기술 선택</option></select>
@@ -3458,55 +3466,52 @@
       catch (_) { const input=document.getElementById('pvp-room-code'); if(input){input.focus();input.select();setPvpRoomStatus('코드를 선택했어요. 복사(Ctrl+C)하세요.');} }
     }
 
-    // Realtime friend battle uses Supabase Broadcast; it does not touch cloud-save rows.
-    let pvpBattle = {team:[], index:0, hp:100, maxHp:100, enemyHp:100, enemyMaxHp:100, started:false, role:'', channel:null, lastAction:0};
+    // Realtime GO-style PvP: each client owns its team; actions are broadcast to the opponent.
+    let pvpBattle = {team:[], index:0, hp:100, maxHp:100, enemyHp:100, enemyMaxHp:100, energy:0, started:false, role:'', channel:null, lastAction:0, teamHp:[], enemyTeam:[], enemyTeamHp:[], enemyIndex:0, chargeBusy:false};
+    function pvpMaxHp(p){return Math.max(60,Math.round((Number(p?.cp)||500)*.12));}
+    function pvpImg(p){return p?getPokemonImage(p):'';}
     function pvpRender(){
-      const panel=document.getElementById('pvp-battle-panel'); if(panel) panel.classList.toggle('hidden',!pvpBattle.started);
-      const active=pvpBattle.team[pvpBattle.index];
-      const label=document.getElementById('pvp-active-pokemon'); if(label) label.textContent=active?`내 포켓몬: ${active.name} · CP ${active.cp||'?'} · ${pvpBattle.hp}/${pvpBattle.maxHp} HP`:'포켓몬을 선택하세요';
-      const bar=document.getElementById('pvp-hp-bar'); if(bar) bar.style.width=(Math.max(0,pvpBattle.enemyHp)/Math.max(1,pvpBattle.enemyMaxHp)*100)+'%';
-      const hp=document.getElementById('pvp-hp-text'); if(hp) hp.textContent=`상대 HP: ${Math.max(0,pvpBattle.enemyHp)} / ${pvpBattle.enemyMaxHp}`;
+      const panel=document.getElementById('pvp-battle-panel'); if(panel){panel.classList.toggle('hidden',!pvpBattle.started);panel.classList.toggle('pvp-live',pvpBattle.started);}
+      const active=pvpBattle.team[pvpBattle.index], enemy=pvpBattle.enemyTeam[pvpBattle.enemyIndex];
+      const setImg=(id,p)=>{const el=document.getElementById(id);if(el&&p){const src=pvpImg(p);if(el.src!==src)el.src=src;}};
+      setImg('pvp-player-sprite',active);setImg('pvp-enemy-sprite',enemy);
+      const label=document.getElementById('pvp-active-pokemon');if(label)label.textContent=active?`내 포켓몬: ${active.name} · CP ${active.cp||'?'} · ${pvpBattle.hp}/${pvpBattle.maxHp} HP`:'포켓몬을 선택하세요';
+      const ename=document.getElementById('pvp-enemy-name');if(ename)ename.textContent=enemy?`${enemy.name} · CP ${enemy.cp||'?'}`:'상대 준비 중';
+      const bar=document.getElementById('pvp-hp-bar');if(bar)bar.style.width=(Math.max(0,pvpBattle.enemyHp)/Math.max(1,pvpBattle.enemyMaxHp)*100)+'%';
+      const hp=document.getElementById('pvp-hp-text');if(hp)hp.textContent=`상대 HP: ${Math.max(0,pvpBattle.enemyHp)} / ${pvpBattle.enemyMaxHp}`;
+      const ownbar=document.getElementById('pvp-own-hp-bar');if(ownbar)ownbar.style.width=(Math.max(0,pvpBattle.hp)/Math.max(1,pvpBattle.maxHp)*100)+'%';
+      const ownhp=document.getElementById('pvp-own-hp-text');if(ownhp)ownhp.textContent=`내 HP: ${Math.max(0,pvpBattle.hp)} / ${pvpBattle.maxHp}`;
+      const energy=document.getElementById('pvp-energy-bar');if(energy)energy.style.width=Math.min(100,pvpBattle.energy)+'%';const et=document.getElementById('pvp-energy-text');if(et)et.textContent=`스페셜 에너지 ${Math.floor(pvpBattle.energy)}%`;
+      const charge=document.getElementById('pvp-charge-btn');if(charge)charge.disabled=!pvpBattle.started||pvpBattle.energy<100||pvpBattle.chargeBusy;
+      const ownteam=document.getElementById('pvp-own-team');if(ownteam)ownteam.textContent=`내 팀 ${pvpBattle.team.filter((p,i)=>pvpBattle.teamHp[i]>0).length}/3`;const enemyteam=document.getElementById('pvp-enemy-team');if(enemyteam)enemyteam.textContent=`상대 팀 ${pvpBattle.enemyTeam.filter((p,i)=>pvpBattle.enemyTeamHp[i]>0).length}/3`;
     }
     function pvpLog(t){const e=document.getElementById('pvp-battle-log');if(e)e.textContent=t;setPvpRoomStatus(t);}
     async function pvpEnsureChannel(){
-      const {client}=await cloudCurrentUser();
-      if(!activePvpRoomCode) throw new Error('먼저 대전방을 만들거나 참가하세요.');
-      if(activePvpRoomChannel) { try{await client.removeChannel(activePvpRoomChannel)}catch(e){} }
+      const {client}=await cloudCurrentUser();if(!activePvpRoomCode)throw new Error('먼저 대전방을 만들거나 참가하세요.');
+      if(activePvpRoomChannel){try{await client.removeChannel(activePvpRoomChannel)}catch(e){}}
       activePvpRoomChannel=client.channel('pvp-room-'+activePvpRoomCode,{config:{broadcast:{self:false}}});
       activePvpRoomChannel.on('broadcast',{event:'pvp'},({payload})=>{
         if(!payload||payload.sender===pvpBattle.role)return;
-        if(payload.kind==='ready'){document.getElementById('pvp-opponent-label').textContent='친구 준비 완료!';pvpLog('친구가 대전 준비를 마쳤어요.');}
-        if(payload.kind==='attack'&&pvpBattle.started){const dmg=Math.max(1,Number(payload.damage)||1);pvpBattle.hp=Math.max(0,pvpBattle.hp-dmg);pvpRender();pvpLog(`상대 ${payload.move||'공격'}! 내 포켓몬이 ${dmg} 피해를 받았어요.`);if(pvpBattle.hp<=0){pvpBattle.index++;if(pvpBattle.index<pvpBattle.team.length){pvpBattle.hp=pvpBattle.maxHp=Math.max(40,Math.round((pvpBattle.team[pvpBattle.index].cp||500)*.12));pvpRender();pvpLog(`${pvpBattle.team[pvpBattle.index].name} 출전!`);}else{pvpLog('패배했습니다. 친구가 승리했어요.');pvpBattle.started=false;pvpRender();}}}
-        if(payload.kind==='switch'){pvpBattle.enemyHp=Number(payload.hp)||100;pvpBattle.enemyMaxHp=pvpBattle.enemyHp;pvpRender();}
+        if(payload.kind==='ready'){pvpBattle.enemyTeam=payload.team||[];pvpBattle.enemyTeamHp=pvpBattle.enemyTeam.map(x=>pvpMaxHp(x));pvpBattle.enemyIndex=0;pvpBattle.enemyMaxHp=pvpBattle.enemyTeamHp[0]||100;pvpBattle.enemyHp=pvpBattle.enemyMaxHp;const l=document.getElementById('pvp-opponent-label');if(l)l.textContent='상대 준비 완료 · 실시간 대전 중';pvpRender();pvpLog('상대가 준비했어요! 화면을 탭해 공격하세요.');}
+        if(payload.kind==='fast'||payload.kind==='charge'){
+          if(!pvpBattle.started)return;const dmg=Math.max(1,Number(payload.damage)||1);pvpBattle.hp=Math.max(0,pvpBattle.hp-dmg);pvpRender();pvpLog(`상대 ${payload.kind==='charge'?'스페셜 어택':'노말 어택'}! ${dmg} 피해를 받았어요.`);
+          if(pvpBattle.hp<=0){pvpBattle.index++;if(pvpBattle.index<pvpBattle.team.length){pvpBattle.maxHp=pvpMaxHp(pvpBattle.team[pvpBattle.index]);pvpBattle.hp=pvpBattle.maxHp;pvpBattle.energy=0;pvpRender();pvpLog(`${pvpBattle.team[pvpBattle.index].name} 출전!`);pvpBroadcast({kind:'switch',index:pvpBattle.index,teamHp:pvpBattle.teamHp}).catch(()=>{});}else{pvpBattle.started=false;pvpRender();pvpLog('패배! 상대가 승리했어요.');}}
+        }
+        if(payload.kind==='enemy-down'){pvpBattle.index=Math.min(2,Number(payload.index)||0);pvpBattle.maxHp=pvpBattle.teamHp[pvpBattle.index]||pvpMaxHp(pvpBattle.team[pvpBattle.index]);pvpBattle.hp=pvpBattle.maxHp;pvpBattle.energy=0;pvpRender();}
+        if(payload.kind==='switch'){pvpBattle.enemyIndex=Math.min(2,Number(payload.index)||0);pvpBattle.enemyMaxHp=Number(payload.teamHp?.[pvpBattle.enemyIndex])||pvpMaxHp(pvpBattle.enemyTeam[pvpBattle.enemyIndex]);pvpBattle.enemyHp=pvpBattle.enemyMaxHp;pvpRender();}
         if(payload.kind==='leave'){pvpLog('상대가 방을 나갔어요.');}
       }).subscribe(status=>{if(status==='SUBSCRIBED')setPvpRoomStatus(`방 ${activePvpRoomCode} · 실시간 대전 채널 연결 완료`);});
     }
-    async function pvpBroadcast(payload){if(!activePvpRoomChannel) await pvpEnsureChannel();await activePvpRoomChannel.send({type:'broadcast',event:'pvp',payload:{...payload,sender:pvpBattle.role,at:Date.now()}});}
+    async function pvpBroadcast(payload){if(!activePvpRoomChannel)await pvpEnsureChannel();await activePvpRoomChannel.send({type:'broadcast',event:'pvp',payload:{...payload,sender:pvpBattle.role,at:Date.now()}});}
     async function pvpStartBattle(){
-      try{
-        const {user}=await cloudCurrentUser(); if(!activePvpRoomCode)throw new Error('먼저 방을 만들거나 참가하세요.');
-        // 온라인 대전 선택창의 option.value는 uniqueId/baseId가 아니라 보유 목록의 배열 인덱스입니다.
-        // 기존 코드에서 이를 ID로 검색해 포켓몬을 찾지 못해, 정상적으로 3마리를 골라도 오류가 났습니다.
-        const selectedValues=['battle-pokemon-select','battle-pokemon-select-2','battle-pokemon-select-3']
-          .map(id=>document.getElementById(id)?.value ?? '');
-        if(selectedValues.some(v=>v==='')) throw new Error('온라인 대전에 출전할 포켓몬 3마리를 선택하세요.');
-        const indexes=selectedValues.map(v=>Number(v));
-        if(indexes.some(i=>!Number.isInteger(i)||i<0||i>=gameState.myPokemon.length)) throw new Error('선택한 포켓몬을 찾을 수 없습니다. 배틀 화면을 닫고 다시 열어 주세요.');
-        if(new Set(indexes).size!==3) throw new Error('서로 다른 포켓몬 3마리를 선택하세요.');
-        const team=indexes.map(i=>gameState.myPokemon[i]);
-        if(team.some(p=>!p)) throw new Error('선택한 포켓몬 정보를 읽지 못했습니다. 다시 선택해 주세요.');
-        pvpBattle.role=user.id; pvpBattle.team=team; pvpBattle.index=0; pvpBattle.maxHp=Math.max(40,Math.round((team[0].cp||500)*.12));pvpBattle.hp=pvpBattle.maxHp;pvpBattle.enemyMaxHp=100;pvpBattle.enemyHp=100;pvpBattle.started=true;
-        await pvpEnsureChannel();pvpRender();await pvpBroadcast({kind:'ready',team:team.map(p=>({name:p.name,cp:p.cp}))});await pvpBroadcast({kind:'switch',hp:pvpBattle.maxHp});pvpLog('대전 시작! 노말 공격 또는 차지 공격을 눌러 공격하세요.');
+      try{const {user}=await cloudCurrentUser();if(!activePvpRoomCode)throw new Error('먼저 방을 만들거나 참가하세요.');
+        const vals=['battle-pokemon-select','battle-pokemon-select-2','battle-pokemon-select-3'].map(id=>document.getElementById(id)?.value??'');if(vals.some(v=>v===''))throw new Error('온라인 대전에 출전할 포켓몬 3마리를 선택하세요.');const indexes=vals.map(Number);if(indexes.some(i=>!Number.isInteger(i)||i<0||i>=gameState.myPokemon.length))throw new Error('선택한 포켓몬을 찾을 수 없습니다.');if(new Set(indexes).size!==3)throw new Error('서로 다른 포켓몬 3마리를 선택하세요.');
+        pvpBattle.role=user.id;pvpBattle.team=indexes.map(i=>gameState.myPokemon[i]);pvpBattle.index=0;pvpBattle.teamHp=pvpBattle.team.map(pvpMaxHp);pvpBattle.maxHp=pvpBattle.teamHp[0];pvpBattle.hp=pvpBattle.maxHp;pvpBattle.energy=0;pvpBattle.enemyTeam=[];pvpBattle.enemyTeamHp=[];pvpBattle.enemyIndex=0;pvpBattle.enemyHp=pvpBattle.enemyMaxHp=100;pvpBattle.started=true;await pvpEnsureChannel();pvpRender();await pvpBroadcast({kind:'ready',team:pvpBattle.team.map(p=>({name:p.name,cp:p.cp,baseId:p.baseId||p.id,shiny:!!p.shiny}))});pvpLog('대전 시작! 상대가 준비되면 3대3 실시간 전투가 시작돼요.');
       }catch(e){setPvpRoomStatus('대전 시작 실패: '+(e.message||e));}
     }
-    async function pvpAttack(kind){
-      if(!pvpBattle.started)return;const p=pvpBattle.team[pvpBattle.index];if(!p)return;
-      const cp=Math.max(100,Number(p.cp)||500);const damage=Math.max(5,Math.round(cp*(kind==='charge'?.045:.018)*(0.8+Math.random()*.4)));
-      pvpBattle.enemyHp=Math.max(0,pvpBattle.enemyHp-damage);pvpRender();
-      try{await pvpBroadcast({kind:'attack',move:kind==='charge'?'차지 공격':'노말 공격',damage});}catch(e){pvpLog('상대에게 공격을 보내지 못했어요: '+e.message);return;}
-      pvpLog(`${p.name}의 ${kind==='charge'?'차지 공격':'노말 공격'}! 상대에게 ${damage} 피해!`);
-      if(pvpBattle.enemyHp<=0){pvpLog('승리! 상대 팀의 HP가 0이 되었어요.');pvpBattle.started=false;pvpRender();}
-    }
+    function pvpShowChargeMini(){if(pvpBattle.chargeBusy||pvpBattle.energy<100)return;pvpBattle.chargeBusy=true;pvpRender();const overlay=document.getElementById('pvp-charge-overlay'),host=document.getElementById('pvp-charge-bubbles'),score=document.getElementById('pvp-charge-score');overlay.classList.add('active');host.innerHTML='';let popped=0;score.textContent='0 / 12';for(let i=0;i<12;i++){const b=document.createElement('button');b.className='pvp-bubble';b.style.left=(4+Math.random()*82)+'%';b.style.top=(18+Math.random()*68)+'%';b.setAttribute('aria-label','버블 터뜨리기');b.onclick=()=>{if(b.dataset.hit)return;b.dataset.hit='1';b.style.transform='scale(1.4)';b.style.opacity='0';popped++;score.textContent=`${popped} / 12`;};host.appendChild(b);}let remain=5500;const timer=setInterval(()=>{remain-=100;if(remain<=0){clearInterval(timer);overlay.classList.remove('active');host.innerHTML='';pvpBattle.chargeBusy=false;const power=.65+.35*(popped/12);pvpBattle.energy=0;pvpRender();pvpDoAttack('charge',power).catch(e=>pvpLog('공격 전송 실패: '+e.message));}},100);}
+    async function pvpDoAttack(kind,power=1){if(!pvpBattle.started)return;const p=pvpBattle.team[pvpBattle.index];if(!p)return;const cp=Math.max(100,Number(p.cp)||500);const damage=Math.max(5,Math.round(cp*(kind==='charge'?.045:.018)*(0.8+Math.random()*.4)*power));pvpBattle.enemyHp=Math.max(0,pvpBattle.enemyHp-damage);if(kind==='fast')pvpBattle.energy=Math.min(100,pvpBattle.energy+18);pvpRender();await pvpBroadcast({kind,move:kind==='charge'?'스페셜 어택':'노말 어택',damage});pvpLog(`${p.name}의 ${kind==='charge'?'스페셜 어택':'노말 어택'}! 상대에게 ${damage} 피해!`);if(pvpBattle.enemyHp<=0){pvpBattle.enemyIndex++;if(pvpBattle.enemyIndex<pvpBattle.enemyTeam.length){pvpBattle.enemyMaxHp=pvpMaxHp(pvpBattle.enemyTeam[pvpBattle.enemyIndex]);pvpBattle.enemyHp=pvpBattle.enemyMaxHp;pvpRender();await pvpBroadcast({kind:'enemy-down',index:pvpBattle.enemyIndex});pvpLog(`상대 ${pvpBattle.enemyTeam[pvpBattle.enemyIndex].name} 출전!`);}else{pvpBattle.started=false;pvpRender();pvpLog('승리! 상대 팀의 포켓몬 3마리를 모두 쓰러뜨렸어요.');}}}
+    async function pvpAttack(kind){if(!pvpBattle.started)return;if(kind==='charge'){pvpShowChargeMini();return;}const now=Date.now();if(now-pvpBattle.lastAction<250)return;pvpBattle.lastAction=now;try{await pvpDoAttack('fast');}catch(e){pvpLog('상대에게 공격을 보내지 못했어요: '+e.message);}}
     async function pvpLeaveRoom(){try{if(activePvpRoomChannel)await activePvpRoomChannel.send({type:'broadcast',event:'pvp',payload:{kind:'leave',sender:pvpBattle.role}});const {client}=await cloudCurrentUser();if(activePvpRoomChannel)await client.removeChannel(activePvpRoomChannel);}catch(e){}activePvpRoomChannel=null;activePvpRoomCode='';pvpBattle.started=false;pvpRender();setPvpRoomStatus('방에서 나왔어요.');}
 
     function cloudSavePayload() {
@@ -4238,7 +4243,7 @@
     const MEGA_KEY='gen1MegaProgressV1';
     const MEGA_IDS={
       3:{name:'메가이상해꽃',sprite:'venusaur-mega'},
-      6:{name:'메가리자몽 X',sprite:'charizard-mega-x'},
+      6:{name:'메가리자몽 X',sprite:'charizard-megax',forms:[{name:'메가리자몽 X',sprite:'charizard-megax'},{name:'메가리자몽 Y',sprite:'charizard-megay'}]},
       9:{name:'메가거북왕',sprite:'blastoise-mega'},
       15:{name:'메가독침붕',sprite:'beedrill-mega'},
       18:{name:'메가피죤투',sprite:'pidgeot-mega'},
@@ -4274,6 +4279,7 @@
       376:{name:'메가메타그로스',sprite:'metagross-mega'},
       380:{name:'메가라티아스',sprite:'latias-mega'},
       381:{name:'메가라티오스',sprite:'latios-mega'},
+      150:{name:'메가뮤츠 X',sprite:'mewtwo-megax',forms:[{name:'메가뮤츠 X',sprite:'mewtwo-megax'},{name:'메가뮤츠 Y',sprite:'mewtwo-megay'}]},
       384:{name:'메가레쿠쟈',sprite:'rayquaza-mega'},
       428:{name:'메가이어롭',sprite:'lopunny-mega'},
       445:{name:'메가한카리아스',sprite:'garchomp-mega'},
@@ -4283,11 +4289,26 @@
       531:{name:'메가다부니',sprite:'audino-mega'},
       719:{name:'메가디안시',sprite:'diancie-mega'}
     };
-    const MEGA_SPRITE_ROOT='https://play.pokemonshowdown.com/sprites/home/';
+    const MEGA_SPRITE_ROOT='https://play.pokemonshowdown.com/sprites/';
     function getMegaSpriteUrl(info,shiny=false){
-      // Prefer animated pixel-art battle sprites; keep the classic retro pixel style.
-      // Pokémon Showdown hosts Mega forms as GIFs in ani / ani-shiny.
-      return info?`https://play.pokemonshowdown.com/sprites/${shiny?'ani-shiny':'ani'}/${info.sprite}.gif`:'';
+      // Showdown animated Mega filenames use 'megax'/'megay' (not 'mega-x'/'mega-y').
+      // Keep the existing sprite slug format for the other Mega forms.
+      return info?`${MEGA_SPRITE_ROOT}${shiny?'ani-shiny':'ani'}/${info.sprite}.gif`:'';
+    }
+    function getMegaSpriteCandidates(info,shiny=false){
+      if(!info)return [];
+      const dirs=shiny?['ani-shiny','xyani-shiny','ani','xyani']:['ani','xyani'];
+      const names=[info.sprite];
+      if(info.sprite==='charizard-mega-x') names.unshift('charizard-megax');
+      if(info.sprite==='charizard-mega-y') names.unshift('charizard-megay');
+      if(info.sprite==='mewtwo-mega-x') names.unshift('mewtwo-megax');
+      if(info.sprite==='mewtwo-mega-y') names.unshift('mewtwo-megay');
+      return [...new Set(dirs.flatMap(d=>names.map(n=>`${MEGA_SPRITE_ROOT}${d}/${n}.gif`)))];
+    }
+    function setMegaSpriteWithFallback(img,info,shiny,p){
+      const urls=getMegaSpriteCandidates(info,shiny);let i=0;
+      const next=()=>{if(i<urls.length){img.onerror=next;img.src=urls[i++];}else{img.onerror=null;img.src=getPokemonRetroStaticUrl(getPokemonSpriteId(p),!!p.shiny);}};
+      img.onerror=next;next();
     }
     let megaData={energy:{},pokemon:{}};try{megaData=Object.assign(megaData,JSON.parse(localStorage.getItem(MEGA_KEY)||'{}'));}catch(e){}
     window.__restoreMegaProgress=function(saved){if(!saved||typeof saved!=='object')return;megaData={energy:{...(saved.energy||{})},pokemon:{...(saved.pokemon||{})}};try{localStorage.setItem(MEGA_KEY,JSON.stringify(megaData));}catch(e){};syncMegaExpiry(false);};
@@ -4298,7 +4319,7 @@
     function megaRecord(p){const k=String(p.uniqueId);if(!megaData.pokemon[k])megaData.pokemon[k]={level:0,count:0,activeUntil:0,readyAt:0,baseCp:Number(p.cp)||0};return megaData.pokemon[k];}
     function renderMega(){const p=(gameState.myPokemon||[]).find(x=>String(x.uniqueId)===String(buddy.id));const info=megaInfo(p);const sum=$('mega-summary'),list=$('mega-energy-list'),btn=$('mega-evolve-btn');if(!sum||!list||!btn)return;
       if(!p||!info){sum.textContent='현재 파트너는 메가진화를 할 수 없어요. 메가진화 가능한 포켓몬을 파트너로 선택하세요.';list.innerHTML=Object.keys(MEGA_IDS).map(id=>{const q=(gameState.myPokemon||[]).find(x=>Number(x.baseId||x.id)===Number(id));return q?`<div class="rounded-xl border p-3 flex items-center gap-3"><img src="${getPokemonImage(q)}" style="width:42px;height:42px;object-fit:contain"><div class="flex-1"><b>${esc(q.name)}</b><div class="text-xs text-slate-500">${MEGA_IDS[id].name} · 에너지 ${megaEnergy(id)}</div></div><button onclick="selectBuddy('${String(q.uniqueId).replace(/'/g,'')}')" class="rounded-lg bg-emerald-600 text-white px-3 py-2 text-sm font-bold">파트너</button></div>`:''}).filter(Boolean).join('')||'<div class="text-sm text-slate-500">보유 중인 메가진화 가능 포켓몬이 없어요.</div>';btn.disabled=true;btn.classList.add('opacity-50');return;}
-      const r=megaRecord(p),remaining=Math.max(0,r.readyAt-Date.now()),active=r.activeUntil>Date.now();sum.innerHTML=`<div class="flex items-center gap-3"><img src="${getMegaSpriteUrl(info,!!p.shiny)}" onerror="this.onerror=null;this.src='${getPokemonRetroStaticUrl(getPokemonSpriteId(p),!!p.shiny)}'" style="width:70px;height:70px;object-fit:contain"><div><b class="text-base">${info.name}</b><div>메가 레벨 ${r.level||0} · 진화 횟수 ${r.count||0}</div><div>메가 에너지: <b>${megaEnergy(p.baseId||p.id)}</b></div><div>${active?'메가진화 중 · '+Math.ceil((r.activeUntil-Date.now())/60000)+'분 남음':remaining>0?'무료 재진화까지 '+Math.ceil(remaining/3600000)+'시간':'재진화 가능'}</div></div></div>`;
+      const r=megaRecord(p),remaining=Math.max(0,r.readyAt-Date.now()),active=r.activeUntil>Date.now();sum.innerHTML=`<div class="flex items-center gap-3"><img data-mega-slug="${info.sprite}" src="${getMegaSpriteUrl(info,!!p.shiny)}" onerror="if(!this.dataset.megaTried){this.dataset.megaTried='1';this.src='https://play.pokemonshowdown.com/sprites/xyani/${info.sprite}.gif'}else{this.onerror=null;this.src='${getPokemonRetroStaticUrl(getPokemonSpriteId(p),!!p.shiny)}'}" style="width:70px;height:70px;object-fit:contain"><div><b class="text-base">${info.name}</b><div>메가 레벨 ${r.level||0} · 진화 횟수 ${r.count||0}</div><div>메가 에너지: <b>${megaEnergy(p.baseId||p.id)}</b></div><div>${active?'메가진화 중 · '+Math.ceil((r.activeUntil-Date.now())/60000)+'분 남음':remaining>0?'무료 재진화까지 '+Math.ceil(remaining/3600000)+'시간':'재진화 가능'}</div></div></div>`;
       list.innerHTML=`<div class="rounded-xl bg-fuchsia-50 border border-fuchsia-200 p-3 text-sm">첫 진화 비용: 200 에너지 · 포획 보너스: 해당 종 에너지 +10 · 파트너 거리 보상: 사탕 +1 및 에너지 +200</div>`;
       btn.disabled=active;btn.classList.toggle('opacity-50',active);btn.textContent=active?'메가진화 중':r.level===0?'메가진화 (에너지 200)':remaining>0?'메가진화 (에너지 200 또는 대기)':'메가진화 (무료)';
     }
