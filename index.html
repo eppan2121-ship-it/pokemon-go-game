@@ -79,16 +79,29 @@
 
     /* Animated Pokémon sprites: gentle idle bounce plus attack lunge */
     @keyframes pokemon-idle {
-      0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
-      35% { transform: translateY(-5px) rotate(-2deg) scale(1.025); }
-      70% { transform: translateY(-2px) rotate(2deg) scale(1.01); }
+      0%, 100% { transform: translate3d(0,0,0) scale(1); }
+      50% { transform: translate3d(0,-2px,0) scale(1.008); }
     }
     @keyframes pokemon-attack-lunge {
       0%, 100% { transform: translateX(0) scale(1); }
       35% { transform: translateX(18px) scale(1.08); }
       65% { transform: translateX(-4px) scale(.98); }
     }
-    .pokemon-lively { animation: pokemon-idle 1.8s ease-in-out infinite; will-change: transform; }
+    /* Polished pixel sprites: keep the original pixel-art style while making colors,
+       outlines and dimensional shading read more clearly at larger display sizes. */
+    .pokemon-lively {
+      animation: pokemon-idle 2.8s ease-in-out infinite;
+      will-change: transform;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      filter: saturate(1.12) contrast(1.06) drop-shadow(0 3px 2px rgba(15,23,42,.24));
+      transform-origin: center center;
+    }
+    .pokemon-lively:hover { filter: saturate(1.18) contrast(1.08) drop-shadow(0 5px 4px rgba(15,23,42,.28)); }
+    @media (prefers-reduced-motion: reduce) { .pokemon-lively { animation: none !important; } }
+    /* Bigger battle sprites give the existing pixel details more room without replacing art. */
+    .battle-big-sprite { image-rendering: pixelated; image-rendering: crisp-edges; }
+    #detail-mega-img { image-rendering: pixelated; image-rendering: crisp-edges; filter: saturate(1.12) contrast(1.06) drop-shadow(0 4px 3px rgba(15,23,42,.25)); }
     .pokemon-attacking { animation: pokemon-attack-lunge .38s ease-out 1 !important; }
     @keyframes goTapRipple { 0% { width:8px;height:8px;opacity:.42;transform:translate(-50%,-50%) scale(.7); } 100% { width:54px;height:54px;opacity:0;transform:translate(-50%,-50%) scale(1); } }
     .go-tap-ripple { position:absolute; z-index:20; pointer-events:none; border:2px solid rgba(255,255,255,.8); background:rgba(255,255,255,.14); border-radius:50%; animation:goTapRipple .42s ease-out forwards; box-shadow:0 0 8px rgba(255,255,255,.24); }
@@ -1625,12 +1638,14 @@
     /* Sprite lookup: prefer animated Gen V pixel sprites, then static Gen V pixel sprites,
        then the repository's default pixel sprites. Avoid switching to modern 3D artwork. */
     function getPokemonSpriteUrl(id, shiny = false) {
-      const root = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
-      return shiny ? `${root}shiny/${id}.png` : `${root}${id}.png`;
+      // Prefer Pokémon Showdown's animated battle GIFs across the whole game.
+      // Some forms/species have no GIF in this collection, so callers retain
+      // their existing static-sprite fallbacks.
+      const root = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/';
+      return shiny ? `${root}shiny/${id}.gif` : `${root}${id}.gif`;
     }
     function getPokemonAnimatedUrl(id, shiny = false) {
-      const root = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/';
-      return shiny ? `${root}shiny/${id}.gif` : `${root}${id}.gif`;
+      return getPokemonSpriteUrl(id, shiny);
     }
     function getPokemonRetroStaticUrl(id, shiny = false) {
       const root = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/';
@@ -1663,15 +1678,39 @@
     function setAnimatedPokemonImage(img, pokemon) {
       if (!img || !pokemon) return;
       const spriteId = getPokemonSpriteId(pokemon);
-      const megaActive = Number(pokemon.megaActiveUntil || 0) > Date.now() && typeof window.__megaSpriteUrl === 'function' && window.__canMegaPokemon && window.__canMegaPokemon(pokemon);
+      const megaActive = Number(pokemon.megaActiveUntil || 0) > Date.now() &&
+        typeof window.__megaSpriteUrl === 'function' &&
+        typeof window.__canMegaPokemon === 'function' && window.__canMegaPokemon(pokemon);
       if (megaActive) {
-        const info = window.__megaInfoForSprite ? window.__megaInfoForSprite(pokemon) : null;
-        const megaId = info && info.sprite ? Number(info.sprite) : spriteId;
-        setRetroFallback(img, megaId, !!pokemon.shiny, spriteId);
-        img.src = getPokemonAnimatedUrl(megaId, !!pokemon.shiny);
+        // IMPORTANT: Mega sprite IDs are slugs (e.g. "rayquaza-mega"), not Pokédex numbers.
+        // Never pass them to getPokemonAnimatedUrl(), which would silently show the base form.
+        const megaUrl = window.__megaSpriteUrl(pokemon);
+        let triedFallback = false;
+        img.onerror = function() {
+          if (!triedFallback) {
+            triedFallback = true;
+            this.onerror = null;
+            this.src = getPokemonRetroStaticUrl(spriteId, !!pokemon.shiny);
+          } else {
+            this.onerror = null;
+            this.style.visibility = 'hidden';
+          }
+        };
+        img.style.visibility = 'visible';
+        // Avoid resetting animated GIFs on every buddy refresh; restarting the
+        // animation every 250ms makes Mega sprites look like they are trembling.
+        if (img.dataset.spriteUrl !== megaUrl) {
+          img.dataset.spriteUrl = megaUrl;
+          img.src = megaUrl;
+        }
       } else {
-        setRetroFallback(img, spriteId, !!pokemon.shiny);
-        img.src = getPokemonAnimatedUrl(spriteId, !!pokemon.shiny);
+        const normalUrl = getPokemonAnimatedUrl(spriteId, !!pokemon.shiny);
+        if (img.dataset.spriteUrl !== normalUrl) {
+          setRetroFallback(img, spriteId, !!pokemon.shiny);
+          img.style.visibility = 'visible';
+          img.dataset.spriteUrl = normalUrl;
+          img.src = normalUrl;
+        }
       }
       img.classList.add('pokemon-lively');
     }
@@ -3472,8 +3511,10 @@
 
     function cloudSavePayload() {
       const code = getAccountCode();
-      return { version: 5, accountCode: code, player: gameState.player, inventory: gameState.inventory, gymDaily: gameState.gymDaily,
-        pokedexCaught: [...gameState.pokedexCaught], myPokemon: gameState.myPokemon,
+      let megaProgress = {energy:{},pokemon:{}};
+      try { megaProgress = JSON.parse(localStorage.getItem('gen1MegaProgressV1') || '{"energy":{},"pokemon":{}}'); } catch(e) {}
+      return { version: 6, accountCode: code, player: gameState.player, inventory: gameState.inventory, gymDaily: gameState.gymDaily,
+        pokedexCaught: [...gameState.pokedexCaught], myPokemon: gameState.myPokemon, megaProgress,
         mapElements: { pokemon: gameState.mapElements.pokemon.map(({img, ...p}) => p), pokestops: gameState.mapElements.pokestops, gyms: gameState.mapElements.gyms }, savedAt: new Date().toISOString() };
     }
     async function cloudCurrentUser() {
@@ -3602,8 +3643,10 @@
     function saveGame(showMessage = true) {
       try {
         const code = getAccountCode();
-        const data = { version: 5, accountCode: code, player: gameState.player, inventory: gameState.inventory, gymDaily: gameState.gymDaily,
-          pokedexCaught: [...gameState.pokedexCaught], myPokemon: gameState.myPokemon,
+        let megaProgress = {energy:{},pokemon:{}};
+        try { megaProgress = JSON.parse(localStorage.getItem('gen1MegaProgressV1') || '{"energy":{},"pokemon":{}}'); } catch(e) {}
+        const data = { version: 6, accountCode: code, player: gameState.player, inventory: gameState.inventory, gymDaily: gameState.gymDaily,
+          pokedexCaught: [...gameState.pokedexCaught], myPokemon: gameState.myPokemon, megaProgress,
           mapElements: { pokemon: gameState.mapElements.pokemon.map(({img, ...p}) => p), pokestops: gameState.mapElements.pokestops, gyms: gameState.mapElements.gyms }, savedAt: new Date().toISOString() };
         const serialized = JSON.stringify(data);
         localStorage.setItem(SAVE_KEY, serialized);
@@ -3633,8 +3676,15 @@
         if (!raw) { if (showMessage) showToast('이 브라우저에서 해당 코드의 저장 데이터를 찾을 수 없습니다.', 'alert-circle'); return false; }
         const data = JSON.parse(raw);
         if (!data || !data.player || !Array.isArray(data.myPokemon)) throw new Error('invalid save');
+        if (data.megaProgress && typeof data.megaProgress === 'object') {
+          try { localStorage.setItem('gen1MegaProgressV1', JSON.stringify(data.megaProgress)); } catch(e) {}
+          try { if (typeof window.__restoreMegaProgress === 'function') window.__restoreMegaProgress(data.megaProgress); } catch(e) {}
+        }
         Object.assign(gameState.player, data.player); Object.assign(gameState.inventory, data.inventory || {}); gameState.gymDaily=data.gymDaily||{date:new Date().toISOString().slice(0,10),used:0}; if(gameState.player.pokecoins==null)gameState.player.pokecoins=0; if(gameState.inventory.gymPass==null)gameState.inventory.gymPass=2;
         gameState.pokedexCaught = new Set(data.pokedexCaught || []); gameState.myPokemon = data.myPokemon.map(p => { const species = GEN1_POKEMON.find(x => x.name === p.name); const ivAtk = Math.max(0, Math.min(15, Number(p.ivAtk) || 0)); const ivDef = Math.max(0, Math.min(15, Number(p.ivDef) || 0)); const ivHp = Math.max(0, Math.min(15, Number(p.ivHp) || 0)); return {...p, ...(species ? {baseId: species.id, type: species.type} : {}), ivAtk, ivDef, ivHp, ivPct: Math.round((ivAtk + ivDef + ivHp) / 45 * 100)}; });
+        // Restore/expire Mega state only AFTER the saved Pokémon array is installed.
+        // Previously this ran before gameState.myPokemon was replaced, so expired CP and active flags could remain stale.
+        try { if (typeof syncMegaExpiry === 'function') syncMegaExpiry(false); } catch(e) {}
         const savedMap = data.mapElements || {};
         gameState.mapElements.pokemon = (savedMap.pokemon || []).map(p => { const species = GEN1_POKEMON.find(x => x.name === p.name); if (species) p = {...p, baseId: species.id, type: species.type}; const ivAtk = Math.max(0, Math.min(15, Number(p.ivAtk) || 0)); const ivDef = Math.max(0, Math.min(15, Number(p.ivDef) || 0)); const ivHp = Math.max(0, Math.min(15, Number(p.ivHp) || 0)); p = {...p, ivAtk, ivDef, ivHp, ivPct: Math.round((ivAtk + ivDef + ivHp) / 45 * 100)}; const img = new Image(); img.src = getPokemonAnimatedUrl(p.baseId, !!p.shiny); img.onerror = () => { img.onerror = null; img.src = getPokemonSpriteUrl(p.baseId, !!p.shiny); }; return {...p, img}; });
         gameState.mapElements.pokestops = savedMap.pokestops || []; gameState.mapElements.gyms = savedMap.gyms || [];
@@ -4181,51 +4231,94 @@
       if(buddy.lastX===null||buddy.lastY===null){buddy.lastX=x;buddy.lastY=y;return;}
       const d=Math.hypot(x-buddy.lastX,y-buddy.lastY);buddy.lastX=x;buddy.lastY=y;
       if(d>0&&d<100){buddy.walked=(Number(buddy.walked)||0)+d;while(buddy.walked>=500){buddy.walked-=500;const p=gameState.myPokemon.find(q=>String(q.uniqueId)===String(buddy.id));if(!p){buddy.id=null;break;}gameState.player.candies=gameState.player.candies||{};const cid=String(p.baseId||p.id||p.name);gameState.player.candies[cid]=(Number(gameState.player.candies[cid])||0)+1;showToast(`${p.name} 파트너 사탕 +1!`,'gift');if(MEGA_IDS[Number(p.baseId||p.id)]){const eid=String(p.baseId||p.id);megaData.energy[eid]=megaEnergy(eid)+200;showToast(`${p.name} 메가 에너지 +200!`,'gift');saveMega();}try{saveGame(false);}catch(e){}}persistBuddy();}
-      (gameState.myPokemon||[]).forEach(q=>{if(q.megaActiveUntil&&q.megaActiveUntil<=Date.now()){const r=megaRecord(q);q.cp=Number(r.baseCp)||q.cp;delete q.megaActiveUntil;delete q.megaName;saveMega();}});
+      // Mega expiry is handled only by syncMegaExpiry below, which also clears the saved timer.
       const sprite=$('buddy-follow-sprite');if(sprite){if(buddy.id&&buddy.activeUntil>Date.now()){sprite.classList.remove('hidden');const elapsed=Date.now()/650;sprite.style.left=`calc(50% - ${68+Math.sin(elapsed)*13}px)`;sprite.style.top=`calc(50% + ${8+Math.cos(elapsed)*5}px)`;}else sprite.classList.add('hidden');}
     }catch(e){}},1000);
     // Mega Evolution system: species energy + per-Pokemon Mega Level and cooldown.
     const MEGA_KEY='gen1MegaProgressV1';
     const MEGA_IDS={
-      3:{name:'메가이상해꽃',sprite:10033},6:{name:'메가리자몽 X',sprite:10034},9:{name:'메가거북왕',sprite:10036},
-      15:{name:'메가독침붕',sprite:10040},18:{name:'메가피죤투',sprite:10073},
-      65:{name:'메가후딘',sprite:10065},80:{name:'메가야도란',sprite:10080},94:{name:'메가팬텀',sprite:10038},
-      115:{name:'메가캥카',sprite:10039},127:{name:'메가쁘사이저',sprite:10078},130:{name:'메가갸라도스',sprite:10041},142:{name:'메가프테라',sprite:10049},
-      181:{name:'메가전룡',sprite:10045},208:{name:'메가강철톤',sprite:10072},212:{name:'메가핫삼',sprite:10046},214:{name:'메가헤라크로스',sprite:10070},
-      229:{name:'메가헬가',sprite:10048},248:{name:'메가마기라스',sprite:10049},
-      254:{name:'메가나무킹',sprite:10065},257:{name:'메가번치코',sprite:10050},260:{name:'메가대짱이',sprite:10064},282:{name:'메가가디안',sprite:10051},
-      302:{name:'메가깜까미',sprite:10066},303:{name:'메가입치트',sprite:10052},306:{name:'메가보스로라',sprite:10053},308:{name:'메가요가램',sprite:10054},310:{name:'메가썬더볼트',sprite:10055},
-      319:{name:'메가샤크니아',sprite:10070},323:{name:'메가폭타',sprite:10087},334:{name:'메가파비코리',sprite:10067},
-      354:{name:'메가다크펫',sprite:10069},359:{name:'메가앱솔',sprite:10065},362:{name:'메가얼음귀신',sprite:10074},373:{name:'메가보만다',sprite:10089},376:{name:'메가메타그로스',sprite:10076},
-      380:{name:'메가라티아스',sprite:10062},381:{name:'메가라티오스',sprite:10063},384:{name:'메가레쿠쟈',sprite:10079},
-      428:{name:'메가이어롭',sprite:10088},445:{name:'메가한카리아스',sprite:10071},448:{name:'메가루카리오',sprite:10059},460:{name:'메가눈설왕',sprite:10060},
-      475:{name:'메가엘레이드',sprite:10068},531:{name:'메가다부니',sprite:10069},719:{name:'메가디안시',sprite:10075}
+      3:{name:'메가이상해꽃',sprite:'venusaur-mega'},
+      6:{name:'메가리자몽 X',sprite:'charizard-mega-x'},
+      9:{name:'메가거북왕',sprite:'blastoise-mega'},
+      15:{name:'메가독침붕',sprite:'beedrill-mega'},
+      18:{name:'메가피죤투',sprite:'pidgeot-mega'},
+      65:{name:'메가후딘',sprite:'alakazam-mega'},
+      80:{name:'메가야도란',sprite:'slowbro-mega'},
+      94:{name:'메가팬텀',sprite:'gengar-mega'},
+      115:{name:'메가캥카',sprite:'kangaskhan-mega'},
+      127:{name:'메가쁘사이저',sprite:'pinsir-mega'},
+      130:{name:'메가갸라도스',sprite:'gyarados-mega'},
+      142:{name:'메가프테라',sprite:'aerodactyl-mega'},
+      181:{name:'메가전룡',sprite:'ampharos-mega'},
+      208:{name:'메가강철톤',sprite:'steelix-mega'},
+      212:{name:'메가핫삼',sprite:'scizor-mega'},
+      214:{name:'메가헤라크로스',sprite:'heracross-mega'},
+      229:{name:'메가헬가',sprite:'houndoom-mega'},
+      248:{name:'메가마기라스',sprite:'tyranitar-mega'},
+      254:{name:'메가나무킹',sprite:'sceptile-mega'},
+      257:{name:'메가번치코',sprite:'blaziken-mega'},
+      260:{name:'메가대짱이',sprite:'swampert-mega'},
+      282:{name:'메가가디안',sprite:'gardevoir-mega'},
+      302:{name:'메가깜까미',sprite:'sableye-mega'},
+      303:{name:'메가입치트',sprite:'mawile-mega'},
+      306:{name:'메가보스로라',sprite:'aggron-mega'},
+      308:{name:'메가요가램',sprite:'medicham-mega'},
+      310:{name:'메가썬더볼트',sprite:'manectric-mega'},
+      319:{name:'메가샤크니아',sprite:'sharpedo-mega'},
+      323:{name:'메가폭타',sprite:'camerupt-mega'},
+      334:{name:'메가파비코리',sprite:'altaria-mega'},
+      354:{name:'메가다크펫',sprite:'banette-mega'},
+      359:{name:'메가앱솔',sprite:'absol-mega'},
+      362:{name:'메가얼음귀신',sprite:'glalie-mega'},
+      373:{name:'메가보만다',sprite:'salamence-mega'},
+      376:{name:'메가메타그로스',sprite:'metagross-mega'},
+      380:{name:'메가라티아스',sprite:'latias-mega'},
+      381:{name:'메가라티오스',sprite:'latios-mega'},
+      384:{name:'메가레쿠쟈',sprite:'rayquaza-mega'},
+      428:{name:'메가이어롭',sprite:'lopunny-mega'},
+      445:{name:'메가한카리아스',sprite:'garchomp-mega'},
+      448:{name:'메가루카리오',sprite:'lucario-mega'},
+      460:{name:'메가눈설왕',sprite:'abomasnow-mega'},
+      475:{name:'메가엘레이드',sprite:'gallade-mega'},
+      531:{name:'메가다부니',sprite:'audino-mega'},
+      719:{name:'메가디안시',sprite:'diancie-mega'}
     };
+    const MEGA_SPRITE_ROOT='https://play.pokemonshowdown.com/sprites/home/';
+    function getMegaSpriteUrl(info,shiny=false){
+      // Prefer animated pixel-art battle sprites; keep the classic retro pixel style.
+      // Pokémon Showdown hosts Mega forms as GIFs in ani / ani-shiny.
+      return info?`https://play.pokemonshowdown.com/sprites/${shiny?'ani-shiny':'ani'}/${info.sprite}.gif`:'';
+    }
     let megaData={energy:{},pokemon:{}};try{megaData=Object.assign(megaData,JSON.parse(localStorage.getItem(MEGA_KEY)||'{}'));}catch(e){}
+    window.__restoreMegaProgress=function(saved){if(!saved||typeof saved!=='object')return;megaData={energy:{...(saved.energy||{})},pokemon:{...(saved.pokemon||{})}};try{localStorage.setItem(MEGA_KEY,JSON.stringify(megaData));}catch(e){};syncMegaExpiry(false);};
     const megaEnergy=id=>Number(megaData.energy[String(id)]||0);
     function saveMega(){try{localStorage.setItem(MEGA_KEY,JSON.stringify(megaData));}catch(e){} try{if(typeof saveGame==='function')saveGame(false);}catch(e){}}
+    function syncMegaExpiry(saveChanges=true){let changed=false;const now=Date.now();(gameState.myPokemon||[]).forEach(p=>{const until=Number(p.megaActiveUntil||0);if(until>0&&until<=now){const r=megaData.pokemon[String(p.uniqueId)];const baseCp=Number(p.megaBaseCp)||Number(r&&r.baseCp)||0;if(baseCp>0)p.cp=baseCp;delete p.megaActiveUntil;delete p.megaName;delete p.megaBaseCp;if(r){r.activeUntil=0;if(baseCp>0)r.baseCp=baseCp;}changed=true;}});Object.values(megaData.pokemon||{}).forEach(r=>{if(r&&Number(r.activeUntil||0)>0&&Number(r.activeUntil)<=now){r.activeUntil=0;changed=true;}});if(changed){try{localStorage.setItem(MEGA_KEY,JSON.stringify(megaData));}catch(e){}if(saveChanges){try{saveGame(false);}catch(e){}try{renderPokemonBox();updateHUD();if(typeof renderMega==='function')renderMega();}catch(e){}}}return changed;}
     function megaInfo(p){return p?MEGA_IDS[Number(p.baseId||p.id)]||null:null;}
     function megaRecord(p){const k=String(p.uniqueId);if(!megaData.pokemon[k])megaData.pokemon[k]={level:0,count:0,activeUntil:0,readyAt:0,baseCp:Number(p.cp)||0};return megaData.pokemon[k];}
     function renderMega(){const p=(gameState.myPokemon||[]).find(x=>String(x.uniqueId)===String(buddy.id));const info=megaInfo(p);const sum=$('mega-summary'),list=$('mega-energy-list'),btn=$('mega-evolve-btn');if(!sum||!list||!btn)return;
       if(!p||!info){sum.textContent='현재 파트너는 메가진화를 할 수 없어요. 메가진화 가능한 포켓몬을 파트너로 선택하세요.';list.innerHTML=Object.keys(MEGA_IDS).map(id=>{const q=(gameState.myPokemon||[]).find(x=>Number(x.baseId||x.id)===Number(id));return q?`<div class="rounded-xl border p-3 flex items-center gap-3"><img src="${getPokemonImage(q)}" style="width:42px;height:42px;object-fit:contain"><div class="flex-1"><b>${esc(q.name)}</b><div class="text-xs text-slate-500">${MEGA_IDS[id].name} · 에너지 ${megaEnergy(id)}</div></div><button onclick="selectBuddy('${String(q.uniqueId).replace(/'/g,'')}')" class="rounded-lg bg-emerald-600 text-white px-3 py-2 text-sm font-bold">파트너</button></div>`:''}).filter(Boolean).join('')||'<div class="text-sm text-slate-500">보유 중인 메가진화 가능 포켓몬이 없어요.</div>';btn.disabled=true;btn.classList.add('opacity-50');return;}
-      const r=megaRecord(p),remaining=Math.max(0,r.readyAt-Date.now()),active=r.activeUntil>Date.now();sum.innerHTML=`<div class="flex items-center gap-3"><img src="${getPokemonAnimatedUrl(info.sprite,!!p.shiny)}" onerror="this.src='${getPokemonImage(p)}'" style="width:70px;height:70px;object-fit:contain"><div><b class="text-base">${info.name}</b><div>메가 레벨 ${r.level||0} · 진화 횟수 ${r.count||0}</div><div>메가 에너지: <b>${megaEnergy(p.baseId||p.id)}</b></div><div>${active?'메가진화 중 · '+Math.ceil((r.activeUntil-Date.now())/60000)+'분 남음':remaining>0?'무료 재진화까지 '+Math.ceil(remaining/3600000)+'시간':'재진화 가능'}</div></div></div>`;
+      const r=megaRecord(p),remaining=Math.max(0,r.readyAt-Date.now()),active=r.activeUntil>Date.now();sum.innerHTML=`<div class="flex items-center gap-3"><img src="${getMegaSpriteUrl(info,!!p.shiny)}" onerror="this.onerror=null;this.src='${getPokemonRetroStaticUrl(getPokemonSpriteId(p),!!p.shiny)}'" style="width:70px;height:70px;object-fit:contain"><div><b class="text-base">${info.name}</b><div>메가 레벨 ${r.level||0} · 진화 횟수 ${r.count||0}</div><div>메가 에너지: <b>${megaEnergy(p.baseId||p.id)}</b></div><div>${active?'메가진화 중 · '+Math.ceil((r.activeUntil-Date.now())/60000)+'분 남음':remaining>0?'무료 재진화까지 '+Math.ceil(remaining/3600000)+'시간':'재진화 가능'}</div></div></div>`;
       list.innerHTML=`<div class="rounded-xl bg-fuchsia-50 border border-fuchsia-200 p-3 text-sm">첫 진화 비용: 200 에너지 · 포획 보너스: 해당 종 에너지 +10 · 파트너 거리 보상: 사탕 +1 및 에너지 +200</div>`;
       btn.disabled=active;btn.classList.toggle('opacity-50',active);btn.textContent=active?'메가진화 중':r.level===0?'메가진화 (에너지 200)':remaining>0?'메가진화 (에너지 200 또는 대기)':'메가진화 (무료)';
     }
     window.megaEvolveBuddy=function(){const p=(gameState.myPokemon||[]).find(x=>String(x.uniqueId)===String(buddy.id)),info=megaInfo(p);if(!p||!info){showToast('메가진화 가능한 파트너를 선택해 주세요.');return;}const r=megaRecord(p);if(r.activeUntil>Date.now()){showToast('이미 메가진화 중이에요.');return;}const energyId=String(p.baseId||p.id),left=Math.max(0,r.readyAt-Date.now());if(r.level===0||left>0){if(megaEnergy(energyId)<200){showToast('메가 에너지 200개가 필요해요.');return;}megaData.energy[energyId]=megaEnergy(energyId)-200;}else{ /* ready after rest: free */ }
       r.count=(r.count||0)+1;r.level=r.count>=30?4:r.count>=7?3:r.count>=2?2:1;r.activeUntil=Date.now()+18*60*60*1000;const days=[5,3,2,1][Math.max(0,Math.min(3,r.level-1))];r.readyAt=r.activeUntil+days*24*60*60*1000;
-      p.megaActiveUntil=r.activeUntil;p.cp=Math.round((Number(r.baseCp)||Number(p.cp)||0)*1.3);p.megaName=info.name;saveMega();try{renderBuddyScreen();}catch(e){}renderMega();updateHUD();renderPokemonBox();showToast(`${info.name} 메가진화! CP가 상승했고 18시간 유지돼요.`,'gift');};
+      r.baseCp=Number(r.baseCp)||Number(p.cp)||0;p.megaBaseCp=Number(r.baseCp);p.megaActiveUntil=r.activeUntil;p.cp=Math.round(p.megaBaseCp*1.3);p.megaName=info.name;saveMega();try{renderBuddyScreen();}catch(e){}renderMega();updateHUD();renderPokemonBox();showToast(`${info.name} 메가진화! CP가 상승했고 18시간 유지돼요.`,'gift');};
     // Allow Mega Evolution directly from any eligible Pokémon in the Box (not only the buddy).
     window.renderDetailMega=function(p){
       const panel=document.getElementById('detail-mega-panel'),img=document.getElementById('detail-mega-img'),status=document.getElementById('detail-mega-status'),btn=document.getElementById('detail-mega-btn');
       if(!panel||!img||!status||!btn)return;const info=megaInfo(p);if(!info){panel.classList.add('hidden');return;}panel.classList.remove('hidden');
       const r=megaRecord(p),active=(r.activeUntil||p.megaActiveUntil||0)>Date.now(),left=Math.max(0,(r.readyAt||0)-Date.now());
-      img.src=active?window.__megaSpriteUrl(p):getPokemonImage(p);img.onerror=function(){this.onerror=null;this.src=getPokemonImage(p);};
+      if(active){setAnimatedPokemonImage(img,p);}else{setAnimatedPokemonImage(img,p);}
       status.innerHTML=`<b>${info.name}</b><div>메가진화 가능 · 메가 레벨 ${r.level||0}</div><div>메가 에너지 ${megaEnergy(p.baseId||p.id)}개</div><div>${active?'메가진화 중 · '+Math.ceil(((r.activeUntil||p.megaActiveUntil)-Date.now())/60000)+'분 남음':left>0?'무료 재진화까지 '+Math.ceil(left/3600000)+'시간':'현재 일반 모습 · 메가진화 가능'}</div><div>진화 유지 시간: 18시간</div>`;
       btn.disabled=active;btn.textContent=active?'메가진화 중':(r.level===0||left>0?'메가진화 (에너지 200)':'메가진화 (무료)');btn.classList.toggle('opacity-50',active);
     };
+    // Restore original CP automatically after the 18-hour Mega timer expires, even if the player does not walk.
+    setInterval(()=>{try{syncMegaExpiry(true);}catch(e){}},15000);
+    syncMegaExpiry(false);
     window.__canMegaPokemon=function(p){return !!megaInfo(p);};
-    window.__megaSpriteUrl=function(p){const info=megaInfo(p);return info?getPokemonAnimatedUrl(info.sprite,!!p.shiny):getPokemonImage(p);};
+    window.__megaSpriteUrl=function(p){const info=megaInfo(p);return info?getMegaSpriteUrl(info,!!p.shiny):getPokemonImage(p);};
     window.__megaInfoForSprite=function(p){return megaInfo(p);};
     window.megaEvolvePokemon=function(uniqueId){
       const p=(gameState.myPokemon||[]).find(x=>String(x.uniqueId)===String(uniqueId)),info=megaInfo(p);if(!p||!info){showToast('이 포켓몬은 메가진화를 할 수 없어요.');return;}
@@ -4233,7 +4326,7 @@
       const energyId=String(p.baseId||p.id),left=Math.max(0,r.readyAt-Date.now());
       if(r.level===0||left>0){if(megaEnergy(energyId)<200){showToast(`${info.name} 에너지 200개가 필요해요. 현재 ${megaEnergy(energyId)}개입니다.`);return;}megaData.energy[energyId]=megaEnergy(energyId)-200;}
       r.baseCp=Number(r.baseCp)||Number(p.cp)||0;r.count=(r.count||0)+1;r.level=r.count>=30?4:r.count>=7?3:r.count>=2?2:1;r.activeUntil=Date.now()+18*60*60*1000;const days=[5,3,2,1][Math.max(0,Math.min(3,r.level-1))];r.readyAt=r.activeUntil+days*24*60*60*1000;
-      p.megaActiveUntil=r.activeUntil;p.cp=Math.round(r.baseCp*1.3);p.megaName=info.name;saveMega();renderPokemonBox();try{renderBuddyScreen();}catch(e){}updateHUD();saveGame(false);try{window.renderDetailMega(p);document.getElementById("detail-img").src=window.__megaSpriteUrl(p);document.getElementById("detail-name").textContent=info.name;document.getElementById("detail-cp").textContent=`CP ${p.cp}`;}catch(e){} showToast(`${info.name} 메가진화! 18시간 동안 유지됩니다.`,'gift');
+      p.megaBaseCp=Number(r.baseCp)||Number(p.cp)||0;p.megaActiveUntil=r.activeUntil;p.cp=Math.round(p.megaBaseCp*1.3);p.megaName=info.name;saveMega();renderPokemonBox();try{renderBuddyScreen();}catch(e){}updateHUD();saveGame(false);try{window.renderDetailMega(p);setAnimatedPokemonImage(document.getElementById("detail-img"),p);document.getElementById("detail-name").textContent=info.name;document.getElementById("detail-cp").textContent=`CP ${p.cp}`;}catch(e){} showToast(`${info.name} 메가진화! 18시간 동안 유지됩니다.`,'gift');
     };
     // Capture rewards: +10 species Mega Energy for catchable Mega species.
     const oldCatchReward=(function(){return null;})();
@@ -4243,7 +4336,7 @@
     const oldBuddyId=buddy.id;
     const originalFeedBuddyBerry=window.feedBuddyBerry;
     // Actual sprite follows the player; it is the selected Pokémon's artwork, not a paw/footstep symbol.
-    const oldFollowInterval=setInterval(()=>{try{const p=(gameState.myPokemon||[]).find(q=>String(q.uniqueId)===String(buddy.id));const img=$('buddy-follow-img');const wrap=$('buddy-follow-sprite');if(img&&wrap){if(p&&buddy.activeUntil>Date.now()){wrap.classList.remove('hidden');const info=megaInfo(p);const sid=(p.megaActiveUntil>Date.now()&&info)?Number(info.sprite):getPokemonSpriteId(p);img.dataset.spriteFallback='0';img.onerror=function(){const n=Number(this.dataset.spriteFallback||0);if(n===0){this.dataset.spriteFallback='1';this.src=getPokemonRetroStaticUrl(sid,!!p.shiny);}else if(n===1){this.dataset.spriteFallback='2';this.src=getPokemonSpriteUrl(sid,!!p.shiny);}else{this.onerror=null;this.style.display='none';}};img.style.display='block';img.src=getPokemonAnimatedUrl(sid,!!p.shiny);img.style.transform=`translateY(${Math.sin(Date.now()/170)*3}px)`;}else{wrap.classList.add('hidden');img.removeAttribute('src');}}}catch(e){}},250);
+    const oldFollowInterval=setInterval(()=>{try{const p=(gameState.myPokemon||[]).find(q=>String(q.uniqueId)===String(buddy.id));const img=$('buddy-follow-img');const wrap=$('buddy-follow-sprite');if(img&&wrap){if(p&&buddy.activeUntil>Date.now()){wrap.classList.remove('hidden');const info=megaInfo(p);img.style.display='block';setAnimatedPokemonImage(img,p);img.style.transform='';}else{wrap.classList.add('hidden');img.removeAttribute('src');}}}catch(e){}},250);
     // The capture code calls this hook after registering a catch.
     window.__grantMegaCatchEnergy=function(baseId){if(MEGA_IDS[Number(baseId)]){megaData.energy[String(baseId)]=megaEnergy(baseId)+10;saveMega();}};
     const oldRenderBox=window.renderPokemonBox;
