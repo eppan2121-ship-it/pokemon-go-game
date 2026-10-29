@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pokémon GO - Gen 1–6 Edition (Cloud Save Safety Fix)</title>
+  <title>Pokémon GO - Gen 1–8 Edition</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -557,6 +557,13 @@
         <button id="detail-mega-btn" onclick="window.megaEvolvePokemon(activeDetailPokemon && activeDetailPokemon.uniqueId)" class="mt-3 w-full rounded-xl bg-fuchsia-600 text-white font-black py-2">메가진화 (에너지 200)</button>
       </div>
 
+      <!-- Form change / absorption controls -->
+      <div id="forme-actions" class="w-full rounded-2xl border border-indigo-200 bg-indigo-50 p-3 mb-2">
+        <div class="font-black text-indigo-800 text-sm mb-1">폼체인지 · 흡수/융합</div>
+        <div id="forme-status" class="text-xs text-indigo-700 mb-2">폼체인지 가능한 포켓몬이면 선택 메뉴가 표시됩니다.</div>
+        <button id="btn-forme-change" onclick="changePokemonForm()" class="w-full py-2 rounded-xl bg-indigo-600 text-white font-black text-sm">폼체인지 / 흡수</button>
+      </div>
+
       <!-- Actions (Power Up / Evolve / Transfer) -->
       <div class="w-full flex flex-col gap-2.5">
         <button id="btn-powerup" onclick="powerUpPokemon()" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-black text-sm shadow-md hover:brightness-105 active:scale-98 flex justify-between px-5 items-center">
@@ -583,8 +590,8 @@
       <div class="p-4 bg-gradient-to-r from-red-500 to-rose-600 text-white flex justify-between items-center">
         <div class="flex items-center gap-2">
           <i data-lucide="book-open" class="w-6 h-6"></i>
-          <h2 class="text-xl font-black font-jua">전국도감 포켓몬 (1-809)</h2>
-          <span id="pokedex-progress-tag" class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-bold">포획 0 / 809</span>
+          <h2 class="text-xl font-black font-jua">전국도감 포켓몬 (1-898)</h2>
+          <span id="pokedex-progress-tag" class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-bold">포획 0 / 898</span>
         </div>
         <button onclick="closeModal('pokedex-modal')" class="w-8 h-8 rounded-full bg-black/20 flex items-center justify-center hover:bg-black/40">
           <i data-lucide="x" class="w-5 h-5"></i>
@@ -606,7 +613,7 @@
     <div class="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-3xl bg-white shadow-2xl">
       <div class="p-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white flex items-center justify-between"><div><h2 class="text-2xl font-black">필드 리서치</h2><p class="text-sm mt-1">태스크를 완료하고 보상을 받으세요!</p></div><button onclick="closeModal('research-modal')" class="w-9 h-9 rounded-full bg-white/20 font-black">✕</button></div>
       <div class="p-4 space-y-3">
-        <div class="grid grid-cols-3 gap-2"><button id="research-tab-daily" onclick="setResearchTab('daily')" class="rounded-xl bg-violet-600 text-white p-2 font-black">데일리</button><button id="research-tab-event" onclick="setResearchTab('event')" class="rounded-xl bg-slate-100 text-slate-500 p-2 font-black">이벤트</button><button id="research-tab-main" onclick="setResearchTab('main')" class="rounded-xl bg-slate-100 text-slate-500 p-2 font-black">메인</button></div>
+        <div class="grid grid-cols-3 gap-2"><button type="button" id="research-tab-daily" onclick="setResearchTab('daily')" class="rounded-xl bg-violet-600 text-white p-2 font-black">데일리</button><button type="button" id="research-tab-event" onclick="setResearchTab('event')" class="rounded-xl bg-slate-100 text-slate-500 p-2 font-black">이벤트</button><button type="button" id="research-tab-main" onclick="setResearchTab('main')" class="rounded-xl bg-slate-100 text-slate-500 p-2 font-black">메인</button></div>
         <div id="welcome-research-card" class="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-100 p-4"></div>
         <div id="research-stamp-panel" class="rounded-2xl bg-amber-50 border border-amber-200 p-3"></div><div id="research-tab-content"><div class="text-xs font-black uppercase tracking-wide text-slate-500">데일리 태스크</div><div class="space-y-3" id="research-task-list"></div></div>
       </div>
@@ -743,10 +750,10 @@
             </div>
             <p id="pvp-room-status" class="text-xs text-indigo-900" aria-live="polite">온라인 대전방에 연결할 수 있어요.</p>
             <div class="grid grid-cols-2 gap-2"><button type="button" onclick="pvpStartBattle()" class="rounded-xl bg-emerald-600 text-white font-black py-2">3마리 선택 후 대전 시작</button><button type="button" onclick="pvpLeaveRoom()" class="rounded-xl bg-white border border-rose-300 text-rose-700 font-bold py-2">방 나가기</button></div>
-            <div id="pvp-battle-panel" class="hidden rounded-xl bg-slate-950 text-white p-3 space-y-2"><div class="flex items-center justify-between"><div class="font-black">⚔️ 실시간 친구 대전 · 3 VS 3</div><button onclick="pvpLeaveRoom()" class="rounded-lg bg-rose-600 px-3 py-2 font-black">나가기 ✕</button></div><div id="pvp-opponent-label" class="text-sm">상대 연결 대기 중</div><div class="pvp-battlefield"><div class="flex items-center gap-3"><img id="pvp-enemy-sprite" class="pvp-sprite" alt="상대 포켓몬"><div class="flex-1"><b id="pvp-enemy-name">상대 포켓몬</b><div class="h-3 rounded bg-slate-700 overflow-hidden mt-2"><div id="pvp-hp-bar" class="h-full bg-emerald-400" style="width:100%"></div></div><div id="pvp-hp-text" class="text-xs mt-1">상대 HP: 100 / 100</div><div id="pvp-enemy-team" class="text-xs mt-1">상대 팀 3마리</div></div></div><div class="flex items-center gap-3"><img id="pvp-player-sprite" class="pvp-sprite" alt="내 포켓몬"><div class="flex-1"><b id="pvp-active-pokemon">내 포켓몬: 준비 중</b><div class="h-3 rounded bg-slate-700 overflow-hidden mt-2"><div id="pvp-own-hp-bar" class="h-full bg-emerald-500" style="width:100%"></div></div><div id="pvp-own-hp-text" class="text-xs mt-1">내 HP</div><div id="pvp-own-team" class="text-xs mt-1">내 팀 3마리</div><div class="h-2 rounded bg-slate-700 overflow-hidden mt-2"><div id="pvp-energy-bar" class="h-full bg-violet-400" style="width:0%"></div></div><div id="pvp-energy-text" class="text-xs">스페셜 에너지 0%</div></div></div></div><div class="grid grid-cols-2 gap-2"><button onclick="pvpAttack('fast')" class="rounded-xl bg-blue-600 p-4 font-black text-lg">⚡ 화면 탭 · 노말 어택</button><button id="pvp-charge-btn" onclick="pvpAttack('charge')" class="rounded-xl bg-orange-500 p-4 font-black text-lg" disabled>💥 스페셜 어택</button></div><div id="pvp-battle-log" class="rounded-lg bg-white/10 p-2 text-sm">상대가 준비하면 대전을 시작하세요.</div></div><div id="pvp-charge-overlay" aria-label="스페셜 어택 버블 미니게임"><div class="p-5 text-center"><div class="text-2xl font-black">💥 스페셜 어택!</div><div id="pvp-charge-instruction" class="mt-2">버블을 빠르게 터뜨려!</div><div id="pvp-charge-score" class="font-black text-xl mt-2">0 / 12</div></div><div id="pvp-charge-bubbles"></div></div>
+            <div id="pvp-battle-panel" class="hidden rounded-xl bg-slate-950 text-white p-3 space-y-2"><div class="flex items-center justify-between"><div class="font-black">⚔️ 실시간 친구 대전 · 3 VS 3</div><button onclick="pvpLeaveRoom()" class="rounded-lg bg-rose-600 px-3 py-2 font-black">나가기 ✕</button></div><div id="pvp-opponent-label" class="text-sm">상대 연결 대기 중</div><div class="pvp-battlefield"><div class="flex items-center gap-3"><img id="pvp-enemy-sprite" class="pvp-sprite" alt="상대 포켓몬"><div class="flex-1"><b id="pvp-enemy-name">상대 포켓몬</b><div class="h-3 rounded bg-slate-700 overflow-hidden mt-2"><div id="pvp-hp-bar" class="h-full bg-emerald-400" style="width:100%"></div></div><div id="pvp-hp-text" class="text-xs mt-1">상대 HP: 100 / 100</div><div id="pvp-enemy-team" class="text-xs mt-1">상대 팀 3마리</div></div></div><div class="flex items-center gap-3"><img id="pvp-player-sprite" class="pvp-sprite" alt="내 포켓몬"><div class="flex-1"><b id="pvp-active-pokemon">내 포켓몬: 준비 중</b><div class="h-3 rounded bg-slate-700 overflow-hidden mt-2"><div id="pvp-own-hp-bar" class="h-full bg-emerald-500" style="width:100%"></div></div><div id="pvp-own-hp-text" class="text-xs mt-1">내 HP</div><div id="pvp-own-team" class="text-xs mt-1">내 팀 3마리</div><div class="h-2 rounded bg-slate-700 overflow-hidden mt-2"><div id="pvp-energy-bar" class="h-full bg-violet-400" style="width:0%"></div></div><div id="pvp-energy-text" class="text-xs">스페셜 에너지 0%</div></div></div></div><div id="pvp-charge-buttons" class="flex items-end justify-center gap-3 min-h-[92px]" aria-label="스페셜 어택 버튼"></div><div class="text-center text-xs text-white/70">화면을 탭해 노말 어택 · 에너지가 차면 회색 원형 버튼을 눌러 스페셜 어택</div><div id="pvp-battle-log" class="rounded-lg bg-white/10 p-2 text-sm">상대가 준비하면 대전을 시작하세요.</div></div><div id="pvp-charge-overlay" aria-label="스페셜 어택 버블 미니게임"><div class="p-5 text-center"><div class="text-2xl font-black">💥 스페셜 어택!</div><div id="pvp-charge-instruction" class="mt-2">버블을 빠르게 터뜨려!</div><div id="pvp-charge-score" class="font-black text-xl mt-2">0 / 12</div></div><div id="pvp-charge-bubbles"></div></div>
           </div>
           <label for="battle-mode-select" class="block text-sm font-extrabold">배틀 방식</label>
-          <select id="battle-mode-select" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-bold"><option value="go">⚡ Pokémon GO 방식 — 연속 노말 어택과 차지 어택</option><option value="classic">🎮 공식 RPG 방식 — 턴제 기술 선택</option></select>
+          <select id="battle-mode-select" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-bold"><option value="go">⚡ Pokémon GO 방식 — 연속 노말 어택과 차지 어택</option><option value="classic">🎮 공식 RPG 방식 — 턴제 기술 선택 (하루 10회)</option></select>
           <label class="block text-sm font-extrabold">내 출전 포켓몬 3마리 (서로 다른 포켓몬을 선택하세요)</label>
           <select id="battle-pokemon-select" aria-label="첫 번째 출전 포켓몬" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-bold text-slate-900" style="color:#0f172a;background-color:#fff" ></select>
           <select id="battle-pokemon-select-2" aria-label="두 번째 출전 포켓몬" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-bold text-slate-900" style="color:#0f172a;background-color:#fff" ></select>
@@ -1635,13 +1642,107 @@
       { id:809, name:"멜메탈", type:"강철", baseAtk:226, baseDef:190, baseHp:264, evolveTo:null, evolveCost:0 }
     ];
 
-        GEN1_POKEMON.push(...GEN2_POKEMON, ...GEN3_POKEMON, ...GEN4_POKEMON, ...GEN5_POKEMON, ...GEN6_POKEMON, ...GEN7_POKEMON);
+        /* Galar Pokédex #810–898. National Dex IDs are also the Showdown/PokeAPI GIF IDs. */
+    const GEN8_POKEMON = [
+      {id:810,name:"흥나숭",type:"풀",baseAtk:122,baseDef:91,baseHp:137,evolveTo:811,evolveCost:25},
+      {id:811,name:"채키몽",type:"풀",baseAtk:165,baseDef:134,baseHp:172,evolveTo:812,evolveCost:100},
+      {id:812,name:"고릴타",type:"풀",baseAtk:239,baseDef:168,baseHp:225,evolveTo:null,evolveCost:0},
+      {id:813,name:"염버니",type:"불꽃",baseAtk:132,baseDef:79,baseHp:137,evolveTo:814,evolveCost:25},
+      {id:814,name:"래비풋",type:"불꽃",baseAtk:170,baseDef:125,baseHp:163,evolveTo:815,evolveCost:100},
+      {id:815,name:"에이스번",type:"불꽃",baseAtk:238,baseDef:163,baseHp:190,evolveTo:null,evolveCost:0},
+      {id:816,name:"울머기",type:"물",baseAtk:132,baseDef:79,baseHp:137,evolveTo:817,evolveCost:25},
+      {id:817,name:"누겔레온",type:"물",baseAtk:186,baseDef:123,baseHp:163,evolveTo:818,evolveCost:100},
+      {id:818,name:"인텔리레온",type:"물",baseAtk:262,baseDef:142,baseHp:172,evolveTo:null,evolveCost:0},
+      {id:819,name:"탐리스",type:"노말",baseAtk:95,baseDef:86,baseHp:172,evolveTo:820,evolveCost:50},
+      {id:820,name:"요씽리스",type:"노말",baseAtk:160,baseDef:156,baseHp:260,evolveTo:null,evolveCost:0},
+      {id:821,name:"파라꼬",type:"비행",baseAtk:88,baseDef:67,baseHp:120,evolveTo:822,evolveCost:25},
+      {id:822,name:"파크로우",type:"비행",baseAtk:129,baseDef:110,baseHp:169,evolveTo:823,evolveCost:100},
+      {id:823,name:"아머까오",type:"비행/강철",baseAtk:163,baseDef:192,baseHp:221,evolveTo:null,evolveCost:0},
+      {id:824,name:"두루지벌레",type:"벌레",baseAtk:46,baseDef:67,baseHp:93,evolveTo:825,evolveCost:25},
+      {id:825,name:"레돔벌레",type:"벌레/에스퍼",baseAtk:67,baseDef:115,baseHp:137,evolveTo:826,evolveCost:100},
+      {id:826,name:"이올브",type:"벌레/에스퍼",baseAtk:156,baseDef:194,baseHp:155,evolveTo:null,evolveCost:0},
+      {id:827,name:"훔처우",type:"악",baseAtk:85,baseDef:82,baseHp:120,evolveTo:828,evolveCost:50},
+      {id:828,name:"폭슬라이",type:"악",baseAtk:172,baseDef:164,baseHp:172,evolveTo:null,evolveCost:0},
+      {id:829,name:"꼬모카",type:"풀",baseAtk:78,baseDef:90,baseHp:120,evolveTo:830,evolveCost:25},
+      {id:830,name:"백솜모카",type:"풀",baseAtk:164,baseDef:176,baseHp:186,evolveTo:null,evolveCost:0},
+      {id:831,name:"우르",type:"노말",baseAtk:76,baseDef:97,baseHp:123,evolveTo:832,evolveCost:50},
+      {id:832,name:"배우르",type:"노말",baseAtk:159,baseDef:198,baseHp:176,evolveTo:null,evolveCost:0},
+      {id:833,name:"깨물부기",type:"물",baseAtk:114,baseDef:85,baseHp:137,evolveTo:834,evolveCost:50},
+      {id:834,name:"갈가부기",type:"물/바위",baseAtk:213,baseDef:164,baseHp:207,evolveTo:null,evolveCost:0},
+      {id:835,name:"멍파치",type:"전기",baseAtk:80,baseDef:90,baseHp:128,evolveTo:836,evolveCost:50},
+      {id:836,name:"펄스멍",type:"전기",baseAtk:197,baseDef:131,baseHp:170,evolveTo:null,evolveCost:0},
+      {id:837,name:"탄동",type:"바위",baseAtk:73,baseDef:91,baseHp:102,evolveTo:838,evolveCost:25},
+      {id:838,name:"탄차곤",type:"바위",baseAtk:95,baseDef:141,baseHp:137,evolveTo:839,evolveCost:100},
+      {id:839,name:"석탄산",type:"바위/불꽃",baseAtk:146,baseDef:198,baseHp:242,evolveTo:null,evolveCost:0},
+      {id:840,name:"과사삭벌레",type:"풀/드래곤",baseAtk:71,baseDef:116,baseHp:120,evolveTo:841,evolveCost:50},
+      {id:841,name:"애프룡",type:"풀/드래곤",baseAtk:214,baseDef:144,baseHp:172,evolveTo:null,evolveCost:0},
+      {id:842,name:"단지래플",type:"풀/드래곤",baseAtk:178,baseDef:146,baseHp:242,evolveTo:null,evolveCost:0},
+      {id:843,name:"모래뱀",type:"땅",baseAtk:103,baseDef:123,baseHp:141,evolveTo:844,evolveCost:50},
+      {id:844,name:"사다이사",type:"땅",baseAtk:202,baseDef:207,baseHp:176,evolveTo:null,evolveCost:0},
+      {id:845,name:"윽우지",type:"비행/물",baseAtk:173,baseDef:163,baseHp:172,evolveTo:null,evolveCost:0},
+      {id:846,name:"찌로꼬치",type:"물",baseAtk:129,baseDef:97,baseHp:121,evolveTo:847,evolveCost:50},
+      {id:847,name:"꼬치조",type:"물",baseAtk:221,baseDef:154,baseHp:156,evolveTo:null,evolveCost:0},
+      {id:848,name:"일레즌",type:"전기/독",baseAtk:97,baseDef:65,baseHp:120,evolveTo:849,evolveCost:50},
+      {id:849,name:"스트린더",type:"전기/독",baseAtk:224,baseDef:140,baseHp:181,evolveTo:null,evolveCost:0},
+      {id:850,name:"태우지네",type:"불꽃/벌레",baseAtk:118,baseDef:90,baseHp:137,evolveTo:851,evolveCost:50},
+      {id:851,name:"다태우지네",type:"불꽃/벌레",baseAtk:220,baseDef:158,baseHp:225,evolveTo:null,evolveCost:0},
+      {id:852,name:"때때무노",type:"격투",baseAtk:121,baseDef:103,baseHp:137,evolveTo:853,evolveCost:50},
+      {id:853,name:"케오퍼스",type:"격투",baseAtk:209,baseDef:162,baseHp:181,evolveTo:null,evolveCost:0},
+      {id:854,name:"데인차",type:"고스트",baseAtk:134,baseDef:96,baseHp:120,evolveTo:855,evolveCost:50},
+      {id:855,name:"포트데스",type:"고스트",baseAtk:176,baseDef:189,baseHp:155,evolveTo:null,evolveCost:0},
+      {id:856,name:"몸지브림",type:"에스퍼",baseAtk:60,baseDef:93,baseHp:116,evolveTo:857,evolveCost:25},
+      {id:857,name:"손지브림",type:"에스퍼",baseAtk:108,baseDef:153,baseHp:155,evolveTo:858,evolveCost:100},
+      {id:858,name:"브리무음",type:"에스퍼/페어리",baseAtk:237,baseDef:182,baseHp:149,evolveTo:null,evolveCost:0},
+      {id:859,name:"메롱꿍",type:"악/페어리",baseAtk:90,baseDef:86,baseHp:116,evolveTo:860,evolveCost:25},
+      {id:860,name:"쏘겨모",type:"악/페어리",baseAtk:120,baseDef:141,baseHp:163,evolveTo:861,evolveCost:100},
+      {id:861,name:"오롱털",type:"악/페어리",baseAtk:227,baseDef:139,baseHp:216,evolveTo:null,evolveCost:0},
+      {id:862,name:"가로막구리",type:"악/노말",baseAtk:180,baseDef:194,baseHp:212,evolveTo:null,evolveCost:0},
+      {id:863,name:"나이킹",type:"강철",baseAtk:195,baseDef:162,baseHp:172,evolveTo:null,evolveCost:0},
+      {id:864,name:"산호르곤",type:"고스트",baseAtk:155,baseDef:179,baseHp:155,evolveTo:null,evolveCost:0},
+      {id:865,name:"창파나이트",type:"격투",baseAtk:248,baseDef:176,baseHp:158,evolveTo:null,evolveCost:0},
+      {id:866,name:"마임꽁꽁",type:"얼음/에스퍼",baseAtk:212,baseDef:179,baseHp:190,evolveTo:null,evolveCost:0},
+      {id:867,name:"데스판",type:"땅/고스트",baseAtk:163,baseDef:237,baseHp:151,evolveTo:null,evolveCost:0},
+      {id:868,name:"마빌크",type:"페어리",baseAtk:71,baseDef:116,baseHp:128,evolveTo:869,evolveCost:50},
+      {id:869,name:"마휘핑",type:"페어리",baseAtk:203,baseDef:203,baseHp:163,evolveTo:null,evolveCost:0},
+      {id:870,name:"대여르",type:"격투",baseAtk:193,baseDef:170,baseHp:176,evolveTo:null,evolveCost:0},
+      {id:871,name:"찌르성게",type:"전기",baseAtk:176,baseDef:161,baseHp:134,evolveTo:null,evolveCost:0},
+      {id:872,name:"누니머기",type:"얼음/벌레",baseAtk:76,baseDef:132,baseHp:102,evolveTo:873,evolveCost:50},
+      {id:873,name:"모스노우",type:"얼음/벌레",baseAtk:230,baseDef:155,baseHp:172,evolveTo:null,evolveCost:0},
+      {id:874,name:"돌헨진",type:"바위",baseAtk:222,baseDef:182,baseHp:176,evolveTo:null,evolveCost:0},
+      {id:875,name:"빙큐보",type:"얼음",baseAtk:196,baseDef:240,baseHp:181,evolveTo:null,evolveCost:0},
+      {id:876,name:"에써르",type:"에스퍼/노말",baseAtk:165,baseDef:141,baseHp:155,evolveTo:null,evolveCost:0},
+      {id:877,name:"모르페코",type:"전기/악",baseAtk:192,baseDef:121,baseHp:172,evolveTo:null,evolveCost:0},
+      {id:878,name:"끼리동",type:"강철",baseAtk:140,baseDef:112,baseHp:176,evolveTo:879,evolveCost:50},
+      {id:879,name:"대왕끼리동",type:"강철",baseAtk:226,baseDef:190,baseHp:272,evolveTo:null,evolveCost:0},
+      {id:880,name:"파치래곤",type:"전기/드래곤",baseAtk:221,baseDef:164,baseHp:207,evolveTo:null,evolveCost:0},
+      {id:881,name:"파치르돈",type:"전기/얼음",baseAtk:190,baseDef:166,baseHp:207,evolveTo:null,evolveCost:0},
+      {id:882,name:"어래곤",type:"물/드래곤",baseAtk:175,baseDef:185,baseHp:207,evolveTo:null,evolveCost:0},
+      {id:883,name:"어치르돈",type:"물/얼음",baseAtk:171,baseDef:185,baseHp:207,evolveTo:null,evolveCost:0},
+      {id:884,name:"두랄루돈",type:"강철/드래곤",baseAtk:239,baseDef:185,baseHp:172,evolveTo:1018,evolveCost:100},
+      {id:885,name:"드라꼰",type:"드래곤/고스트",baseAtk:117,baseDef:61,baseHp:99,evolveTo:886,evolveCost:25},
+      {id:886,name:"드래런치",type:"드래곤/고스트",baseAtk:163,baseDef:105,baseHp:137,evolveTo:887,evolveCost:100},
+      {id:887,name:"드래펄트",type:"드래곤/고스트",baseAtk:266,baseDef:170,baseHp:204,evolveTo:null,evolveCost:0},
+      {id:888,name:"자시안",type:"페어리",baseAtk:254,baseDef:236,baseHp:192,evolveTo:null,evolveCost:0},
+      {id:889,name:"자마젠타",type:"격투",baseAtk:254,baseDef:236,baseHp:192,evolveTo:null,evolveCost:0},
+      {id:890,name:"무한다이노",type:"독/드래곤",baseAtk:278,baseDef:192,baseHp:268,evolveTo:null,evolveCost:0},
+      {id:891,name:"치고마",type:"격투",baseAtk:170,baseDef:112,baseHp:155,evolveTo:892,evolveCost:100},
+      {id:892,name:"우라오스",type:"격투/악",baseAtk:254,baseDef:177,baseHp:225,evolveTo:null,evolveCost:0},
+      {id:893,name:"자루도",type:"악/풀",baseAtk:242,baseDef:215,baseHp:233,evolveTo:null,evolveCost:0},
+      {id:894,name:"레지에레키",type:"전기",baseAtk:250,baseDef:125,baseHp:190,evolveTo:null,evolveCost:0},
+      {id:895,name:"레지드래고",type:"드래곤",baseAtk:202,baseDef:101,baseHp:400,evolveTo:null,evolveCost:0},
+      {id:896,name:"블리자포스",type:"얼음",baseAtk:246,baseDef:223,baseHp:225,evolveTo:null,evolveCost:0},
+      {id:897,name:"레이스포스",type:"고스트",baseAtk:246,baseDef:223,baseHp:225,evolveTo:null,evolveCost:0},
+      {id:898,name:"버드렉스",type:"에스퍼/풀",baseAtk:198,baseDef:178,baseHp:225,evolveTo:null,evolveCost:0}
+    ];
+
+    GEN1_POKEMON.push(...GEN2_POKEMON, ...GEN3_POKEMON, ...GEN4_POKEMON, ...GEN5_POKEMON, ...GEN6_POKEMON, ...GEN7_POKEMON, ...GEN8_POKEMON);
     const GEN2_EVOLUTION_LINKS = {42:169,61:186,79:199,113:242,123:212,125:239,126:240,133:196,137:233,117:230};
     const GEN5_EVOLUTION_LINKS = {495: 496, 496: 497, 498: 499, 499: 500, 501: 502, 502: 503, 504: 505, 506: 507, 507: 508, 509: 510, 511: 512, 513: 514, 515: 516, 517: 518, 519: 520, 520: 521, 522: 523, 524: 525, 525: 526, 527: 528, 529: 530, 532: 533, 533: 534, 535: 536, 536: 537, 540: 541, 541: 542, 543: 544, 544: 545, 546: 547, 548: 549, 551: 552, 552: 553, 554: 555, 557: 558, 559: 560, 562: 563, 564: 565, 566: 567, 568: 569, 570: 571, 572: 573, 574: 575, 575: 576, 577: 578, 578: 579, 580: 581, 582: 583, 583: 584, 588: 589, 590: 591, 595: 596, 597: 598, 599: 600, 600: 601, 602: 603, 603: 604, 605: 606, 607: 608, 608: 609, 610: 611, 611: 612, 613: 614, 616: 617, 619: 620, 622: 623, 624: 625, 627: 628, 629: 630, 633: 634, 634: 635, 636: 637};
     const GEN4_EVOLUTION_LINKS = {190:424,198:430,200:429,207:472,221:473,233:474,299:476,315:407,356:477,361:478,82:462,108:463,112:464,114:465,125:466,126:467,176:468,193:469,215:461};
     const GEN6_EVOLUTION_LINKS = {650:651,651:652,653:654,654:655,656:657,657:658,659:660,661:662,662:663,664:665,665:666,667:668,669:670,670:671,672:673,674:675,677:678,679:680,680:681,682:683,684:685,686:687,688:689,690:691,692:693,694:695,696:697,698:699,704:705,705:706,708:709,710:711,712:713,714:715};
+    const GEN8_EVOLUTION_LINKS = {810:811,811:812,813:814,814:815,816:817,817:818,819:820,821:822,822:823,824:825,825:826,827:828,829:830,831:832,833:834,835:836,837:838,838:839,840:841,843:844,846:847,848:849,850:851,852:853,854:855,856:857,857:858,859:860,860:861,868:869,872:873,878:879,885:886,886:887,891:892};
     const GEN7_EVOLUTION_LINKS = {722:723,723:724,725:726,726:727,728:729,729:730,731:732,732:733,734:735,736:737,737:738,739:740,742:743,744:745,747:748,749:750,751:752,753:754,755:756,757:758,759:760,761:762,762:763,767:768,769:770,772:773,782:783,783:784,789:790,790:791,803:804,808:809};
-    GEN1_POKEMON.forEach(p => { if (GEN2_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN2_EVOLUTION_LINKS[p.id]; if (GEN4_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN4_EVOLUTION_LINKS[p.id]; if (GEN5_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN5_EVOLUTION_LINKS[p.id]; if (GEN6_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN6_EVOLUTION_LINKS[p.id]; if (GEN7_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN7_EVOLUTION_LINKS[p.id]; });
+    GEN1_POKEMON.forEach(p => { if (GEN2_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN2_EVOLUTION_LINKS[p.id]; if (GEN4_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN4_EVOLUTION_LINKS[p.id]; if (GEN5_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN5_EVOLUTION_LINKS[p.id]; if (GEN6_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN6_EVOLUTION_LINKS[p.id]; if (GEN7_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN7_EVOLUTION_LINKS[p.id]; if (GEN8_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN8_EVOLUTION_LINKS[p.id]; });
 
     /* Sprite lookup: prefer animated Gen V pixel sprites, then static Gen V pixel sprites,
        then the repository's default pixel sprites. Avoid switching to modern 3D artwork. */
@@ -1669,7 +1770,7 @@
         else { this.onerror = null; this.style.visibility = 'hidden'; }
       };
     }
-    // Build a single canonical lookup for all 809 species. Sprite URLs use
+    // Build a single canonical lookup for all 898 species. Sprite URLs use
     // National Pokédex IDs, not Korean display names, so localized names can
     // never accidentally be used as image filenames.
     const POKEMON_BY_ID = new Map(GEN1_POKEMON.map(species => [Number(species.id), species]));
@@ -1684,6 +1785,14 @@
       return species ? Number(species.id) : 1;
     }
     function setAnimatedPokemonImage(img, pokemon) {
+      if (img && pokemon && pokemon.formeActive && pokemon.formeSlug) {
+        const u=formSpriteUrl(pokemon.formeSlug,!!pokemon.shiny);
+        if(img.dataset.spriteUrl!==u || img.dataset.formSpriteSlug!==pokemon.formeSlug){
+          setFormSpriteWithFallback(img,pokemon.formeSlug,!!pokemon.shiny);
+        }
+        return;
+      }
+
       if (!img || !pokemon) return;
       const spriteId = getPokemonSpriteId(pokemon);
       const megaActive = Number(pokemon.megaActiveUntil || 0) > Date.now() &&
@@ -1693,12 +1802,17 @@
         // IMPORTANT: Mega sprite IDs are slugs (e.g. "rayquaza-mega"), not Pokédex numbers.
         // Never pass them to getPokemonAnimatedUrl(), which would silently show the base form.
         const megaUrl = window.__megaSpriteUrl(pokemon);
-        let triedFallback = false;
+        // Never replace a failed Mega sprite with the normal Retro/base form.
+        // Try the alternate supported Mega sprite URLs first; if all fail, hide
+        // the image rather than falsely showing the unevolved Pokémon.
+        const megaInfo = typeof window.__megaInfoForSprite === 'function' ? window.__megaInfoForSprite(pokemon) : null;
+        const megaCandidates = typeof getMegaSpriteCandidates === 'function' && megaInfo
+          ? getMegaSpriteCandidates(megaInfo, !!pokemon.shiny) : [megaUrl];
+        let megaCandidateIndex = 0;
         img.onerror = function() {
-          if (!triedFallback) {
-            triedFallback = true;
-            this.onerror = null;
-            this.src = getPokemonRetroStaticUrl(spriteId, !!pokemon.shiny);
+          megaCandidateIndex++;
+          if (megaCandidateIndex < megaCandidates.length) {
+            this.src = megaCandidates[megaCandidateIndex];
           } else {
             this.onerror = null;
             this.style.visibility = 'hidden';
@@ -1869,25 +1983,62 @@
       {id:'victini',name:'비크티니',stages:['승리의 불꽃','열정의 포획','배틀 도전','파트너 훈련','승리의 길','승리의 환상']}
     ];
     const DAILY_RESET_HOUR=21;
+    const MAIN_RESEARCH_TASKS=[
+      {event:'catch',goal:3,title:'初次相遇',description:'야생 포켓몬 3마리 포획하기',reward:{type:'stardust',amount:500,label:'별의모래 500개'}},
+      {event:'spin',goal:2,title:'주변 탐험',description:'포켓스톱 2회 돌리기',reward:{type:'pokeball',amount:10,label:'몬스터볼 10개'}},
+      {event:'catch',goal:5,title:'도감 채우기',description:'야생 포켓몬 5마리 추가 포획하기',reward:{type:'stardust',amount:1000,label:'별의모래 1,000개'}},
+      {event:'evolve',goal:1,title:'진화의 힘',description:'포켓몬 1마리 진화시키기',reward:{type:'rareCandy',amount:2,label:'이상한사탕 2개'}},
+      {event:'battle',goal:1,title:'트레이너 도전',description:'트레이너 또는 체육관 배틀 1회 승리하기',reward:{type:'stardust',amount:2000,label:'별의모래 2,000개'}},
+      {event:'catch',goal:10,title:'환상의 만남',description:'야생 포켓몬 10마리를 포획하고 환상의 포켓몬 만나기',reward:{type:'encounter',amount:1,label:'환상의 포켓몬과 만남'}}
+    ];
+    const MYTHICAL_SPECIES_IDS={mew:151,celebi:251,jirachi:385,shaymin:492,victini:494};
     function dailyResearchKey(){const d=new Date();if(d.getHours()<DAILY_RESET_HOUR)d.setDate(d.getDate()-1);return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();}
     function ensureResearchState(){
       if(!gameState.player.research||typeof gameState.player.research!=='object')gameState.player.research={progress:{},claimed:{},welcomeClaimed:false};
       const r=gameState.player.research;if(typeof r.welcomeClaimed!=='boolean')r.welcomeClaimed=false;
-      if(!r.progress)r.progress={};if(!r.claimed)r.claimed={};if(!r.daily)r.daily={key:'',ids:[],progress:{},claimed:{},stamp:0,boxClaimed:false,cycle:0};
+      if(!r.progress)r.progress={};if(!r.claimed)r.claimed={};if(!r.main||typeof r.main!=='object')r.main={};
+      MYTHICAL_RESEARCHES.forEach(m=>{if(!r.main[m.id]||typeof r.main[m.id]!=='object')r.main[m.id]={stage:0,progress:0,claimedStages:[]};const q=r.main[m.id];q.stage=Math.max(0,Math.min(6,Number(q.stage)||0));q.progress=Math.max(0,Number(q.progress)||0);if(!Array.isArray(q.claimedStages))q.claimedStages=[];});
+      if(!r.daily)r.daily={key:'',ids:[],progress:{},claimed:{},stamp:0,boxClaimed:false,cycle:0};
       const d=r.daily;if(d.key!==dailyResearchKey()){d.key=dailyResearchKey();d.cycle=Number(d.cycle||0)+1;d.ids=[];for(let i=0;i<5;i++){let idx=(d.cycle*5+i)%DAILY_RESEARCH_POOL.length;d.ids.push(DAILY_RESEARCH_POOL[idx].id);}d.progress={};d.claimed={};}
       d.ids.forEach(id=>{if(!Number.isFinite(Number(d.progress[id])))d.progress[id]=0;});
     }
     let currentResearchTab='daily';
-    function setResearchTab(tab){currentResearchTab=tab;renderResearch();}
+    function setResearchTab(tab){if(!['daily','event','main'].includes(tab))return;currentResearchTab=tab;renderResearch();}
     function advanceResearch(id,amount=1){ensureResearchState();const d=gameState.player.research.daily;const t=DAILY_RESEARCH_POOL.find(x=>x.id===id);if(t&&d.ids.includes(id)&&!d.claimed[id])d.progress[id]=Math.min(t.goal,(Number(d.progress[id])||0)+amount);saveGame(false);}
+    function advanceMainResearch(event,amount=1){
+      ensureResearchState();const r=gameState.player.research;let changed=false;
+      MYTHICAL_RESEARCHES.forEach(m=>{const q=r.main[m.id];if(q.stage>=6)return;const task=MAIN_RESEARCH_TASKS[q.stage];if(task.event===event&&!q.claimedStages.includes(q.stage)){q.progress=Math.min(task.goal,(Number(q.progress)||0)+amount);changed=true;}});
+      if(changed)saveGame(false);
+    }
+    function claimMainResearchReward(id){
+      ensureResearchState();const m=MYTHICAL_RESEARCHES.find(x=>x.id===id);if(!m)return;const q=gameState.player.research.main[id];if(q.stage>=6)return;
+      const task=MAIN_RESEARCH_TASKS[q.stage];if(q.progress<task.goal||q.claimedStages.includes(q.stage)){showToast('아직 완료하지 않은 과제예요.','alert-circle');return;}
+      q.claimedStages.push(q.stage);const final=q.stage===5;
+      if(task.reward.type==='stardust')gameState.player.stardust=(Number(gameState.player.stardust)||0)+task.reward.amount;
+      else if(task.reward.type==='pokeball')gameState.inventory.pokeball=(Number(gameState.inventory.pokeball)||0)+task.reward.amount;
+      else if(task.reward.type==='rareCandy')gameState.inventory.rareCandy=(Number(gameState.inventory.rareCandy)||0)+task.reward.amount;
+      q.stage++;q.progress=0;saveGame(false);updateHUD();renderResearch();
+      if(final){const sid=MYTHICAL_SPECIES_IDS[id];const base=GEN1_POKEMON.find(x=>Number(x.id)===sid);if(base){const p={uniqueId:Date.now()+Math.random(),baseId:base.id,name:base.name,type:base.type,cp:1000,ivAtk:15,ivDef:15,ivHp:15,ivPct:100,shiny:false,fromMainResearch:true};if(typeof ensureGOMoves==='function')ensureGOMoves(p);closeModal('research-modal');startEncounter(p);showToast(`${m.name} 메인 리서치 완료! 환상의 포켓몬이 나타났어요!`,'gift');}else showToast(`${m.name} 메인 리서치 완료! 보상을 받았어요.`,'gift');}
+      else showToast(`메인 리서치 보상: ${task.reward.label}`,'gift');
+    }
     function renderResearch(){
-      ensureResearchState();const r=gameState.player.research,d=r.daily;const welcome=document.getElementById('welcome-research-card');if(welcome){const claimed=r.welcomeClaimed;welcome.innerHTML=`<div class="text-xs font-black text-amber-800">환영 리서치 · 무료</div><h3 class="mt-1 text-lg font-black text-slate-900">전설 포켓몬을 만나자!</h3><p class="mt-1 text-sm text-slate-700">랜덤 전설 포켓몬 · CP 1000 · IV 100%</p><button ${claimed?'disabled':''} onclick="claimWelcomeResearch()" class="mt-3 w-full rounded-xl px-4 py-3 font-black ${claimed?'bg-slate-200 text-slate-500':'bg-amber-500 text-amber-950'}">${claimed?'이미 보상을 받았어요':'무료 보상 받기'}</button>`;}
-      ['daily','event','main'].forEach(t=>{const b=document.getElementById('research-tab-'+t);if(b)b.className='rounded-xl p-2 font-black '+(currentResearchTab===t?'bg-violet-600 text-white':'bg-slate-100 text-slate-500');});
-      const panel=document.getElementById('research-stamp-panel');if(panel)panel.innerHTML=`<div class="font-black">데일리 도장 ${d.stamp||0}/6</div><div class="flex gap-1 my-2">${Array.from({length:6},(_,i)=>`<span class="flex-1 text-center rounded-lg p-2 ${i<(d.stamp||0)?'bg-amber-400':'bg-white border'}">${i<(d.stamp||0)?'★':'☆'}</span>`).join('')}</div><button onclick="claimResearchBox()" ${d.stamp<6||d.boxClaimed?'disabled':''} class="w-full rounded-xl p-2 font-black ${d.stamp>=6&&!d.boxClaimed?'bg-amber-500':'bg-slate-200 text-slate-400'}">${d.boxClaimed?'오늘의 리서치 박스 수령 완료':'리서치 박스 열기 (도장 6개)'}</button><p class="text-xs text-slate-500 mt-1">매일 밤 9시에 데일리 태스크가 갱신돼요.</p>`;
-      const host=document.getElementById('research-task-list'),content=document.getElementById('research-tab-content');if(!host||!content)return;
-      if(currentResearchTab==='event'){content.innerHTML='<div class="rounded-2xl bg-slate-50 p-6 text-center text-slate-500">현재 진행 중인 이벤트가 없어요.</div>';return;}
-      if(currentResearchTab==='main'){content.innerHTML=MYTHICAL_RESEARCHES.map(m=>{const state=r.main?.[m.id]||{stage:0,progress:{},claimed:false};return `<div class="rounded-2xl border p-4"><div class="font-black">${m.name} 환상 리서치 · ${Math.min(6,state.stage+1)}/6</div><p class="text-sm text-slate-600 mt-1">${m.stages[Math.min(5,state.stage)]} — 포획·탐험·배틀 과제를 완료하세요.</p><div class="text-xs text-violet-700 mt-2">각 단계에 과제 5개 · 완료 시 다음 단계 해금</div><button onclick="showToast('메인 리서치 과제는 단계별 진행 기능을 준비 중이에요.','info')" class="mt-3 rounded-xl bg-violet-600 text-white px-3 py-2 font-bold">리서치 보기</button></div>`;}).join('');return;}
-      content.innerHTML='<div class="text-xs font-black uppercase tracking-wide text-slate-500">데일리 태스크 · 최대 5개</div><div class="space-y-3" id="research-task-list"></div>';const h=document.getElementById('research-task-list');h.innerHTML=d.ids.map(id=>{const t=DAILY_RESEARCH_POOL.find(x=>x.id===id);const n=Number(d.progress[id])||0,claimed=!!d.claimed[id],done=n>=t.goal;return `<div class="rounded-2xl border border-slate-200 p-4"><div class="flex justify-between gap-3"><div><h3 class="font-black">${t.title}</h3><p class="text-sm text-slate-600">${t.description}</p></div><span class="text-xs font-black">${claimed?'완료':`${n}/${t.goal}`}</span></div><div class="h-2 bg-slate-100 rounded-full overflow-hidden mt-3"><div class="h-full bg-violet-500" style="width:${Math.min(100,n/t.goal*100)}%"></div></div><div class="flex justify-between items-center mt-3"><span class="text-sm font-bold text-amber-700">🎁 ${t.reward.label}</span><button ${(!done||claimed)?'disabled':''} onclick="claimResearchReward('${t.id}')" class="rounded-xl px-4 py-2 text-sm font-black ${done&&!claimed?'bg-violet-600 text-white':'bg-slate-200 text-slate-400'}">${claimed?'수령 완료':done?'보상 받기':'진행 중'}</button></div></div>`;}).join('');
+      ensureResearchState();
+      const r=gameState.player.research,d=r.daily;
+      const welcome=document.getElementById('welcome-research-card');
+      if(welcome){const claimed=r.welcomeClaimed;welcome.innerHTML=`<div class="text-xs font-black text-amber-800">환영 리서치 · 무료</div><h3 class="mt-1 text-lg font-black text-slate-900">전설 포켓몬을 만나자!</h3><p class="mt-1 text-sm text-slate-700">랜덤 전설 포켓몬 · CP 1000 · IV 100%</p><button type="button" ${claimed?'disabled':''} onclick="claimWelcomeResearch()" class="mt-3 w-full rounded-xl px-4 py-3 font-black ${claimed?'bg-slate-200 text-slate-500':'bg-amber-500 text-amber-950'}">${claimed?'이미 보상을 받았어요':'무료 보상 받기'}</button>`;}
+      ['daily','event','main'].forEach(t=>{const b=document.getElementById('research-tab-'+t);if(b){b.type='button';b.setAttribute('aria-pressed',String(currentResearchTab===t));b.className='rounded-xl p-2 font-black transition '+(currentResearchTab===t?'bg-violet-600 text-white shadow':'bg-slate-100 text-slate-500 hover:bg-violet-100');}});
+      const panel=document.getElementById('research-stamp-panel');
+      if(panel)panel.innerHTML=`<div class="font-black">데일리 도장 ${d.stamp||0}/6</div><div class="flex gap-1 my-2">${Array.from({length:6},(_,i)=>`<span class="flex-1 text-center rounded-lg p-2 ${i<(d.stamp||0)?'bg-amber-400':'bg-white border'}">${i<(d.stamp||0)?'★':'☆'}</span>`).join('')}</div><button type="button" onclick="claimResearchBox()" ${d.stamp<6||d.boxClaimed?'disabled':''} class="w-full rounded-xl p-2 font-black ${d.stamp>=6&&!d.boxClaimed?'bg-amber-500':'bg-slate-200 text-slate-400'}">${d.boxClaimed?'오늘의 리서치 박스 수령 완료':'리서치 박스 열기 (도장 6개)'}</button><p class="text-xs text-slate-500 mt-1">매일 밤 9시에 데일리 태스크가 갱신돼요.</p>`;
+      const content=document.getElementById('research-tab-content');if(!content)return;
+      if(currentResearchTab==='event'){
+        content.innerHTML='<div class="rounded-2xl bg-slate-50 p-6 text-center text-slate-500">현재 진행 중인 이벤트가 없어요.</div>';return;
+      }
+      if(currentResearchTab==='main'){
+        content.innerHTML='<div class="text-xs font-black uppercase tracking-wide text-slate-500 mb-3">메인 리서치 · 단계별 과제와 보상</div>'+MYTHICAL_RESEARCHES.map(m=>{const state=r.main[m.id],done=state.stage>=6,stage=Math.min(5,state.stage),task=MAIN_RESEARCH_TASKS[stage],progress=done?task.goal:Math.min(task.goal,Number(state.progress)||0),claimed=done||state.claimedStages.includes(stage);return `<div class="rounded-2xl border border-violet-200 p-4 mb-3"><div class="flex items-start justify-between gap-2"><div><div class="font-black text-slate-900">${m.name} · 메인 리서치</div><div class="text-xs text-violet-700 font-bold mt-1">${done?'완료':`단계 ${stage+1}/6 · ${m.stages[stage]}`}</div></div><span class="rounded-full bg-violet-50 px-2 py-1 text-xs font-black text-violet-700">${done?'완료':`${progress}/${task.goal}`}</span></div>${done?`<p class="text-sm text-emerald-700 font-bold mt-3">모든 단계를 완료했어요!</p>`:`<p class="text-sm text-slate-700 mt-3">${task.description}</p><div class="h-2 bg-slate-100 rounded-full overflow-hidden mt-2"><div class="h-full bg-violet-500" style="width:${Math.min(100,progress/task.goal*100)}%"></div></div><div class="flex flex-wrap justify-between items-center gap-2 mt-3"><span class="text-sm font-bold text-amber-700">🎁 ${task.reward.label}</span><button type="button" ${progress<task.goal||claimed?'disabled':''} onclick="claimMainResearchReward('${m.id}')" class="rounded-xl px-4 py-2 text-sm font-black ${progress>=task.goal&&!claimed?'bg-violet-600 text-white':'bg-slate-200 text-slate-400'}">${claimed?'수령 완료':progress>=task.goal?'보상 받기':'진행 중'}</button></div>`}</div>`;}).join('');return;
+      }
+      content.innerHTML='<div class="text-xs font-black uppercase tracking-wide text-slate-500 mb-3">데일리 태스크 · 최대 5개</div><div class="space-y-3" id="research-task-list"></div>';
+      const h=document.getElementById('research-task-list');if(!h)return;
+      h.innerHTML=d.ids.map(id=>{const t=DAILY_RESEARCH_POOL.find(x=>x.id===id);if(!t)return '';const n=Number(d.progress[id])||0,claimed=!!d.claimed[id],done=n>=t.goal;return `<div class="rounded-2xl border border-slate-200 p-4"><div class="flex justify-between gap-3"><div><h3 class="font-black">${t.title}</h3><p class="text-sm text-slate-600">${t.description}</p></div><span class="text-xs font-black">${claimed?'완료':`${n}/${t.goal}`}</span></div><div class="h-2 bg-slate-100 rounded-full overflow-hidden mt-3"><div class="h-full bg-violet-500" style="width:${Math.min(100,n/t.goal*100)}%"></div></div><div class="flex justify-between items-center mt-3"><span class="text-sm font-bold text-amber-700">🎁 ${t.reward.label}</span><button type="button" ${(!done||claimed)?'disabled':''} onclick="claimResearchReward('${t.id}')" class="rounded-xl px-4 py-2 text-sm font-black ${done&&!claimed?'bg-violet-600 text-white':'bg-slate-200 text-slate-400'}">${claimed?'수령 완료':done?'보상 받기':'진행 중'}</button></div></div>`;}).join('');
     }
     function claimResearchBox(){ensureResearchState();const d=gameState.player.research.daily;if(d.stamp<6||d.boxClaimed)return;d.boxClaimed=true;gameState.player.stardust=(Number(gameState.player.stardust)||0)+2000;gameState.inventory.rareCandy=(Number(gameState.inventory.rareCandy)||0)+1;saveGame(false);updateHUD();renderResearch();showToast('리서치 박스 보상: 별의모래 2000개와 이상한사탕 1개!','gift');}
     function claimWelcomeResearch(){
@@ -1963,19 +2114,22 @@
       722:0,723:0,724:0,725:0,726:0,727:0,728:0,729:0,730:0,731:0,732:0,733:0,734:0,735:0,736:0,737:0,738:0,739:0,740:0,741:0,742:0,743:0,744:0,745:0,746:0,747:0,748:0,749:0,750:0,751:0,752:0,753:0,754:0,755:0,756:0,757:0,758:0,759:0,760:0,761:0,762:0,763:0,764:0,765:0,766:0,767:0,768:0,769:0,770:0,771:0,772:0,773:0,774:0,775:0,776:0,777:0,778:0,779:0,780:0,781:0,782:0,783:0,784:0,785:0,786:0,787:0,788:0,789:0,790:0,791:0,792:0,793:0,794:0,795:0,796:0,797:0,798:0,799:0,800:0,801:0,802:0,803:0,804:0,805:0,806:0,807:0,808:0,809:0
     };
     // 전설 포켓몬은 야생 출현 CP가 최대한 2300 이상~4000 이하가 되도록 조정 (종별 공식 최대 CP도 넘지 않음).
-    // 1~7세대 전설·희귀 포켓몬 전국도감 번호(환상 포켓몬 및 울트라비스트 일부 포함).
+    // 1~8세대 전설·희귀 포켓몬 전국도감 번호(환상 포켓몬 및 울트라비스트 일부 포함).
     const LEGENDARY_POKEMON_IDS = new Set([
       144,145,146,150, 243,244,245,249,250,
       377,378,379,380,381,382,383,384,
       480,481,482,483,484,485,486,487,488,
-      638,639,640,641,642,643,644,645,646,647,648,649, 716,717,718, 785,786,787,788,789,790,791,792,793,794,795,796,797,798,799,800,801,802,803,804,805,806,807,808,809
+      638,639,640,641,642,643,644,645,646,647,648,649, 716,717,718, 785,786,787,788,789,790,791,792,793,794,795,796,797,798,799,800,801,802,803,804,805,806,807,808,809, 888,889,890,894,895,896,897,898
     ]);
     const MAX_CP_CPM_L50 = 0.8403;
     GEN7_POKEMON.forEach(p => { OFFICIAL_MAX_CP_GEN7[p.id] = Math.max(10, Math.floor(((p.baseAtk+15) * Math.sqrt(p.baseDef+15) * Math.sqrt(p.baseHp+15) * MAX_CP_CPM_L50 * MAX_CP_CPM_L50) / 10)); });
 
+    const OFFICIAL_MAX_CP_GEN8 = {};
+    GEN8_POKEMON.forEach(p => { OFFICIAL_MAX_CP_GEN8[p.id] = Math.max(10, Math.floor(((p.baseAtk+15) * Math.sqrt(p.baseDef+15) * Math.sqrt(p.baseHp+15) * MAX_CP_CPM_L50 * MAX_CP_CPM_L50) / 10)); });
     function getOfficialMaxCP(base) {
       if (!base) return 0;
       const id = Number(base.id || base.baseId);
+      if (OFFICIAL_MAX_CP_GEN8[id]) return OFFICIAL_MAX_CP_GEN8[id];
       if (OFFICIAL_MAX_CP_GEN7[id]) return OFFICIAL_MAX_CP_GEN7[id];
       if (OFFICIAL_MAX_CP_GEN6[id]) return OFFICIAL_MAX_CP_GEN6[id];
       if (OFFICIAL_MAX_CP_GEN5[id]) return OFFICIAL_MAX_CP_GEN5[id];
@@ -1985,7 +2139,7 @@
       return Math.max(10, Math.floor((atk * Math.sqrt(def) * Math.sqrt(sta) * MAX_CP_CPM_L50 * MAX_CP_CPM_L50) / 10));
     }
     // 희귀도 기반 야생 출현: 환상은 사실상 출현하지 않고, 전설/울트라비스트도 극히 드뭅니다.
-    const MYTHICAL_POKEMON_IDS = new Set([151,251,385,386,489,490,491,492,493,494,647,648,649,719,720,721, 801,802,807].filter(Number.isFinite));
+    const MYTHICAL_POKEMON_IDS = new Set([151,251,385,386,489,490,491,492,493,494,647,648,649,719,720,721, 801,802,807,893].filter(Number.isFinite));
     const ULTRA_BEAST_IDS = new Set([793,794,795,796,797,798,799,800,803,804,805,806]);
     function wildSpawnWeight(species) {
       const id=Number(species.id);
@@ -2350,7 +2504,7 @@
           if (gainedUltraBalls) stopRewards.push(`하이퍼볼 +${gainedUltraBalls}`);
           stopRewards.push(`열매 +${gainedBerries}`);
           showToast(`포켓스톱! ${stopRewards.join(', ')}`, 'gift');
-          advanceResearch('spin1',1);
+          advanceResearch('spin1',1); advanceMainResearch('spin',1);
           updateHUD();
           saveGame(false);
         }
@@ -2833,7 +2987,7 @@
 
           // Reward XP & Candy
           addXP(150);
-          advanceResearch('catch1',1); advanceResearch('catch3',1);
+          advanceResearch('catch1',1); advanceResearch('catch3',1); advanceMainResearch('catch',1);
           gameState.player.stardust += 100;
           gameState.player.candies[p.baseId] = (gameState.player.candies[p.baseId] || 0) + 3;
 
@@ -2919,7 +3073,7 @@
 
         card.innerHTML = `
           <div class="text-[11px] font-black text-emerald-600">CP ${p.cp}</div>
-          <img src="${p.megaActiveUntil>Date.now() && window.__megaSpriteUrl ? window.__megaSpriteUrl(p) : getPokemonAnimatedUrl(getPokemonSpriteId(p), !!p.shiny)}" onerror="if(!this.dataset.retroFallback){this.dataset.retroFallback='1';this.src='${getPokemonRetroStaticUrl(getPokemonSpriteId(p), !!p.shiny)}'}else{this.onerror=null;this.src='${getPokemonSpriteUrl(getPokemonSpriteId(p), !!p.shiny)}'}" class="pokemon-lively w-16 h-16 object-contain my-1 ${p.shiny ? 'drop-shadow-[0_0_8px_rgba(250,204,21,0.95)]' : ''}">
+          <img ${p.formeActive && p.formeSlug ? `data-form-sprite-slug="${p.formeSlug}" data-form-sprite-shiny="${p.shiny ? '1' : '0'}" data-form-sprite-index="0" src="${formSpriteUrl(p.formeSlug, !!p.shiny)}" onerror="window.handleFormSpriteError(this)"` : `src="${p.megaActiveUntil>Date.now() && window.__megaSpriteUrl ? window.__megaSpriteUrl(p) : getPokemonAnimatedUrl(getPokemonSpriteId(p), !!p.shiny)}" onerror="if(${(p.megaActiveUntil>Date.now()) ? 'true' : 'false'}){this.onerror=null;this.style.visibility='hidden'}else if(!this.dataset.retroFallback){this.dataset.retroFallback='1';this.src='${getPokemonRetroStaticUrl(getPokemonSpriteId(p), !!p.shiny)}'}else{this.onerror=null;this.src='${getPokemonSpriteUrl(getPokemonSpriteId(p), !!p.shiny)}'}`} class="pokemon-lively w-16 h-16 object-contain my-1 ${p.shiny ? 'drop-shadow-[0_0_8px_rgba(250,204,21,0.95)]' : ''}">
           <div class="text-xs font-black text-gray-800 truncate w-full text-center">${p.shiny ? '✨ ' : ''}${p.name}</div>
           ${p.shiny ? '<span class="text-[9px] font-black text-amber-600">이로치</span>' : ''}
           <span class="text-[9px] font-bold px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded mt-0.5">IV ${p.ivPct}%</span>
@@ -2996,8 +3150,104 @@
         btnEvolve.style.display = 'none';
       }
 
+      const fs=document.getElementById('forme-status');
+      if(fs)fs.textContent=pokemon.formeActive?('현재 폼: '+(pokemon.formeLabel||pokemon.formeSlug)):'폼체인지 가능한 포켓몬이면 선택 메뉴가 표시됩니다.';
       openModal('detail-modal');
     }
+
+
+    // Alternate forms use Showdown animated GIF slugs. Never silently substitute a base sprite.
+    const FORM_CHANGE_RULES = {
+      487:[{label:'어나더폼',slug:'giratina'},{label:'오리진폼',slug:'giratina-origin'}],
+      492:[{label:'랜드폼',slug:'shaymin'},{label:'스카이폼',slug:'shaymin-sky'}],
+      479:[{label:'노말폼',slug:'rotom'},{label:'히트폼',slug:'rotom-heat'},{label:'워시폼',slug:'rotom-wash'},{label:'프로스트폼',slug:'rotom-frost'},{label:'팬폼',slug:'rotom-fan'},{label:'커트폼',slug:'rotom-mow'}],
+      483:[{label:'어나더폼',slug:'dialga'},{label:'오리진폼',slug:'dialga-origin'}],
+      484:[{label:'어나더폼',slug:'palkia'},{label:'오리진폼',slug:'palkia-origin'}],
+      493:[{label:'노말폼',slug:'arceus'},{label:'불꽃폼',slug:'arceus-fire'},{label:'물폼',slug:'arceus-water'},{label:'풀폼',slug:'arceus-grass'},{label:'전기폼',slug:'arceus-electric'},{label:'얼음폼',slug:'arceus-ice'},{label:'격투폼',slug:'arceus-fighting'},{label:'독폼',slug:'arceus-poison'},{label:'땅폼',slug:'arceus-ground'},{label:'비행폼',slug:'arceus-flying'},{label:'에스퍼폼',slug:'arceus-psychic'},{label:'벌레폼',slug:'arceus-bug'},{label:'바위폼',slug:'arceus-rock'},{label:'고스트폼',slug:'arceus-ghost'},{label:'드래곤폼',slug:'arceus-dragon'},{label:'악폼',slug:'arceus-dark'},{label:'강철폼',slug:'arceus-steel'},{label:'페어리폼',slug:'arceus-fairy'}],
+      649:[{label:'노말폼',slug:'genesect'},{label:'블레이즈폼',slug:'genesect-burn'},{label:'프리즈폼',slug:'genesect-chill'},{label:'아쿠아폼',slug:'genesect-douse'},{label:'라이트닝폼',slug:'genesect-shock'}],
+      718:[{label:'10%폼',slug:'zygarde-10'},{label:'50%폼',slug:'zygarde'},{label:'퍼펙트폼',slug:'zygarde-complete'}],
+      646:[{label:'일반 큐레무',slug:'kyurem'},{label:'블랙 큐레무',slug:'kyurem-black'},{label:'화이트 큐레무',slug:'kyurem-white'}],
+      800:[{label:'네크로즈마',slug:'necrozma'},{label:'황혼의 갈기',slug:'necrozma-dusk-mane'},{label:'새벽의 날개',slug:'necrozma-dawn-wings'},{label:'울트라네크로즈마',slug:'necrozma-ultra'}],
+      888:[{label:'역전의 용사',slug:'zacian'},{label:'검왕',slug:'zacian-crowned'}],
+      889:[{label:'역전의 용사',slug:'zamazenta'},{label:'방패왕',slug:'zamazenta-crowned'}],
+      890:[{label:'무한다이노',slug:'eternatus'},{label:'무한다이맥스',slug:'eternatus-eternamax'}]
+    };
+    // Forme sprites: try Pokémon Showdown's native animated sprite paths first,
+    // then the PokeAPI mirror. Do not silently fall back to the base species sprite.
+    function formSpriteCandidates(slug, shiny) {
+      const paths = shiny
+        ? [
+            'https://play.pokemonshowdown.com/sprites/ani-shiny/' + slug + '.gif',
+            'https://play.pokemonshowdown.com/sprites/ani/' + slug + '-shiny.gif',
+            'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/shiny/' + slug + '.gif'
+          ]
+        : [
+            'https://play.pokemonshowdown.com/sprites/ani/' + slug + '.gif',
+            'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/' + slug + '.gif'
+          ];
+      return [...new Set(paths)];
+    }
+    function formSpriteUrl(slug, shiny) { return formSpriteCandidates(slug, shiny)[0]; }
+    function setFormSpriteWithFallback(img, slug, shiny) {
+      if (!img || !slug) return;
+      const candidates = formSpriteCandidates(slug, !!shiny);
+      let index = 0;
+      img.dataset.formSpriteSlug = slug;
+      img.dataset.formSpriteShiny = shiny ? '1' : '0';
+      img.dataset.formSpriteIndex = '0';
+      img.onerror = function () {
+        const currentSlug = this.dataset.formSpriteSlug;
+        const currentShiny = this.dataset.formSpriteShiny === '1';
+        const urls = formSpriteCandidates(currentSlug, currentShiny);
+        let next = Number(this.dataset.formSpriteIndex || 0) + 1;
+        if (next < urls.length) {
+          this.dataset.formSpriteIndex = String(next);
+          this.src = urls[next];
+        } else {
+          this.onerror = null;
+          this.style.visibility = 'hidden';
+          this.alt = '폼 스프라이트를 불러오지 못했습니다';
+          if (typeof showToast === 'function') showToast('해당 폼 GIF를 불러오지 못했어요. 연결을 확인해 주세요.');
+        }
+      };
+      img.style.visibility = 'visible';
+      img.dataset.spriteUrl = candidates[0];
+      img.src = candidates[0];
+    }
+    window.handleFormSpriteError = function(img) {
+      if (img && img.dataset.formSpriteSlug) {
+        // Reuse the same ordered fallback list for box-card inline error handlers.
+        const slug = img.dataset.formSpriteSlug;
+        const shiny = img.dataset.formSpriteShiny === '1';
+        const urls = formSpriteCandidates(slug, shiny);
+        const next = Number(img.dataset.formSpriteIndex || 0) + 1;
+        if (next < urls.length) {
+          img.dataset.formSpriteIndex = String(next);
+          img.src = urls[next];
+        } else {
+          img.onerror = null;
+          img.style.visibility = 'hidden';
+        }
+      }
+    };
+    function changePokemonForm() {
+      const p=activeDetailPokemon; if(!p)return;
+      const forms=FORM_CHANGE_RULES[Number(p.baseId||p.id)]||[];
+      if(!forms.length){showToast('이 포켓몬은 현재 폼체인지 메뉴를 지원하지 않아요.');return;}
+      const raw=prompt('변경할 폼 번호를 입력하세요.\\n'+forms.map((f,i)=>(i+1)+'. '+f.label).join('\\n'));
+      if(raw===null)return;
+      const i=Number(raw)-1;
+      if(!Number.isInteger(i)||i<0||i>=forms.length){showToast('선택 번호가 올바르지 않아요.');return;}
+      const f=forms[i]; p.formeSlug=f.slug; p.formeLabel=f.label; p.formeActive=true;
+      const img=document.getElementById('detail-img');
+      if(img){setFormSpriteWithFallback(img,f.slug,!!p.shiny);}
+      const st=document.getElementById('forme-status');if(st)st.textContent='현재 폼: '+f.label+' · Showdown GIF';
+      const nm=document.getElementById('detail-name');if(nm)nm.textContent=(p.shiny?'✨ ':'')+p.name+' ('+f.label+')';
+      try{if(typeof saveGame==='function')saveGame();else if(typeof saveLocalGame==='function')saveLocalGame();}catch(e){}
+      try{renderPokemonBox();}catch(e){}
+      showToast(f.label+' 선택 완료');
+    }
+    window.getPokemonFormSpriteUrl=formSpriteUrl;
 
     /* Power Up Logic */
     function powerUpPokemon() {
@@ -3015,6 +3265,7 @@
 
       gameState.player.stardust -= 200;
       gameState.player.candies[activeDetailPokemon.baseId]--;
+      advanceMainResearch('power',1);
 
       activeDetailPokemon.cp = Math.max(activeDetailPokemon.cp, Math.min(getOfficialMaxCP(baseInfo || {id:activeDetailPokemon.baseId,baseAtk:1,baseDef:1,baseHp:1}), activeDetailPokemon.cp + Math.floor(15 + Math.random() * 12)));
       playSound('catch');
@@ -3037,6 +3288,7 @@
       }
 
       gameState.player.candies[activeDetailPokemon.baseId] -= baseInfo.evolveCost;
+      advanceMainResearch('evolve',1);
 
       const nextBase = GEN1_POKEMON.find(x => x.id === baseInfo.evolveTo);
       activeDetailPokemon.baseId = nextBase.id;
@@ -3079,7 +3331,7 @@
       const grid = document.getElementById('pokedex-grid');
       grid.innerHTML = '';
 
-      document.getElementById('pokedex-progress-tag').innerText = `포획 ${gameState.pokedexCaught.size} / 809`;
+      document.getElementById('pokedex-progress-tag').innerText = `포획 ${gameState.pokedexCaught.size} / 898`;
 
       GEN1_POKEMON.forEach(p => {
         const isCaught = gameState.pokedexCaught.has(p.id);
@@ -3469,7 +3721,7 @@
     // Realtime GO-style PvP. Each client controls its own team; both clients must ready before a shared countdown.
     let pvpBattle = {team:[], index:0, hp:100, maxHp:100, enemyHp:100, enemyMaxHp:100, energy:0, started:false, role:'', channel:null, lastAction:0, teamHp:[], enemyTeam:[], enemyTeamHp:[], enemyIndex:0, chargeBusy:false, ready:false, enemyReady:false, countdown:false, shields:2, enemyShields:2, fastReadyAt:0, lastSeq:0, outSeq:0, lastRemoteSeq:0};
     function pvpMaxHp(p){try{return Math.max(10,Math.round(battleStats(p).hp));}catch(e){return Math.max(10,Math.round(Number(p?.hp)||100));}}
-    function pvpImg(p){return p?getPokemonImage(p):'';}
+    function pvpImg(p){if(!p)return '';if(Number(p.megaActiveUntil||0)>Date.now()&&window.__megaSpriteUrl&&window.__canMegaPokemon&&window.__canMegaPokemon(p))return window.__megaSpriteUrl(p);return getPokemonImage(p);}
     function pvpMoves(p){try{ensureGOMoves(p);return {fastMoves:[{name:p.fastMove,power:(GO_FAST_POWER&&GO_FAST_POWER[p.fastMove])||8,energy:(GO_FAST_ENERGY&&GO_FAST_ENERGY[p.fastMove])||9,cooldown:(GO_FAST_COOLDOWN&&GO_FAST_COOLDOWN[p.fastMove])||500}],chargedMoves:(p.chargedMoves||[]).map(m=>({name:m.name,power:Number(m.power)||55,cost:Number(m.cost)||50}))};}catch(e){return {fastMoves:[{name:p.fastMove||'몸통박치기',power:8,energy:9,cooldown:500}],chargedMoves:(p.chargedMoves||[]).map(m=>({name:m.name,power:m.power||55,cost:m.cost||50}))};}}
     function pvpRender(){
       const panel=document.getElementById('pvp-battle-panel'); if(panel){panel.classList.toggle('hidden',!pvpBattle.ready&&!pvpBattle.started&&!pvpBattle.countdown);panel.classList.toggle('pvp-live',pvpBattle.ready||pvpBattle.started||pvpBattle.countdown);}
@@ -3483,7 +3735,7 @@
       const ownbar=document.getElementById('pvp-own-hp-bar');if(ownbar)ownbar.style.width=(Math.max(0,pvpBattle.hp)/Math.max(1,pvpBattle.maxHp)*100)+'%';
       const ownhp=document.getElementById('pvp-own-hp-text');if(ownhp)ownhp.textContent=`내 HP: ${Math.max(0,pvpBattle.hp)} / ${pvpBattle.maxHp}`;
       const energy=document.getElementById('pvp-energy-bar');if(energy)energy.style.width=Math.min(100,pvpBattle.energy)+'%';const et=document.getElementById('pvp-energy-text');if(et)et.textContent=`스페셜 에너지 ${Math.floor(pvpBattle.energy)}% · 보호막 ${pvpBattle.shields}/2`;
-      const charge=document.getElementById('pvp-charge-btn');const currentMoves=active?pvpMoves(active).chargedMoves:[];const chargeCost=Number(currentMoves[0]?.cost)||50;if(charge){charge.disabled=!pvpBattle.started||pvpBattle.energy<chargeCost||pvpBattle.chargeBusy;charge.textContent=currentMoves[0]?`⭕ ${currentMoves[0].name} · ${chargeCost} 에너지`:'⭕ 스페셜 어택';}
+      const chargeHost=document.getElementById('pvp-charge-buttons');const currentMoves=active?pvpMoves(active).chargedMoves:[];if(chargeHost){const moves=currentMoves.slice(0,2);chargeHost.innerHTML=moves.map((m,i)=>{const cost=Math.max(1,Number(m.cost)||50),ready=pvpBattle.started&&pvpBattle.energy>=cost&&!pvpBattle.chargeBusy;const fill=Math.max(0,Math.min(100,pvpBattle.energy/cost*100));return `<button type="button" onclick="pvpAttack('charge',${i})" ${ready?'':'disabled'} title="${String(m.name).replace(/&/g,'&amp;').replace(/"/g,'&quot;')}" class="relative overflow-hidden flex flex-col items-center justify-center rounded-full border-4 border-slate-300 shadow-lg disabled:opacity-70" style="width:82px;height:82px;background:linear-gradient(to top,#9ca3af ${fill}%,#374151 ${fill}%);color:white"><span class="text-[10px] font-black text-center leading-tight px-1">${String(m.name).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span><span class="text-[9px]">${Math.floor(pvpBattle.energy)}/${cost}</span></button>`;}).join('');}
       const ownteam=document.getElementById('pvp-own-team');if(ownteam)ownteam.textContent=`내 팀 ${pvpBattle.team.filter((p,i)=>pvpBattle.teamHp[i]>0).length}/3`;const enemyteam=document.getElementById('pvp-enemy-team');if(enemyteam)enemyteam.textContent=`상대 팀 ${pvpBattle.enemyTeam.filter((p,i)=>pvpBattle.enemyTeamHp[i]>0).length}/3`;
     }
     function pvpLog(t){const e=document.getElementById('pvp-battle-log');if(e)e.textContent=t;setPvpRoomStatus(t);}
@@ -3527,8 +3779,8 @@
         await pvpEnsureChannel();pvpRender();await pvpBroadcast({kind:'ready',team:pvpCleanTeam(pvpBattle.team)});pvpLog('준비 완료! 상대가 팀을 선택할 때까지 기다립니다. 양쪽이 준비되면 3초 카운트다운이 시작돼요.');if(pvpBattle.enemyReady)await pvpBeginCountdown();
       }catch(e){setPvpRoomStatus('대전 준비 실패: '+(e.message||e));}
     }
-    function pvpShowChargeMini(){
-      const p=pvpBattle.team[pvpBattle.index], list=p?pvpMoves(p).chargedMoves:[], chosen=list[0];
+    function pvpShowChargeMini(moveIndex=0){
+      const p=pvpBattle.team[pvpBattle.index], list=p?pvpMoves(p).chargedMoves:[], chosen=list[moveIndex];
       if(pvpBattle.chargeBusy||!chosen||pvpBattle.energy<Number(chosen.cost||50)||!pvpBattle.started)return;
       pvpBattle.chargeBusy=true;pvpRender();const overlay=document.getElementById('pvp-charge-overlay'),host=document.getElementById('pvp-charge-bubbles'),score=document.getElementById('pvp-charge-score');
       overlay.classList.add('active');host.innerHTML='';let popped=0;const total=24;score.textContent=`0 / ${total}`;
@@ -3544,7 +3796,7 @@
       if(pvpBattle.enemyHp<=0){pvpBattle.enemyIndex++;if(pvpBattle.enemyIndex<pvpBattle.enemyTeam.length){pvpBattle.enemyMaxHp=pvpBattle.enemyTeamHp[pvpBattle.enemyIndex]||pvpMaxHp(pvpBattle.enemyTeam[pvpBattle.enemyIndex]);pvpBattle.enemyHp=pvpBattle.enemyMaxHp;pvpRender();await pvpBroadcast({kind:'switch',index:pvpBattle.enemyIndex});pvpLog(`상대 ${pvpBattle.enemyTeam[pvpBattle.enemyIndex].name} 출전!`);}else{pvpBattle.started=false;pvpRender();await pvpBroadcast({kind:'battle-end',result:'win'});pvpLog('승리! 상대 팀의 포켓몬 3마리를 모두 쓰러뜨렸어요.');}}
     }
     document.addEventListener('pointerdown',ev=>{if(!pvpBattle.started||pvpBattle.chargeBusy)return;const panel=document.getElementById('pvp-battle-panel');if(!panel||!panel.classList.contains('pvp-live')||!panel.contains(ev.target))return;if(ev.target.closest('button,select,input,a,#pvp-charge-overlay'))return;pvpAttack('fast');},{passive:true});
-    async function pvpAttack(kind){if(!pvpBattle.started||pvpBattle.chargeBusy)return;if(kind==='charge'){pvpShowChargeMini();return;}const now=Date.now();if(now-pvpBattle.lastAction<500)return;pvpBattle.lastAction=now;try{await pvpDoAttack('fast');}catch(e){pvpLog('상대에게 공격을 보내지 못했어요: '+e.message);}}
+    async function pvpAttack(kind,moveIndex=0){if(!pvpBattle.started||pvpBattle.chargeBusy)return;if(kind==='charge'){pvpShowChargeMini(moveIndex);return;}const now=Date.now();if(now-pvpBattle.lastAction<500)return;pvpBattle.lastAction=now;try{await pvpDoAttack('fast');}catch(e){pvpLog('상대에게 공격을 보내지 못했어요: '+e.message);}}
     async function pvpLeaveRoom(){try{if(activePvpRoomChannel)await activePvpRoomChannel.send({type:'broadcast',event:'pvp',payload:{kind:'leave',sender:pvpBattle.role}});const {client}=await cloudCurrentUser();if(activePvpRoomChannel)await client.removeChannel(activePvpRoomChannel);}catch(e){}activePvpRoomChannel=null;activePvpRoomCode='';pvpBattle.started=false;pvpBattle.ready=false;pvpBattle.enemyReady=false;pvpBattle.countdown=false;pvpRender();setPvpRoomStatus('방에서 나왔어요.');}
 
     function cloudSavePayload() {
@@ -3851,15 +4103,34 @@
         cpm
       };
     }
+    // 턴제(Classic/RPG) 배틀은 한국 현지 날짜 기준 하루 10회로 제한합니다.
+    function getClassicBattleDailyState() {
+      if (!gameState.player) gameState.player = {};
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      let daily = gameState.player.classicBattleDaily;
+      if (!daily || daily.date !== date) daily = gameState.player.classicBattleDaily = { date, count: 0 };
+      daily.count = Math.max(0, Math.min(10, Number(daily.count) || 0));
+      return daily;
+    }
+
     function startTrainerBattle() {
       document.getElementById('battle-finish-btn')?.classList.add('hidden');
       const mode = document.getElementById('battle-mode-select').value || 'go';
+      if (mode === 'classic') { const daily = getClassicBattleDailyState(); if (daily.count >= 10) { showToast('오늘 턴제 배틀 10회를 모두 사용했어요. 내일 다시 도전하세요! (GO 방식 배틀은 계속 이용할 수 있어요.)', 'alert-circle'); return; } }
       if (gameState.myPokemon.length < (window.__gymChallenge ? 1 : 3)) { showToast(window.__gymChallenge ? '체육관 도전에는 포켓몬이 최소 1마리 필요합니다.' : '3대3 배틀을 하려면 포켓몬이 3마리 이상 필요합니다.', 'alert-circle'); return; }
       const gymChallenge=window.__gymChallenge;
       let chosen = [0,1,2].map(i => Number(document.getElementById(i === 0 ? 'battle-pokemon-select' : `battle-pokemon-select-${i+1}`).value));
       if(gymChallenge){let ids=[];try{ids=JSON.parse(localStorage.getItem(BATTLE_PARTY_KEY)||'[]');}catch(e){}const saved=ids.map(id=>gameState.myPokemon.findIndex(p=>String(p.uniqueId)===String(id))).filter(i=>i>=0);const uniqueSaved=[...new Set(saved)];const uniqueOwned=gameState.myPokemon.map((p,i)=>i);chosen=uniqueSaved.length?uniqueSaved:uniqueOwned.slice(0,3);if(chosen.length===0)chosen=[0];}
       if (!gymChallenge && new Set(chosen).size !== 3) { showToast('서로 다른 포켓몬 3마리를 선택해주세요.', 'alert-circle'); return; }
       const playerTeam = chosen.map(i => gameState.myPokemon[i]);
+      if (mode === 'classic') {
+        const daily = getClassicBattleDailyState();
+        daily.count = Math.min(10, daily.count + 1);
+        saveGame(false);
+        const hint = document.getElementById('battle-team-hint');
+        if (hint) hint.textContent = `오늘 턴제 배틀 ${daily.count}/10회 사용`;
+      }
       if(gymChallenge) gymChallenge.startedAt=Date.now();
       const enemyBases = [...GEN1_POKEMON].sort(() => Math.random() - 0.5).slice(0,3);
       const difficulty = Math.max(0.58, Math.min(2.0, 0.72 + (rankData.level - 1) * 0.035 + rankData.totalSets * 0.005));
@@ -4108,7 +4379,7 @@
       const gymChallenge=window.__gymChallenge;
       if(!gymChallenge) document.getElementById('battle-finish-btn').classList.remove('hidden'); else document.getElementById('battle-finish-btn').classList.add('hidden');
       document.getElementById('battle-log').textContent = `${message} ${won ? '🎉 승리! XP 250과 별의모래 300을 획득했다!' : '😵 패배… 포켓몬을 강화하고 다시 도전해 보자!'}`;
-      if (won) { addXP(250); gameState.player.stardust += 300; playSound('catch'); }
+      if (won) { addXP(250); gameState.player.stardust += 300; playSound('catch'); advanceMainResearch('battle',1); }
       if(gymChallenge){
         if(won){const elapsed=Math.max(1,Math.ceil((Date.now()-gymChallenge.startedAt)/60000));const coins=Math.min(60,elapsed);gameState.player.pokecoins=(Number(gameState.player.pokecoins)||0)+coins;const g=gymChallenge.gym;if(g){g.defeated=true;gameState.mapElements.gyms=gameState.mapElements.gyms.filter(x=>x.id!==g.id);}const last=battleState&&battleState.enemyTeam&&battleState.enemyTeam[battleState.enemyTeam.length-1];const boss=last||makeGymBoss();const base=GEN1_POKEMON.find(x=>x.id===boss.baseId)||GEN1_POKEMON[0];const cp=calculateWildSpawnCP(base,boss.ivAtk||0,boss.ivDef||0,boss.ivHp||0);gymBossToCatch={...boss,cp,uniqueId:Date.now()+Math.random()};document.getElementById('battle-log').textContent+=` 체육관 보상: 포켓코인 ${coins}개! 관장의 ${boss.name}을(를) 포획할 수 있어요.`;setTimeout(()=>{const modal=document.getElementById('battle-modal');modal.classList.add('hidden');modal.classList.remove('flex');closeGymModal();if(gymBossToCatch){const b=gymBossToCatch;gymBossToCatch=null;startEncounter(b);}},900);}
         else {document.getElementById('battle-log').textContent+=' 이번 도전은 패배로 끝났습니다.';}
@@ -4339,9 +4610,10 @@
       return [...new Set(dirs.flatMap(d=>names.map(n=>`${MEGA_SPRITE_ROOT}${d}/${n}.gif`)))];
     }
     function setMegaSpriteWithFallback(img,info,shiny,p){
+      // Mega-only fallback chain: never show a normal/Retro sprite as if it were Mega.
       const urls=getMegaSpriteCandidates(info,shiny);let i=0;
-      const next=()=>{if(i<urls.length){img.onerror=next;img.src=urls[i++];}else{img.onerror=null;img.src=getPokemonRetroStaticUrl(getPokemonSpriteId(p),!!p.shiny);}};
-      img.onerror=next;next();
+      const next=()=>{if(i<urls.length){img.onerror=next;img.src=urls[i++];}else{img.onerror=null;img.style.visibility='hidden';}};
+      img.style.visibility='visible';img.onerror=next;next();
     }
     let megaData={energy:{},pokemon:{}};try{megaData=Object.assign(megaData,JSON.parse(localStorage.getItem(MEGA_KEY)||'{}'));}catch(e){}
     window.__restoreMegaProgress=function(saved){if(!saved||typeof saved!=='object')return;megaData={energy:{...(saved.energy||{})},pokemon:{...(saved.pokemon||{})}};try{localStorage.setItem(MEGA_KEY,JSON.stringify(megaData));}catch(e){};syncMegaExpiry(false);};
@@ -4352,7 +4624,7 @@
     function megaRecord(p){const k=String(p.uniqueId);if(!megaData.pokemon[k])megaData.pokemon[k]={level:0,count:0,activeUntil:0,readyAt:0,baseCp:Number(p.cp)||0};return megaData.pokemon[k];}
     function renderMega(){const p=(gameState.myPokemon||[]).find(x=>String(x.uniqueId)===String(buddy.id));const info=megaInfo(p);const sum=$('mega-summary'),list=$('mega-energy-list'),btn=$('mega-evolve-btn');if(!sum||!list||!btn)return;
       if(!p||!info){sum.textContent='현재 파트너는 메가진화를 할 수 없어요. 메가진화 가능한 포켓몬을 파트너로 선택하세요.';list.innerHTML=Object.keys(MEGA_IDS).map(id=>{const q=(gameState.myPokemon||[]).find(x=>Number(x.baseId||x.id)===Number(id));return q?`<div class="rounded-xl border p-3 flex items-center gap-3"><img src="${getPokemonImage(q)}" style="width:42px;height:42px;object-fit:contain"><div class="flex-1"><b>${esc(q.name)}</b><div class="text-xs text-slate-500">${MEGA_IDS[id].name} · 에너지 ${megaEnergy(id)}</div></div><button onclick="selectBuddy('${String(q.uniqueId).replace(/'/g,'')}')" class="rounded-lg bg-emerald-600 text-white px-3 py-2 text-sm font-bold">파트너</button></div>`:''}).filter(Boolean).join('')||'<div class="text-sm text-slate-500">보유 중인 메가진화 가능 포켓몬이 없어요.</div>';btn.disabled=true;btn.classList.add('opacity-50');return;}
-      const r=megaRecord(p),remaining=Math.max(0,r.readyAt-Date.now()),active=r.activeUntil>Date.now();sum.innerHTML=`<div class="flex items-center gap-3"><img data-mega-slug="${info.sprite}" src="${getMegaSpriteUrl(info,!!p.shiny)}" onerror="if(!this.dataset.megaTried){this.dataset.megaTried='1';this.src='https://play.pokemonshowdown.com/sprites/xyani/${info.sprite}.gif'}else{this.onerror=null;this.src='${getPokemonRetroStaticUrl(getPokemonSpriteId(p),!!p.shiny)}'}" style="width:70px;height:70px;object-fit:contain"><div><b class="text-base">${info.name}</b><div>메가 레벨 ${r.level||0} · 진화 횟수 ${r.count||0}</div><div>메가 에너지: <b>${megaEnergy(p.baseId||p.id)}</b></div><div>${active?'메가진화 중 · '+Math.ceil((r.activeUntil-Date.now())/60000)+'분 남음':remaining>0?'무료 재진화까지 '+Math.ceil(remaining/3600000)+'시간':'재진화 가능'}</div></div></div>`;
+      const r=megaRecord(p),remaining=Math.max(0,r.readyAt-Date.now()),active=r.activeUntil>Date.now();sum.innerHTML=`<div class="flex items-center gap-3"><img data-mega-slug="${info.sprite}" src="${getMegaSpriteUrl(info,!!p.shiny)}" onerror="if(!this.dataset.megaTried){this.dataset.megaTried='1';this.src='https://play.pokemonshowdown.com/sprites/xyani/${info.sprite}.gif'}else{this.onerror=null;this.style.visibility='hidden'}" style="width:70px;height:70px;object-fit:contain"><div><b class="text-base">${info.name}</b><div>메가 레벨 ${r.level||0} · 진화 횟수 ${r.count||0}</div><div>메가 에너지: <b>${megaEnergy(p.baseId||p.id)}</b></div><div>${active?'메가진화 중 · '+Math.ceil((r.activeUntil-Date.now())/60000)+'분 남음':remaining>0?'무료 재진화까지 '+Math.ceil(remaining/3600000)+'시간':'재진화 가능'}</div></div></div>`;
       list.innerHTML=`<div class="rounded-xl bg-fuchsia-50 border border-fuchsia-200 p-3 text-sm">첫 진화 비용: 200 에너지 · 포획 보너스: 해당 종 에너지 +10 · 파트너 거리 보상: 사탕 +1 및 에너지 +200</div>`;
       btn.disabled=active;btn.classList.toggle('opacity-50',active);btn.textContent=active?'메가진화 중':r.level===0?'메가진화 (에너지 200)':remaining>0?'메가진화 (에너지 200 또는 대기)':'메가진화 (무료)';
     }
@@ -4364,7 +4636,7 @@
       const panel=document.getElementById('detail-mega-panel'),img=document.getElementById('detail-mega-img'),status=document.getElementById('detail-mega-status'),btn=document.getElementById('detail-mega-btn');
       if(!panel||!img||!status||!btn)return;const info=megaInfo(p);if(!info){panel.classList.add('hidden');return;}panel.classList.remove('hidden');
       const r=megaRecord(p),active=(r.activeUntil||p.megaActiveUntil||0)>Date.now(),left=Math.max(0,(r.readyAt||0)-Date.now());
-      if(active){setAnimatedPokemonImage(img,p);}else{setAnimatedPokemonImage(img,p);}
+      if(active){const megaUrl=getMegaSpriteUrl(info,!!p.shiny);setMegaSpriteWithFallback(img,info,!!p.shiny,p);if(img.dataset.spriteUrl!==megaUrl){img.dataset.spriteUrl=megaUrl;img.src=megaUrl;}img.style.visibility='visible';}else{img.onerror=null;img.dataset.spriteUrl='';setAnimatedPokemonImage(img,p);}
       status.innerHTML=`<b>${info.name}</b><div>메가진화 가능 · 메가 레벨 ${r.level||0}</div><div>메가 에너지 ${megaEnergy(p.baseId||p.id)}개</div><div>${active?'메가진화 중 · '+Math.ceil(((r.activeUntil||p.megaActiveUntil)-Date.now())/60000)+'분 남음':left>0?'무료 재진화까지 '+Math.ceil(left/3600000)+'시간':'현재 일반 모습 · 메가진화 가능'}</div><div>진화 유지 시간: 18시간</div>`;
       btn.disabled=active;btn.textContent=active?'메가진화 중':(r.level===0||left>0?'메가진화 (에너지 200)':'메가진화 (무료)');btn.classList.toggle('opacity-50',active);
     };
@@ -4454,6 +4726,278 @@
     }
     #pokemon-modal > .glass-panel, #pokedex-modal > .glass-panel { overflow: hidden !important; }
     #pokedex-grid { min-height: 0 !important; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  </style>
+
+
+  <style id="responsive-mobile-overflow-final-fix">
+    /* Viewport-safe layout for phones, short screens, browser bars and notches. */
+    :root { --app-vh: 100vh; }
+    @supports (height: 100dvh) { :root { --app-vh: 100dvh; } }
+    html, body {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+    body { min-height: 0; }
+    #game-container {
+      width: 100%;
+      height: var(--app-vh);
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Start screen and tutorial remain fully reachable on narrow/short phones. */
+    #home-screen, #tutorial-screen {
+      box-sizing: border-box !important;
+      width: 100% !important;
+      height: var(--app-vh) !important;
+      min-height: 0 !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      overscroll-behavior-y: contain;
+      -webkit-overflow-scrolling: touch;
+      padding:
+        max(12px, env(safe-area-inset-top))
+        max(12px, env(safe-area-inset-right))
+        max(12px, env(safe-area-inset-bottom))
+        max(12px, env(safe-area-inset-left)) !important;
+      align-items: safe center !important;
+    }
+    #home-screen > div, #tutorial-screen > div {
+      box-sizing: border-box !important;
+      width: 100% !important;
+      max-width: 28rem !important;
+      min-width: 0 !important;
+      max-height: none !important;
+      margin: auto !important;
+      flex-shrink: 0;
+    }
+    #home-screen h1 { font-size: clamp(1.45rem, 6vw, 1.875rem) !important; }
+    #tutorial-text { min-height: 0 !important; }
+
+    /* All tall menus scroll at the overlay level; panels cannot extend off-screen. */
+    #research-modal, #pokedex-modal, #pokemon-modal, #detail-modal, #bag-modal,
+    #trainer-profile-modal, #buddy-modal, #gym-modal, #shop-modal {
+      box-sizing: border-box !important;
+      width: 100% !important;
+      height: var(--app-vh) !important;
+      max-height: var(--app-vh) !important;
+      inset: 0 !important;
+      padding:
+        max(8px, env(safe-area-inset-top))
+        max(8px, env(safe-area-inset-right))
+        max(8px, env(safe-area-inset-bottom))
+        max(8px, env(safe-area-inset-left)) !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      overscroll-behavior-y: contain !important;
+      -webkit-overflow-scrolling: touch !important;
+      touch-action: pan-y;
+    }
+    #research-modal:not(.hidden), #pokedex-modal:not(.hidden),
+    #pokemon-modal:not(.hidden), #detail-modal:not(.hidden),
+    #bag-modal:not(.hidden), #trainer-profile-modal:not(.hidden),
+    #buddy-modal:not(.hidden), #gym-modal:not(.hidden), #shop-modal:not(.hidden) {
+      display: flex !important;
+      align-items: flex-start !important;
+      justify-content: center !important;
+    }
+    #research-modal.hidden, #pokedex-modal.hidden, #pokemon-modal.hidden,
+    #detail-modal.hidden, #bag-modal.hidden, #trainer-profile-modal.hidden,
+    #buddy-modal.hidden, #gym-modal.hidden, #shop-modal.hidden {
+      display: none !important;
+    }
+
+    #research-modal > div, #pokedex-modal > .glass-panel,
+    #pokemon-modal > .glass-panel, #detail-modal > .glass-panel,
+    #bag-modal > .glass-panel, #trainer-profile-modal > div,
+    #buddy-modal > div, #gym-modal > div, #shop-modal > .glass-panel {
+      box-sizing: border-box !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: min(100%, 42rem) !important;
+      max-height: none !important;
+      margin: 0 auto !important;
+      flex: 0 0 auto !important;
+    }
+
+    /* Research: let the entire task list scroll, including on very short screens. */
+    #research-modal > div {
+      max-height: none !important;
+      overflow: visible !important;
+      border-radius: 1rem !important;
+    }
+    #research-modal .p-5, #research-modal .p-4 { min-width: 0; }
+    #research-tab-content, #research-task-list { min-width: 0; }
+    #research-modal button { min-height: 40px; touch-action: manipulation; }
+
+    /* Pokédex and box: fixed-height panel with an independently scrollable list. */
+    #pokedex-modal > .glass-panel, #pokemon-modal > .glass-panel {
+      height: calc(var(--app-vh) - max(16px, env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom))) !important;
+      max-height: calc(var(--app-vh) - max(16px, env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom))) !important;
+      min-height: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+    }
+    #pokedex-modal > .glass-panel > :first-child,
+    #pokemon-modal > .glass-panel > :first-child {
+      flex: 0 0 auto !important;
+      min-width: 0 !important;
+    }
+    #pokedex-grid, #pokemon-grid, #pokemon-list, #pokemon-box-list, #box-pokemon-list {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      max-height: none !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      overscroll-behavior-y: contain !important;
+      touch-action: pan-y !important;
+    }
+    #pokedex-modal > .glass-panel > *, #pokemon-modal > .glass-panel > * { min-width: 0; }
+    #pokemon-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    #pokedex-modal h2 { font-size: clamp(0.9rem, 3.6vw, 1.25rem) !important; }
+    #pokedex-progress-tag { white-space: nowrap; }
+
+    /* Other detail screens: allow scrolling instead of clipping the lower buttons. */
+    #detail-modal > .glass-panel, #bag-modal > .glass-panel,
+    #trainer-profile-modal > div, #buddy-modal > div, #gym-modal > div {
+      max-height: none !important;
+      overflow: visible !important;
+    }
+    #detail-modal, #bag-modal, #trainer-profile-modal, #buddy-modal {
+      align-items: flex-start !important;
+    }
+    #detail-modal > .glass-panel, #bag-modal > .glass-panel {
+      margin-bottom: 4px !important;
+    }
+
+    /* Keep touch controls usable without disabling scrolling in content areas. */
+    #home-screen button, #tutorial-screen button,
+    #research-modal button, #pokedex-modal button, #pokemon-modal button,
+    #detail-modal button, #bag-modal button {
+      touch-action: manipulation;
+    }
+
+    @media (max-width: 480px) {
+      #research-modal .p-5 { padding: 0.9rem !important; }
+      #research-modal .p-4 { padding: 0.75rem !important; }
+      #research-modal h2 { font-size: 1.2rem !important; }
+      #research-modal .grid.grid-cols-3 { gap: 0.35rem !important; }
+      #research-modal .grid.grid-cols-3 button { padding: 0.55rem 0.25rem !important; font-size: 0.85rem !important; }
+      #pokedex-grid, #pokemon-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 0.5rem !important; padding: 0.65rem !important; }
+      #pokedex-modal > .glass-panel > :first-child { padding: 0.7rem !important; }
+    }
+    @media (max-height: 560px) {
+      #home-screen > div, #tutorial-screen > div { padding: 1rem !important; }
+      #home-screen p { margin-bottom: 0.75rem !important; }
+      #home-screen .grid { gap: 0.5rem !important; }
+      #home-screen button { padding: 0.7rem !important; }
+      #tutorial-icon { margin-top: 0.5rem !important; margin-bottom: 0.5rem !important; }
+      #tutorial-screen > div { gap: 0.5rem; }
+    }
+  </style>
+
+
+  <style id="battle-and-menu-viewport-balance-fix">
+    /* Keep the research/box overlays scrollable while fitting the battle arena
+       inside the actual visible viewport (including short landscape/tablet views). */
+    #battle-modal {
+      height: var(--app-vh, 100dvh) !important;
+      max-height: var(--app-vh, 100dvh) !important;
+      overflow: hidden !important;
+      padding: 0 !important;
+      box-sizing: border-box !important;
+    }
+    #battle-modal:has(#battle-arena.go-mode) .battle-panel {
+      height: var(--app-vh, 100dvh) !important;
+      max-height: var(--app-vh, 100dvh) !important;
+      min-height: 0 !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+    #battle-modal:has(#battle-arena.go-mode) .battle-panel > div:nth-child(2) {
+      flex: 1 1 auto !important;
+      height: auto !important;
+      min-height: 0 !important;
+      max-height: none !important;
+      overflow: hidden !important;
+      padding: 0 !important;
+    }
+    #battle-arena.go-mode {
+      height: 100% !important;
+      min-height: 0 !important;
+      max-height: 100% !important;
+      overflow: hidden !important;
+    }
+    #battle-arena.go-mode #battle-stage {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      height: auto !important;
+      max-height: 100% !important;
+      padding-top: clamp(6px, 1.5vh, 14px) !important;
+      padding-bottom: clamp(6px, 1.5vh, 14px) !important;
+    }
+    #battle-arena.go-mode .battle-big-sprite {
+      width: min(38vw, 22vh, 230px) !important;
+      height: min(34vh, 230px) !important;
+      max-height: 34vh !important;
+    }
+    #battle-arena.go-mode #battle-leave-btn {
+      top: max(6px, env(safe-area-inset-top)) !important;
+      right: max(8px, env(safe-area-inset-right)) !important;
+      padding: 6px 10px !important;
+      font-size: 13px !important;
+    }
+    #battle-arena.go-mode #battle-controls {
+      bottom: max(6px, env(safe-area-inset-bottom)) !important;
+      gap: clamp(8px, 2vw, 18px) !important;
+    }
+    #battle-arena.go-mode #battle-charge-btn,
+    #battle-arena.go-mode #battle-charge-btn2 {
+      width: clamp(76px, 17vw, 112px) !important;
+      height: clamp(76px, 17vw, 112px) !important;
+      padding: 5px !important;
+      font-size: clamp(10px, 2.5vw, 13px) !important;
+    }
+    #battle-arena.go-mode #battle-log {
+      bottom: calc(clamp(96px, 18vh, 128px) + env(safe-area-inset-bottom)) !important;
+      max-height: 44px !important;
+      overflow: hidden !important;
+    }
+    #battle-arena.go-mode #battle-go-meter {
+      bottom: calc(clamp(70px, 13vh, 94px) + env(safe-area-inset-bottom)) !important;
+    }
+    #battle-incoming-charge {
+      padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)) !important;
+      overflow-y: auto !important;
+      box-sizing: border-box !important;
+    }
+    #battle-incoming-charge .prompt-card {
+      max-height: calc(var(--app-vh, 100dvh) - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+      overflow-y: auto !important;
+      padding: clamp(12px, 3vh, 20px) !important;
+    }
+    @media (max-height: 650px) {
+      #battle-arena.go-mode .battle-big-sprite {
+        width: min(30vw, 18vh, 170px) !important;
+        height: min(24vh, 170px) !important;
+        max-height: 24vh !important;
+      }
+      #battle-arena.go-mode #battle-charge-btn,
+      #battle-arena.go-mode #battle-charge-btn2 {
+        width: 72px !important;
+        height: 72px !important;
+        font-size: 10px !important;
+        border-width: 3px !important;
+      }
+      #battle-arena.go-mode #battle-log { bottom: calc(82px + env(safe-area-inset-bottom)) !important; }
+      #battle-arena.go-mode #battle-go-meter { bottom: calc(58px + env(safe-area-inset-bottom)) !important; }
+    }
   </style>
 
 </body>
