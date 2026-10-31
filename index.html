@@ -2031,7 +2031,9 @@
       if(panel)panel.innerHTML=`<div class="font-black">데일리 도장 ${d.stamp||0}/6</div><div class="flex gap-1 my-2">${Array.from({length:6},(_,i)=>`<span class="flex-1 text-center rounded-lg p-2 ${i<(d.stamp||0)?'bg-amber-400':'bg-white border'}">${i<(d.stamp||0)?'★':'☆'}</span>`).join('')}</div><button type="button" onclick="claimResearchBox()" ${d.stamp<6||d.boxClaimed?'disabled':''} class="w-full rounded-xl p-2 font-black ${d.stamp>=6&&!d.boxClaimed?'bg-amber-500':'bg-slate-200 text-slate-400'}">${d.boxClaimed?'오늘의 리서치 박스 수령 완료':'리서치 박스 열기 (도장 6개)'}</button><p class="text-xs text-slate-500 mt-1">매일 밤 9시에 데일리 태스크가 갱신돼요.</p>`;
       const content=document.getElementById('research-tab-content');if(!content)return;
       if(currentResearchTab==='event'){
-        content.innerHTML='<div class="rounded-2xl bg-slate-50 p-6 text-center text-slate-500">현재 진행 중인 이벤트가 없어요.</div>';return;
+        const halloweenClaimed=!!r.halloween2026Claimed;
+        const gofestClaimed=!!r.gofest2026Claimed;
+        content.innerHTML=`<div class="space-y-4"><div class="rounded-2xl border-2 border-orange-300 bg-gradient-to-br from-orange-50 via-purple-50 to-slate-100 p-4"><div class="text-xs font-black text-orange-700">🎃 2026 할로윈 스페셜</div><h3 class="mt-1 text-xl font-black text-slate-900">할로윈 비밀 선물</h3><p class="mt-2 text-sm text-slate-700">이벤트 코드를 입력하면 이로치 밀탱크를 만날 수 있어요.</p><div class="mt-3 rounded-xl bg-white/80 p-3 text-sm"><div class="font-black text-slate-800">✨ 이로치 밀탱크</div><div class="text-slate-600">최대 CP · IV 100% (공격/방어/HP 각 15)</div></div><label for="halloween-event-code" class="block mt-3 text-xs font-bold text-slate-600">이벤트 코드</label><div class="mt-1 flex gap-2"><input id="halloween-event-code" type="text" autocomplete="off" maxlength="20" placeholder="코드 입력" class="min-w-0 flex-1 rounded-xl border border-orange-200 bg-white px-3 py-3 font-bold" ${halloweenClaimed?'disabled':''}><button type="button" onclick="redeemHalloween2026Code()" ${halloweenClaimed?'disabled':''} class="rounded-xl bg-orange-500 px-4 py-3 font-black text-white disabled:bg-slate-300">${halloweenClaimed?'수령 완료':'교환'}</button></div>${halloweenClaimed?'<p class="mt-2 text-sm font-bold text-emerald-700">이미 할로윈 선물을 수령했어요!</p>':'<p class="mt-2 text-xs text-slate-500">계정당 한 번만 교환할 수 있어요.</p>'}</div><div class="rounded-2xl border-2 border-sky-300 bg-gradient-to-br from-sky-50 via-indigo-50 to-slate-100 p-4"><div class="text-xs font-black text-sky-800">🌌 2026년 11월 GO FEST 스페셜</div><h3 class="mt-1 text-xl font-black text-slate-900">전설의 만남</h3><p class="mt-2 text-sm text-slate-700">코드 교환 후 두 포켓몬을 차례로 만날 수 있어요.</p><div class="mt-3 rounded-xl bg-white/80 p-3 text-sm space-y-2"><div><div class="font-black text-slate-800">무한다이노 · 무한다이맥스 폼</div><div class="text-slate-600">최대 CP · IV 100% · 다이맥스포</div></div><div class="border-t border-slate-200 pt-2"><div class="font-black text-slate-800">✨ 이로치 레쿠쟈</div><div class="text-slate-600">최대 CP · IV 100%</div></div></div><label for="gofest-event-code" class="block mt-3 text-xs font-bold text-slate-600">이벤트 코드</label><div class="mt-1 flex gap-2"><input id="gofest-event-code" type="text" autocomplete="off" maxlength="20" placeholder="코드 입력" class="min-w-0 flex-1 rounded-xl border border-sky-200 bg-white px-3 py-3 font-bold" ${gofestClaimed?'disabled':''}><button type="button" onclick="redeemGofest2026Code()" ${gofestClaimed?'disabled':''} class="rounded-xl bg-sky-600 px-4 py-3 font-black text-white disabled:bg-slate-300">${gofestClaimed?'수령 완료':'교환'}</button></div>${gofestClaimed?'<p class="mt-2 text-sm font-bold text-emerald-700">GO FEST 선물을 이미 수령했어요!</p>':'<p class="mt-2 text-xs text-slate-500">계정당 한 번만 교환할 수 있어요.</p>'}<p class="mt-2 text-xs text-slate-500">두 포켓몬은 직접 포획해야 박스에 등록돼요.</p></div></div>`;return;
       }
       if(currentResearchTab==='main'){
         content.innerHTML='<div class="text-xs font-black uppercase tracking-wide text-slate-500 mb-3">메인 리서치 · 단계별 과제와 보상</div>'+MYTHICAL_RESEARCHES.map(m=>{const state=r.main[m.id],done=state.stage>=6,stage=Math.min(5,state.stage),task=MAIN_RESEARCH_TASKS[stage],progress=done?task.goal:Math.min(task.goal,Number(state.progress)||0),claimed=done||state.claimedStages.includes(stage);return `<div class="rounded-2xl border border-violet-200 p-4 mb-3"><div class="flex items-start justify-between gap-2"><div><div class="font-black text-slate-900">${m.name} · 메인 리서치</div><div class="text-xs text-violet-700 font-bold mt-1">${done?'완료':`단계 ${stage+1}/6 · ${m.stages[stage]}`}</div></div><span class="rounded-full bg-violet-50 px-2 py-1 text-xs font-black text-violet-700">${done?'완료':`${progress}/${task.goal}`}</span></div>${done?`<p class="text-sm text-emerald-700 font-bold mt-3">모든 단계를 완료했어요!</p>`:`<p class="text-sm text-slate-700 mt-3">${task.description}</p><div class="h-2 bg-slate-100 rounded-full overflow-hidden mt-2"><div class="h-full bg-violet-500" style="width:${Math.min(100,progress/task.goal*100)}%"></div></div><div class="flex flex-wrap justify-between items-center gap-2 mt-3"><span class="text-sm font-bold text-amber-700">🎁 ${task.reward.label}</span><button type="button" ${progress<task.goal||claimed?'disabled':''} onclick="claimMainResearchReward('${m.id}')" class="rounded-xl px-4 py-2 text-sm font-black ${progress>=task.goal&&!claimed?'bg-violet-600 text-white':'bg-slate-200 text-slate-400'}">${claimed?'수령 완료':progress>=task.goal?'보상 받기':'진행 중'}</button></div>`}</div>`;}).join('');return;
@@ -2040,6 +2042,41 @@
       const h=document.getElementById('research-task-list');if(!h)return;
       h.innerHTML=d.ids.map(id=>{const t=DAILY_RESEARCH_POOL.find(x=>x.id===id);if(!t)return '';const n=Number(d.progress[id])||0,claimed=!!d.claimed[id],done=n>=t.goal;return `<div class="rounded-2xl border border-slate-200 p-4"><div class="flex justify-between gap-3"><div><h3 class="font-black">${t.title}</h3><p class="text-sm text-slate-600">${t.description}</p></div><span class="text-xs font-black">${claimed?'완료':`${n}/${t.goal}`}</span></div><div class="h-2 bg-slate-100 rounded-full overflow-hidden mt-3"><div class="h-full bg-violet-500" style="width:${Math.min(100,n/t.goal*100)}%"></div></div><div class="flex justify-between items-center mt-3"><span class="text-sm font-bold text-amber-700">🎁 ${t.reward.label}</span><button type="button" ${(!done||claimed)?'disabled':''} onclick="claimResearchReward('${t.id}')" class="rounded-xl px-4 py-2 text-sm font-black ${done&&!claimed?'bg-violet-600 text-white':'bg-slate-200 text-slate-400'}">${claimed?'수령 완료':done?'보상 받기':'진행 중'}</button></div></div>`;}).join('');
     }
+    function redeemHalloween2026Code(){
+      ensureResearchState();
+      const r=gameState.player.research;
+      if(r.halloween2026Claimed){showToast('할로윈 선물은 이미 수령했어요.','alert-circle');return;}
+      const input=document.getElementById('halloween-event-code');
+      const code=String(input?.value||'').trim();
+      if(code!=='2026Halloween'){showToast('이벤트 코드가 올바르지 않아요.','alert-circle');return;}
+      const base=GEN1_POKEMON.find(p=>Number(p.id)===241);
+      if(!base){showToast('밀탱크 데이터를 찾지 못했어요.','alert-circle');return;}
+      const maxCP=getOfficialMaxCP(base);
+      const pokemon={uniqueId:Date.now()+Math.random(),baseId:base.id,name:base.name,type:base.type,cp:maxCP,ivAtk:15,ivDef:15,ivHp:15,ivPct:100,shiny:true,fromHalloween2026:true};
+      if(typeof ensureGOMoves==='function')ensureGOMoves(pokemon);
+      r.halloween2026Claimed=true;
+      saveGame(false);updateHUD();renderResearch();closeModal('research-modal');startEncounter(pokemon);
+      showToast('🎃 할로윈 스페셜! 최대 CP 이로치 밀탱크가 나타났어요!','gift');
+    }
+    function redeemGofest2026Code(){
+      ensureResearchState();
+      const r=gameState.player.research;
+      if(r.gofest2026Claimed){showToast('GO FEST 선물은 이미 수령했어요.','alert-circle');return;}
+      const input=document.getElementById('gofest-event-code');
+      if(String(input?.value||'').trim()!=='2026Gofest'){showToast('이벤트 코드가 올바르지 않아요.','alert-circle');return;}
+      const eternatus=GEN8_POKEMON.find(p=>Number(p.id)===890);
+      const rayquaza=GEN3_POKEMON.find(p=>Number(p.id)===384);
+      if(!eternatus||!rayquaza){showToast('이벤트 포켓몬 데이터를 찾지 못했어요.','alert-circle');return;}
+      const eternatusGift={uniqueId:Date.now()+Math.random(),baseId:eternatus.id,name:eternatus.name,type:eternatus.type,cp:getOfficialMaxCP(eternatus),ivAtk:15,ivDef:15,ivHp:15,ivPct:100,shiny:false,formeActive:true,formeSlug:'eternatus-eternamax',formeLabel:'무한다이맥스',fromGofest2026:true,fastMove:'용의숨결',chargedMoves:[{name:'다이맥스포',cost:50,power:120,fastEnergy:9}]};
+      const rayquazaGift={uniqueId:Date.now()+Math.random()+1,baseId:rayquaza.id,name:rayquaza.name,type:rayquaza.type,cp:getOfficialMaxCP(rayquaza),ivAtk:15,ivDef:15,ivHp:15,ivPct:100,shiny:true,fromGofest2026:true};
+      if(typeof ensureGOMoves==='function')ensureGOMoves(rayquazaGift);
+      gameState.pendingEventEncounters=[eternatusGift,rayquazaGift];
+      r.gofest2026Claimed=true;
+      saveGame(false);updateHUD();renderResearch();closeModal('research-modal');
+      const first=gameState.pendingEventEncounters.shift();startEncounter(first);
+      showToast('🌌 GO FEST! 무한다이노가 나타났어요. 포획하면 이로치 레쿠쟈도 만날 수 있어요!','gift');
+    }
+
     function claimResearchBox(){ensureResearchState();const d=gameState.player.research.daily;if(d.stamp<6||d.boxClaimed)return;d.boxClaimed=true;gameState.player.stardust=(Number(gameState.player.stardust)||0)+2000;gameState.inventory.rareCandy=(Number(gameState.inventory.rareCandy)||0)+1;saveGame(false);updateHUD();renderResearch();showToast('리서치 박스 보상: 별의모래 2000개와 이상한사탕 1개!','gift');}
     function claimWelcomeResearch(){
       ensureResearchState();
@@ -2691,12 +2728,13 @@
       renderCatchLoop();
     }
 
-    function fleeEncounter() {
+    function fleeEncounter(silent=false) {
       document.getElementById('encounter-screen').classList.add('hidden');
       document.getElementById('encounter-screen').classList.remove('flex');
-      playSound('flee');
-      showToast('야생 포켓몬이 도망쳤습니다!', 'log-out');
+      if(!silent){playSound('flee');showToast('야생 포켓몬이 도망쳤습니다!', 'log-out');}
       gameState.activeEncounter = null;
+      const next=Array.isArray(gameState.pendingEventEncounters)&&gameState.pendingEventEncounters.length?gameState.pendingEventEncounters.shift():null;
+      if(next){saveGame(false);setTimeout(()=>{startEncounter(next);showToast(`다음 이벤트 포켓몬: ${next.shiny?'✨ ':''}${next.name}!`,'gift');},250);}
     }
 
     function resetBallPosition() {
@@ -2995,7 +3033,7 @@
           berryMultiplier = 1.0;
 
           setTimeout(() => {
-            fleeEncounter();
+            fleeEncounter(true);
           }, 1200);
 
         } else {
@@ -3238,7 +3276,7 @@
       if(raw===null)return;
       const i=Number(raw)-1;
       if(!Number.isInteger(i)||i<0||i>=forms.length){showToast('선택 번호가 올바르지 않아요.');return;}
-      const f=forms[i]; p.formeSlug=f.slug; p.formeLabel=f.label; p.formeActive=true;
+      const f=forms[i]; p.formeSlug=f.slug; p.formeLabel=f.label; p.formeActive=true; if(typeof ensureGOMoves==='function')ensureGOMoves(p);
       const img=document.getElementById('detail-img');
       if(img){setFormSpriteWithFallback(img,f.slug,!!p.shiny);}
       const st=document.getElementById('forme-status');if(st)st.textContent='현재 폼: '+f.label+' · Showdown GIF';
@@ -3394,7 +3432,7 @@
     // Damage = floor(0.5 × move power × attacker Attack / defender Defense × STAB × type effectiveness) + 1.
     const GO_MOVE_TYPES={
       '몸통박치기':'노말','전광석화':'노말','할퀴기':'노말','막치기':'노말','물기':'악','불꽃세례':'불꽃','회오리불꽃':'불꽃','불태우기':'불꽃','물대포':'물','거품':'물','폭포오르기':'물','덩굴채찍':'풀','잎날가르기':'풀','기관총':'풀','씨기관총':'풀','전기쇼크':'전기','스파크':'전기','볼트체인지':'전기','차지빔':'전기','카운터':'격투','태권당수':'격투','안다리걸기':'격투','독침':'독','용해액':'독','독바늘':'독','머드숏':'땅','진흙뿌리기':'땅','돌떨구기':'바위','떨어뜨리기':'바위','벌레먹기':'벌레','엉겨붙기':'벌레','연속자르기':'벌레','핥기':'고스트','섀도크루':'고스트','병상첨병':'고스트','메탈클로':'강철','불릿펀치':'강철','날개치기':'비행','에어슬래시':'비행','염동력':'에스퍼','사이코커터':'에스퍼','신통력':'에스퍼','얼음뭉치':'얼음','얼음숨결':'얼음','눈싸라기':'얼음','용의숨결':'드래곤','드래곤테일':'드래곤','애교부리기':'페어리','요정의바람':'페어리','사념의박치기':'에스퍼',
-      '누르기':'노말','파괴광선':'노말','스피드스타':'노말','짓밟기':'노말','화염방사':'불꽃','불대문자':'불꽃','니트로차지':'불꽃','불꽃펀치':'불꽃','아쿠아테일':'물','하이드로펌프':'물','파도타기':'물','거품광선':'물','파워휩':'풀','리프블레이드':'풀','에너지볼':'풀','솔라빔':'풀','10만볼트':'전기','방전':'전기','와일드볼트':'전기','번개':'전기','크로스촙':'격투','폭발펀치':'격투','깨트리기':'격투','인파이트':'격투','오물폭탄':'독','독엄니':'독','오물웨이브':'독','지진':'땅','드릴라이너':'땅','대지의힘':'땅','스톤에지':'바위','암석봉인':'바위','원시의힘':'바위','시저크로스':'벌레','벌레의야단법석':'벌레','덤벼들기':'벌레','섀도볼':'고스트','섀도펀치':'고스트','괴상한바람':'고스트','아이언헤드':'강철','러스터캐논':'강철','자이로볼':'강철','제비반환':'비행','브레이브버드':'비행','에어컷터':'비행','사이코키네시스':'에스퍼','사이코쇼크':'에스퍼','미래예지':'에스퍼','냉동빔':'얼음','눈사태':'얼음','얼어붙은바람':'얼음','드래곤클로':'드래곤','역린':'드래곤','용의파동':'드래곤','매지컬샤인':'페어리','치근거리기':'페어리','문포스':'페어리','블라스트번':'불꽃','하이드로캐논':'물','하드플랜트':'풀','사이코브레이크':'에스퍼','기합구슬':'격투','용성군':'드래곤','폭풍':'비행','헤비봄버':'강철','심판의뭉치':'노말'
+      '누르기':'노말','파괴광선':'노말','스피드스타':'노말','짓밟기':'노말','화염방사':'불꽃','불대문자':'불꽃','니트로차지':'불꽃','불꽃펀치':'불꽃','아쿠아테일':'물','하이드로펌프':'물','파도타기':'물','거품광선':'물','파워휩':'풀','리프블레이드':'풀','에너지볼':'풀','솔라빔':'풀','10만볼트':'전기','방전':'전기','와일드볼트':'전기','번개':'전기','크로스촙':'격투','폭발펀치':'격투','깨트리기':'격투','인파이트':'격투','오물폭탄':'독','독엄니':'독','오물웨이브':'독','지진':'땅','드릴라이너':'땅','대지의힘':'땅','스톤에지':'바위','암석봉인':'바위','원시의힘':'바위','시저크로스':'벌레','벌레의야단법석':'벌레','덤벼들기':'벌레','섀도볼':'고스트','섀도펀치':'고스트','괴상한바람':'고스트','아이언헤드':'강철','러스터캐논':'강철','자이로볼':'강철','제비반환':'비행','브레이브버드':'비행','에어컷터':'비행','사이코키네시스':'에스퍼','사이코쇼크':'에스퍼','미래예지':'에스퍼','냉동빔':'얼음','눈사태':'얼음','얼어붙은바람':'얼음','드래곤클로':'드래곤','역린':'드래곤','용의파동':'드래곤','매지컬샤인':'페어리','치근거리기':'페어리','문포스':'페어리','블라스트번':'불꽃','하이드로캐논':'물','하드플랜트':'풀','사이코브레이크':'에스퍼','기합구슬':'격투','용성군':'드래곤','폭풍':'비행','헤비봄버':'강철','심판의뭉치':'노말','다이맥스포':'드래곤','거수참':'강철'
     };
     const GO_TYPE_CHART={
       '노말':{weak:['격투'],resist:['고스트']},
@@ -3449,11 +3487,11 @@
     // Normalize a couple of values authored as strings above.
     for(const k in GO_CHARGED_POOLS) GO_CHARGED_POOLS[k]=GO_CHARGED_POOLS[k].map(m=>[m[0],Number(m[1])]);
     const GO_SPECIES_FAST={25:['전기쇼크','전광석화'],26:['전기쇼크','볼트체인지'],6:['회오리불꽃','날개치기'],9:['물대포','폭포오르기'],3:['덩굴채찍','잎날가르기'],150:['염동력','사이코커터'],149:['용의숨결','드래곤테일'],143:['핥기','사념의박치기']};
-    const GO_SPECIES_CHARGED={25:[['10만볼트',60],['와일드볼트',90],['번개',100]],26:[['방전',65],['와일드볼트',90]],6:[['블라스트번',110],['드래곤클로',50],['화염방사',55]],9:[['하이드로캐논',80],['하이드로펌프',80],['냉동빔',90]],3:[['하드플랜트',100],['오물폭탄',65],['솔라빔',80]],150:[['사이코브레이크',60],['섀도볼',55],['기합구슬',140]],149:[['용성군',150],['드래곤클로',50],['폭풍',110]],143:[['누르기',40],['지진',100],['헤비봄버',70]],493:[['심판의뭉치',100]]};
+    const GO_SPECIES_CHARGED={25:[['10만볼트',60],['와일드볼트',90],['번개',100]],26:[['방전',65],['와일드볼트',90]],6:[['블라스트번',110],['드래곤클로',50],['화염방사',55]],9:[['하이드로캐논',80],['하이드로펌프',80],['냉동빔',90]],3:[['하드플랜트',100],['오물폭탄',65],['솔라빔',80]],150:[['사이코브레이크',60],['섀도볼',55],['기합구슬',140]],149:[['용성군',150],['드래곤클로',50],['폭풍',110]],143:[['누르기',40],['지진',100],['헤비봄버',70]],493:[['심판의뭉치',100]],890:[['다이맥스포',120]]};
     function goTypeKey(p){const types=(p.type||'노말').split('/');return types.find(t=>GO_FAST_POOLS[t]||GO_CHARGED_POOLS[t])||'노말';}
     function chooseGOFast(p,exclude){const pool=[...(GO_SPECIES_FAST[p.baseId]||[]),...(GO_FAST_POOLS[goTypeKey(p)]||GO_FAST_POOLS['노말'])];const a=[...new Set(pool)].filter(x=>x!==exclude);return a[Math.floor(Math.random()*a.length)]||'몸통박치기';}
     function chooseGOCharged(p,exclude=[]){const pool=[...(GO_SPECIES_CHARGED[p.baseId]||[]),...(GO_CHARGED_POOLS[goTypeKey(p)]||GO_CHARGED_POOLS['노말'])];const uniq=pool.filter((m,i)=>!exclude.includes(m[0])&&pool.findIndex(x=>x[0]===m[0])===i);const m=uniq[Math.floor(Math.random()*uniq.length)]||['누르기',40];return {name:m[0],cost:Math.max(35,Math.min(80,Math.round(Number(m[1])*.7))),power:Number(m[1]),fastEnergy:9};}
-    function ensureGOMoves(p){if(!p.fastMove)p.fastMove=chooseGOFast(p);if(!Array.isArray(p.chargedMoves)||!p.chargedMoves.length)p.chargedMoves=[chooseGOCharged(p)];p.chargedMoves=p.chargedMoves.slice(0,2);return p;}
+    function ensureGOMoves(p){if(!p.fastMove)p.fastMove=chooseGOFast(p);if(!Array.isArray(p.chargedMoves)||!p.chargedMoves.length)p.chargedMoves=[chooseGOCharged(p)];p.chargedMoves=p.chargedMoves.slice(0,2);const sig=(Number(p.baseId)===890)?{name:'다이맥스포',cost:50,power:120,fastEnergy:9}:(Number(p.baseId)===888&&p.formeActive&&p.formeSlug==='zacian-crowned'?{name:'거수참',cost:50,power:120,fastEnergy:9}:null);if(sig&&!p.chargedMoves.some(m=>m.name===sig.name)){p.chargedMoves[0]=sig;}if(Number(p.baseId)===888&&(!p.formeActive||p.formeSlug!=='zacian-crowned'))p.chargedMoves=p.chargedMoves.filter(m=>m.name!=='거수참');if(!p.chargedMoves.length)p.chargedMoves=[chooseGOCharged(p)];return p;}
     function grantSecondMoveCost(p){return [144,145,146,150,151].includes(Number(p.baseId))?100:50;}
     function teachSecondChargedMove(){const p=activeDetailPokemon;if(!p)return;ensureGOMoves(p);if(p.chargedMoves.length>=2){showToast('이미 스페셜 어택을 2개 배웠습니다.','alert-circle');return;}const need=grantSecondMoveCost(p),have=Number(gameState.player.candies[p.baseId]||0);if(have<need){showToast(`사탕이 부족합니다. ${need}개 필요 (현재 ${have}개)`,'alert-circle');return;}gameState.player.candies[p.baseId]=have-need;p.chargedMoves.push(chooseGOCharged(p,p.chargedMoves.map(m=>m.name)));openDetailModal(p);updateHUD();saveGame(false);showToast(`${p.name}이(가) 두 번째 스페셜 어택을 배웠습니다!`,'sparkles');}
     function useTM(type){const count=Number(gameState.inventory[type]||0);if(count<=0){showToast(`${type==='fastTM'?'노말':'스페셜'} 기술머신이 없습니다.`,'alert-circle');return;}const sel=document.getElementById('tm-pokemon'),p=gameState.myPokemon[Number(sel&&sel.value)];if(!p){showToast('기술머신을 사용할 포켓몬을 선택하세요.','alert-circle');return;}ensureGOMoves(p);if(type==='fastTM'){p.fastMove=chooseGOFast(p,p.fastMove);}else{const answer=p.chargedMoves.length>1?prompt('변경할 스페셜 기술 번호를 입력하세요: 1 또는 2','1'):'1';if(answer===null)return;const idx=Number(answer)-1;if(idx<0||idx>=p.chargedMoves.length||!Number.isFinite(idx)){return;}p.chargedMoves[idx]=chooseGOCharged(p,p.chargedMoves.filter((_,i)=>i!==idx).map(m=>m.name));}gameState.inventory[type]--;updateHUD();renderBag();renderPokemonBox();if(activeDetailPokemon===p)openDetailModal(p);saveGame(false);showToast('기술머신을 사용해 기술을 변경했습니다!','sparkles');}
@@ -3502,7 +3540,7 @@
         const choice=prompt('배울 노말 기술 번호를 선택하세요:\n'+moves.map((m,i)=>`${i+1}. ${m}${m===p.fastMove?' (현재 기술)':''}`).join('\n'),'1');
         if(choice===null)return;const idx=Number(choice)-1;if(!Number.isInteger(idx)||idx<0||idx>=moves.length){showToast('올바른 번호를 입력하세요.','alert-circle');return;}p.fastMove=moves[idx];
       }else{
-        const pool=[...(GO_SPECIES_CHARGED[p.baseId]||[]),...(GO_CHARGED_POOLS[goTypeKey(p)]||GO_CHARGED_POOLS['노말']),...(ELITE_ONLY_CHARGED_MOVES[p.baseId]||[])];
+        const pool=[...(GO_SPECIES_CHARGED[p.baseId]||[]),...(GO_CHARGED_POOLS[goTypeKey(p)]||GO_CHARGED_POOLS['노말']),...(ELITE_ONLY_CHARGED_MOVES[p.baseId]||[]),...(Number(p.baseId)===888&&p.formeActive&&p.formeSlug==='zacian-crowned'?[['거수참',120]]:[])];
         const unique=pool.filter((m,i)=>pool.findIndex(x=>x[0]===m[0])===i);if(!unique.length){showToast('선택 가능한 스페셜 기술이 없습니다.','alert-circle');return;}
         const slotAnswer=p.chargedMoves.length>1?prompt('변경할 스페셜 기술 칸을 선택하세요: 1 또는 2','1'):'1';if(slotAnswer===null)return;const slot=Number(slotAnswer)-1;if(!Number.isInteger(slot)||slot<0||slot>=p.chargedMoves.length){showToast('해당 스페셜 기술 칸이 없습니다. 먼저 두 번째 기술을 배워야 할 수 있어요.','alert-circle');return;}
         const options=unique.map(m=>({name:m[0],cost:Math.max(35,Math.min(80,Math.round(Number(m[1])*.7))),power:Number(m[1]),fastEnergy:9}));
@@ -3739,7 +3777,7 @@
       const ownteam=document.getElementById('pvp-own-team');if(ownteam)ownteam.textContent=`내 팀 ${pvpBattle.team.filter((p,i)=>pvpBattle.teamHp[i]>0).length}/3`;const enemyteam=document.getElementById('pvp-enemy-team');if(enemyteam)enemyteam.textContent=`상대 팀 ${pvpBattle.enemyTeam.filter((p,i)=>pvpBattle.enemyTeamHp[i]>0).length}/3`;
     }
     function pvpLog(t){const e=document.getElementById('pvp-battle-log');if(e)e.textContent=t;setPvpRoomStatus(t);}
-    function pvpCleanTeam(team){return (team||[]).map(p=>({name:p.name,cp:p.cp,baseId:p.baseId||p.id,id:p.id,shiny:!!p.shiny,ivAtk:p.ivAtk||0,ivDef:p.ivDef||0,ivHp:p.ivHp||0,types:p.types||[],fastMove:p.fastMove,chargedMoves:(p.chargedMoves||[]).map(m=>({name:m.name,cost:m.cost,power:m.power})),moves:pvpMoves(p)}));}
+    function pvpCleanTeam(team){return (team||[]).map(p=>({name:p.name,cp:p.cp,baseId:p.baseId||p.id,id:p.id,shiny:!!p.shiny,formeActive:!!p.formeActive,formeSlug:p.formeSlug||'',formeLabel:p.formeLabel||'',ivAtk:p.ivAtk||0,ivDef:p.ivDef||0,ivHp:p.ivHp||0,types:p.types||[],type:p.type||'노말',fastMove:p.fastMove,chargedMoves:(p.chargedMoves||[]).map(m=>({name:m.name,cost:m.cost,power:m.power})),moves:pvpMoves(p)}));}
     function pvpShowIncomingShield(payload){
       pvpBattle.incomingCharge={id:payload.actionId,move:payload.move||'스페셜 어택',damage:Number(payload.previewDamage)||0,startedAt:Date.now(),choice:null};
       pvpBattle.inputLocked=true;
@@ -3774,14 +3812,14 @@
           if(!blocked)pvpBattle.hp=Math.max(0,pvpBattle.hp-dmg);
           pvpRender();pvpLog(blocked?'실드로 상대 스페셜 어택을 막았어요!':`상대 스페셜 어택! ${dmg} 피해를 받았어요.`);
           const box=document.getElementById('pvp-incoming-shield');if(box)box.remove();if(pvpBattle.incomingCharge){clearInterval(pvpBattle.incomingCharge.timer);pvpBattle.incomingCharge=null;}pvpBattle.inputLocked=!!pvpBattle.chargeBusy;
-          if(pvpBattle.hp<=0){pvpBattle.index++;if(pvpBattle.index<pvpBattle.team.length){pvpBattle.maxHp=pvpBattle.teamHp[pvpBattle.index]||pvpMaxHp(pvpBattle.team[pvpBattle.index]);pvpBattle.hp=pvpBattle.maxHp;pvpBattle.energy=0;pvpRender();await pvpBroadcast({kind:'switch',index:pvpBattle.index});}else{pvpBattle.started=false;pvpRender();await pvpBroadcast({kind:'battle-end',result:'lose'});}}
+          if(pvpBattle.hp<=0){pvpBattle.index++;if(pvpBattle.index<pvpBattle.team.length){pvpBattle.maxHp=pvpBattle.teamHp[pvpBattle.index]||pvpMaxHp(pvpBattle.team[pvpBattle.index]);pvpBattle.hp=pvpBattle.maxHp;pvpBattle.energy=0;pvpRender();await pvpBroadcast({kind:'switch',index:pvpBattle.index,team:'self'});}else{pvpBattle.started=false;pvpRender();await pvpBroadcast({kind:'battle-end',result:'lose'});}}
         }
         if(payload.kind==='fast'||payload.kind==='charge'){
           if(!pvpBattle.started||payload.seq&&payload.seq<=pvpBattle.lastRemoteSeq)return;if(payload.seq)pvpBattle.lastRemoteSeq=payload.seq;
           const dmg=Math.max(1,Number(payload.damage)||1);pvpBattle.hp=Math.max(0,pvpBattle.hp-dmg);pvpRender();pvpLog(`상대 ${payload.move|| (payload.kind==='charge'?'스페셜 어택':'노말 어택')}! ${dmg} 피해를 받았어요.`);
-          if(pvpBattle.hp<=0){pvpBattle.index++;if(pvpBattle.index<pvpBattle.team.length){pvpBattle.maxHp=pvpBattle.teamHp[pvpBattle.index]||pvpMaxHp(pvpBattle.team[pvpBattle.index]);pvpBattle.hp=pvpBattle.maxHp;pvpBattle.energy=0;pvpBattle.fastReadyAt=0;pvpRender();await pvpBroadcast({kind:'switch',index:pvpBattle.index});pvpLog(`${pvpBattle.team[pvpBattle.index].name} 출전!`);}else{pvpBattle.started=false;pvpRender();pvpLog('패배! 상대가 승리했어요.');}}
+          if(pvpBattle.hp<=0){pvpBattle.index++;if(pvpBattle.index<pvpBattle.team.length){pvpBattle.maxHp=pvpBattle.teamHp[pvpBattle.index]||pvpMaxHp(pvpBattle.team[pvpBattle.index]);pvpBattle.hp=pvpBattle.maxHp;pvpBattle.energy=0;pvpBattle.fastReadyAt=0;pvpRender();await pvpBroadcast({kind:'switch',index:pvpBattle.index,team:'self'});pvpLog(`${pvpBattle.team[pvpBattle.index].name} 출전!`);}else{pvpBattle.started=false;pvpRender();pvpLog('패배! 상대가 승리했어요.');}}
         }
-        if(payload.kind==='switch'){pvpBattle.enemyIndex=Math.min(2,Number(payload.index)||0);pvpBattle.enemyMaxHp=pvpBattle.enemyTeamHp[pvpBattle.enemyIndex]||pvpMaxHp(pvpBattle.enemyTeam[pvpBattle.enemyIndex]);pvpBattle.enemyHp=pvpBattle.enemyMaxHp;pvpRender();}
+        if(payload.kind==='switch' && payload.team==='self'){const next=Math.max(0,Math.min(pvpBattle.enemyTeam.length-1,Number(payload.index)||0));if(pvpBattle.enemyTeam[next]){pvpBattle.enemyIndex=next;pvpBattle.enemyMaxHp=pvpBattle.enemyTeamHp[next]||pvpMaxHp(pvpBattle.enemyTeam[next]);pvpBattle.enemyHp=pvpBattle.enemyMaxHp;pvpRender();pvpLog(`상대 ${pvpBattle.enemyTeam[next].name} 출전!`);}}
         if(payload.kind==='leave'){pvpBattle.started=false;pvpRender();pvpLog('상대가 방을 나갔어요.');}
         if(payload.kind==='battle-end'){pvpBattle.started=false;pvpRender();pvpLog(payload.result==='win'?'승리!':'패배!');}
       }).subscribe(status=>{if(status==='SUBSCRIBED'){setPvpRoomStatus(`방 ${activePvpRoomCode} · 실시간 대전 채널 연결 완료`);if(activePvpRoomChannel.__subResolve){activePvpRoomChannel.__subResolve(true);activePvpRoomChannel.__subResolve=null;}}else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){if(activePvpRoomChannel.__subResolve){activePvpRoomChannel.__subResolve(false);activePvpRoomChannel.__subResolve=null;}}});
@@ -3810,13 +3848,13 @@
       let pointerDown=false;const popAt=(x,y)=>{const el=document.elementFromPoint(x,y);const b=el&&el.closest?el.closest('.pvp-bubble'):null;if(b&&!b.dataset.hit){b.dataset.hit='1';b.style.transform='scale(1.4)';b.style.opacity='0';popped++;score.textContent=`${popped} / ${total}`;setTimeout(()=>b.remove(),120);}};
       overlay.onpointerdown=e=>{pointerDown=true;popAt(e.clientX,e.clientY);};overlay.onpointermove=e=>{if(pointerDown)popAt(e.clientX,e.clientY);};overlay.onpointerup=overlay.onpointercancel=()=>{pointerDown=false;};
       let spawned=0;const spawn=setInterval(()=>{if(!pvpBattle.chargeBusy){clearInterval(spawn);return;}if(spawned>=total){clearInterval(spawn);return;}spawned++;const b=document.createElement('button');b.type='button';b.className='pvp-bubble';b.setAttribute('aria-label','에너지 버블');b.style.left=(24+Math.random()*52)+'%';b.style.top=(25+Math.random()*48)+'%';b.textContent='★';b.onclick=()=>{if(b.dataset.hit)return;b.dataset.hit='1';b.style.opacity='0';popped++;score.textContent=`${popped} / ${total}`;setTimeout(()=>b.remove(),120);};host.appendChild(b);setTimeout(()=>{if(b.parentNode&&!b.dataset.hit)b.remove();},2000);},180);
-      const finish=async()=>{clearInterval(spawn);overlay.classList.remove('active');overlay.onpointerdown=overlay.onpointermove=overlay.onpointerup=overlay.onpointercancel=null;host.innerHTML='';pvpBattle.chargeBusy=false;pvpBattle.energy=Math.max(0,pvpBattle.energy-Number(chosen.cost||50));const mult=.45+.55*(popped/total);const attacker=pvpBattle.team[pvpBattle.index],defender=pvpBattle.enemyTeam[pvpBattle.enemyIndex];let damage=0;try{damage=calculateGODamage(attacker,defender,chosen.name,Number(chosen.power)||55,{});}catch(e){damage=Math.max(5,Math.round((Number(attacker.cp)||500)*.045));}damage=Math.max(1,Math.round(damage*mult));const shielded=!!pvpBattle.outgoingCharge?.shieldUsed;if(!shielded)pvpBattle.enemyHp=Math.max(0,pvpBattle.enemyHp-damage);pvpBattle.inputLocked=false;pvpRender();await pvpBroadcast({kind:'charge-resolve',actionId,move:chosen.name,damage,shielded});pvpBattle.outgoingCharge=null;pvpLog(`${attacker.name}의 ${chosen.name}! 상대에게 ${shielded?'실드로 막힌':damage+' 피해'}!`);if(pvpBattle.enemyHp<=0){pvpBattle.enemyIndex++;if(pvpBattle.enemyIndex<pvpBattle.enemyTeam.length){pvpBattle.enemyMaxHp=pvpBattle.enemyTeamHp[pvpBattle.enemyIndex]||pvpMaxHp(pvpBattle.enemyTeam[pvpBattle.enemyIndex]);pvpBattle.enemyHp=pvpBattle.enemyMaxHp;pvpRender();await pvpBroadcast({kind:'switch',index:pvpBattle.enemyIndex});}else{pvpBattle.started=false;pvpRender();await pvpBroadcast({kind:'battle-end',result:'win'});}}};setTimeout(finish,5200);
+      const finish=async()=>{clearInterval(spawn);overlay.classList.remove('active');overlay.onpointerdown=overlay.onpointermove=overlay.onpointerup=overlay.onpointercancel=null;host.innerHTML='';pvpBattle.chargeBusy=false;pvpBattle.energy=Math.max(0,pvpBattle.energy-Number(chosen.cost||50));const mult=.45+.55*(popped/total);const attacker=pvpBattle.team[pvpBattle.index],defender=pvpBattle.enemyTeam[pvpBattle.enemyIndex];let damage=0;try{damage=calculateGODamage(attacker,defender,chosen.name,Number(chosen.power)||55,{});}catch(e){damage=Math.max(5,Math.round((Number(attacker.cp)||500)*.045));}damage=Math.max(1,Math.round(damage*mult));const shielded=!!pvpBattle.outgoingCharge?.shieldUsed;if(!shielded)pvpBattle.enemyHp=Math.max(0,pvpBattle.enemyHp-damage);pvpBattle.inputLocked=false;pvpRender();await pvpBroadcast({kind:'charge-resolve',actionId,move:chosen.name,damage,shielded});pvpBattle.outgoingCharge=null;pvpLog(`${attacker.name}의 ${chosen.name}! 상대에게 ${shielded?'실드로 막힌':damage+' 피해'}!`);if(pvpBattle.enemyHp<=0){pvpBattle.enemyHp=0;pvpRender();pvpLog('상대 포켓몬이 쓰러졌어요. 상대의 교체를 기다리는 중…');}};setTimeout(finish,5200);
     }
     async function pvpDoAttack(kind,power=1,chosenMove=null){if(!pvpBattle.started)return;const p=pvpBattle.team[pvpBattle.index],enemy=pvpBattle.enemyTeam[pvpBattle.enemyIndex];if(!p||!enemy)return;
       ensureGOMoves(p);const moves=pvpMoves(p),move=kind==='fast'?(moves.fastMoves[0]||{name:p.fastMove||'몸통박치기',power:8,energy:9,cooldown:500}):(chosenMove||moves.chargedMoves[0]||{name:'스페셜 어택',power:55,cost:50});
       let damage=0;try{damage=calculateGODamage(p,enemy,move.name,Number(move.power)|| (kind==='fast'?8:55),{});}catch(e){damage=Math.max(5,Math.round((Number(p.cp)||500)*(kind==='charge'?.045:.018)*power));}
       damage=Math.max(1,Math.round(damage*power));pvpBattle.enemyHp=Math.max(0,pvpBattle.enemyHp-damage);if(kind==='fast')pvpBattle.energy=Math.min(100,pvpBattle.energy+(Number(move.energy)||9));pvpRender();await pvpBroadcast({kind,move:move.name,damage});pvpLog(`${p.name}의 ${move.name}! 상대에게 ${damage} 피해!`);
-      if(pvpBattle.enemyHp<=0){pvpBattle.enemyIndex++;if(pvpBattle.enemyIndex<pvpBattle.enemyTeam.length){pvpBattle.enemyMaxHp=pvpBattle.enemyTeamHp[pvpBattle.enemyIndex]||pvpMaxHp(pvpBattle.enemyTeam[pvpBattle.enemyIndex]);pvpBattle.enemyHp=pvpBattle.enemyMaxHp;pvpRender();await pvpBroadcast({kind:'switch',index:pvpBattle.enemyIndex});pvpLog(`상대 ${pvpBattle.enemyTeam[pvpBattle.enemyIndex].name} 출전!`);}else{pvpBattle.started=false;pvpRender();await pvpBroadcast({kind:'battle-end',result:'win'});pvpLog('승리! 상대 팀의 포켓몬 3마리를 모두 쓰러뜨렸어요.');}}
+      if(pvpBattle.enemyHp<=0){pvpBattle.enemyHp=0;pvpRender();pvpLog('상대 포켓몬이 쓰러졌어요. 상대의 교체를 기다리는 중…');}
     }
     document.addEventListener('pointerdown',ev=>{if(!pvpBattle.started||pvpBattle.chargeBusy||pvpBattle.inputLocked)return;const panel=document.getElementById('pvp-battle-panel');if(!panel||!panel.classList.contains('pvp-live')||!panel.contains(ev.target))return;if(ev.target.closest('button,select,input,a,#pvp-charge-overlay'))return;pvpAttack('fast');},{passive:true});
     async function pvpAttack(kind,moveIndex=0){if(!pvpBattle.started||pvpBattle.chargeBusy||pvpBattle.inputLocked)return;if(kind==='charge'){pvpShowChargeMini(moveIndex);return;}const now=Date.now();if(now-pvpBattle.lastAction<500)return;pvpBattle.lastAction=now;try{await pvpDoAttack('fast');}catch(e){pvpLog('상대에게 공격을 보내지 못했어요: '+e.message);}}
