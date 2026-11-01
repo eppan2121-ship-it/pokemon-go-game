@@ -207,6 +207,27 @@
     #pvp-charge-overlay.active {display:block}
     .pvp-bubble {position:absolute;width:clamp(48px,13vw,72px);height:clamp(48px,13vw,72px);border-radius:50%;border:3px solid #e0f2fe;background:radial-gradient(circle at 30% 25%,#fff 0 8%,#7dd3fc 15%,#2563eb 75%);box-shadow:0 0 18px #38bdf8;}
 </style>
+  <style id="offline-mobile-render-fallback">
+    /* Critical local styles: the first screen must render even when Tailwind CDN is unavailable. */
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden}
+    body{min-height:100dvh;min-height:100svh;background:#0f172a}
+    .hidden{display:none!important}
+    .fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}
+    .inset-0{inset:0}.w-full{width:100%}.h-full{height:100%}.block{display:block}
+    .flex{display:flex}.grid{display:grid}.items-center{align-items:center}.items-start{align-items:flex-start}
+    .justify-center{justify-content:center}.justify-between{justify-content:space-between}
+    .overflow-hidden{overflow:hidden}.text-center{text-align:center}
+    #game-container{position:relative;width:100%;height:100vh;height:100dvh;min-height:0;overflow:hidden;isolation:isolate}
+    #mapCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+    #home-screen{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;width:100%;height:100vh;height:100dvh;overflow-y:auto;padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 20%,#a7f3d0,#166534 75%)}
+    #home-screen>div{width:min(100%,28rem);margin:auto;padding:clamp(18px,5vw,28px);border-radius:24px;background:rgba(255,255,255,.96);text-align:center;color:#064e3b;box-shadow:0 12px 36px #0004}
+    #home-screen h1{font-size:clamp(1.5rem,6vw,1.9rem);font-weight:900;margin:.25rem 0}
+    #home-screen button,#tutorial-screen button{min-height:48px;touch-action:manipulation;cursor:pointer}
+    #tutorial-screen{position:fixed;inset:0;z-index:210;display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));}
+    #tutorial-screen>div{width:min(100%,28rem);margin:auto;background:#fff;color:#0f172a;border-radius:22px;padding:22px}
+    @media(max-width:700px){#game-container{height:100dvh;height:100svh}#home-screen>div{max-width:30rem}button{touch-action:manipulation}}
+  </style>
 </head>
 <body class="bg-gray-900 text-gray-800 overflow-hidden w-screen h-screen select-none overscroll-none">
 
@@ -702,6 +723,7 @@
         <div class="p-3 bg-sky-50 rounded-2xl border border-sky-200"><label for="tm-pokemon" class="block text-xs font-bold text-sky-900 mb-2">기술머신을 사용할 포켓몬</label><select id="tm-pokemon" class="w-full p-2 rounded-xl border border-sky-200 bg-white text-sm"></select><div class="grid grid-cols-2 gap-2 mt-2"><button onclick="useTM('fastTM')" class="rounded-xl bg-sky-600 text-white font-black py-2">노말 기술 변경</button><button onclick="useTM('chargedTM')" class="rounded-xl bg-violet-600 text-white font-black py-2">스페셜 기술 변경</button></div></div>
         <div class="flex items-center justify-between gap-3 p-3 bg-violet-50 rounded-2xl border border-violet-200"><div class="min-w-0"><div class="font-extrabold text-sm text-gray-800">💥 스페셜 기술머신</div><div class="text-xs text-gray-500">스페셜 어택을 다른 기술로 변경</div></div><span id="bag-count-charged-tm" class="font-black text-lg text-violet-800">0개</span></div>
         <div class="mt-2 rounded-2xl border-2 border-amber-300 bg-amber-50 p-3"><div class="font-black text-amber-900">🌟 대단한 기술머신</div><p class="text-xs text-amber-800 mt-1">원하는 기술을 직접 선택해 배울 수 있어요.</p><div class="flex justify-between py-2 text-sm font-bold"><span>⚡ 대단한 노말 기술머신</span><span id="bag-count-elite-fast-tm">0개</span></div><button onclick="useEliteTM('eliteFastTM')" class="w-full rounded-xl bg-amber-500 text-white font-black py-2">노말 기술 선택</button><div class="flex justify-between py-2 mt-2 text-sm font-bold"><span>💥 대단한 스페셜 기술머신</span><span id="bag-count-elite-charged-tm">0개</span></div><button onclick="useEliteTM('eliteChargedTM')" class="w-full rounded-xl bg-orange-600 text-white font-black py-2">스페셜 기술 선택</button></div>
+        <div class="mt-2 rounded-2xl border-2 border-yellow-400 bg-yellow-50 p-3"><div class="flex items-center justify-between gap-2"><div><div class="font-black text-yellow-900">🟡 금뚜껑</div><p class="text-xs text-yellow-800 mt-1">특훈으로 선택한 포켓몬의 공격·방어·HP IV를 모두 15로 올립니다.</p></div><span id="bag-count-gold-cap" class="font-black text-lg text-yellow-900">0개</span></div><label for="gold-cap-pokemon" class="block text-xs font-bold text-yellow-900 mt-3 mb-2">특훈할 포켓몬</label><select id="gold-cap-pokemon" class="w-full p-2 rounded-xl border border-yellow-300 bg-white text-sm"></select><button onclick="useGoldBottleCap()" class="mt-2 w-full rounded-xl bg-yellow-500 text-yellow-950 font-black py-2">금뚜껑으로 특훈</button></div>
 
         <!-- Razz Berry Item -->
         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-2xl border border-gray-200">
@@ -1861,6 +1883,7 @@
         chargedTM: 0,
         eliteFastTM: 0,
         eliteChargedTM: 0,
+        goldBottleCap: 0,
         gymPass: 2
       },
       gymDaily: { date: new Date().toISOString().slice(0,10), used: 0 },
@@ -1939,7 +1962,7 @@
 
       msg.innerText = message;
       iconEl.setAttribute('data-lucide', icon);
-      lucide.createIcons();
+      if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
 
       box.classList.remove('opacity-0', '-translate-y-4');
       box.classList.add('opacity-100', 'translate-y-0');
@@ -1997,6 +2020,7 @@
       if(!gameState.player.research||typeof gameState.player.research!=='object')gameState.player.research={progress:{},claimed:{},welcomeClaimed:false};
       const r=gameState.player.research;if(typeof r.welcomeClaimed!=='boolean')r.welcomeClaimed=false;
       if(!r.progress)r.progress={};if(!r.claimed)r.claimed={};if(!r.main||typeof r.main!=='object')r.main={};
+      if(!r.hyperTrainingEvent||typeof r.hyperTrainingEvent!=='object')r.hyperTrainingEvent={startedAt:Date.now(),catchProgress:0,battleProgress:0,claimed:false};const he=r.hyperTrainingEvent;if(!Number(he.startedAt))he.startedAt=Date.now();he.catchProgress=Math.max(0,Math.min(20,Number(he.catchProgress)||0));he.battleProgress=Math.max(0,Math.min(20,Number(he.battleProgress)||0));he.claimed=!!he.claimed;
       MYTHICAL_RESEARCHES.forEach(m=>{if(!r.main[m.id]||typeof r.main[m.id]!=='object')r.main[m.id]={stage:0,progress:0,claimedStages:[]};const q=r.main[m.id];q.stage=Math.max(0,Math.min(6,Number(q.stage)||0));q.progress=Math.max(0,Number(q.progress)||0);if(!Array.isArray(q.claimedStages))q.claimedStages=[];});
       if(!r.daily)r.daily={key:'',ids:[],progress:{},claimed:{},stamp:0,boxClaimed:false,cycle:0};
       const d=r.daily;if(d.key!==dailyResearchKey()){d.key=dailyResearchKey();d.cycle=Number(d.cycle||0)+1;d.ids=[];for(let i=0;i<5;i++){let idx=(d.cycle*5+i)%DAILY_RESEARCH_POOL.length;d.ids.push(DAILY_RESEARCH_POOL[idx].id);}d.progress={};d.claimed={};}
@@ -2033,7 +2057,7 @@
       if(currentResearchTab==='event'){
         const halloweenClaimed=!!r.halloween2026Claimed;
         const gofestClaimed=!!r.gofest2026Claimed;
-        content.innerHTML=`<div class="space-y-4"><div class="rounded-2xl border-2 border-orange-300 bg-gradient-to-br from-orange-50 via-purple-50 to-slate-100 p-4"><div class="text-xs font-black text-orange-700">🎃 2026 할로윈 스페셜</div><h3 class="mt-1 text-xl font-black text-slate-900">할로윈 비밀 선물</h3><p class="mt-2 text-sm text-slate-700">이벤트 코드를 입력하면 이로치 밀탱크를 만날 수 있어요.</p><div class="mt-3 rounded-xl bg-white/80 p-3 text-sm"><div class="font-black text-slate-800">✨ 이로치 밀탱크</div><div class="text-slate-600">최대 CP · IV 100% (공격/방어/HP 각 15)</div></div><label for="halloween-event-code" class="block mt-3 text-xs font-bold text-slate-600">이벤트 코드</label><div class="mt-1 flex gap-2"><input id="halloween-event-code" type="text" autocomplete="off" maxlength="20" placeholder="코드 입력" class="min-w-0 flex-1 rounded-xl border border-orange-200 bg-white px-3 py-3 font-bold" ${halloweenClaimed?'disabled':''}><button type="button" onclick="redeemHalloween2026Code()" ${halloweenClaimed?'disabled':''} class="rounded-xl bg-orange-500 px-4 py-3 font-black text-white disabled:bg-slate-300">${halloweenClaimed?'수령 완료':'교환'}</button></div>${halloweenClaimed?'<p class="mt-2 text-sm font-bold text-emerald-700">이미 할로윈 선물을 수령했어요!</p>':'<p class="mt-2 text-xs text-slate-500">계정당 한 번만 교환할 수 있어요.</p>'}</div><div class="rounded-2xl border-2 border-sky-300 bg-gradient-to-br from-sky-50 via-indigo-50 to-slate-100 p-4"><div class="text-xs font-black text-sky-800">🌌 2026년 11월 GO FEST 스페셜</div><h3 class="mt-1 text-xl font-black text-slate-900">전설의 만남</h3><p class="mt-2 text-sm text-slate-700">코드 교환 후 두 포켓몬을 차례로 만날 수 있어요.</p><div class="mt-3 rounded-xl bg-white/80 p-3 text-sm space-y-2"><div><div class="font-black text-slate-800">무한다이노 · 무한다이맥스 폼</div><div class="text-slate-600">최대 CP · IV 100% · 다이맥스포</div></div><div class="border-t border-slate-200 pt-2"><div class="font-black text-slate-800">✨ 이로치 레쿠쟈</div><div class="text-slate-600">최대 CP · IV 100%</div></div></div><label for="gofest-event-code" class="block mt-3 text-xs font-bold text-slate-600">이벤트 코드</label><div class="mt-1 flex gap-2"><input id="gofest-event-code" type="text" autocomplete="off" maxlength="20" placeholder="코드 입력" class="min-w-0 flex-1 rounded-xl border border-sky-200 bg-white px-3 py-3 font-bold" ${gofestClaimed?'disabled':''}><button type="button" onclick="redeemGofest2026Code()" ${gofestClaimed?'disabled':''} class="rounded-xl bg-sky-600 px-4 py-3 font-black text-white disabled:bg-slate-300">${gofestClaimed?'수령 완료':'교환'}</button></div>${gofestClaimed?'<p class="mt-2 text-sm font-bold text-emerald-700">GO FEST 선물을 이미 수령했어요!</p>':'<p class="mt-2 text-xs text-slate-500">계정당 한 번만 교환할 수 있어요.</p>'}<p class="mt-2 text-xs text-slate-500">두 포켓몬은 직접 포획해야 박스에 등록돼요.</p></div></div>`;return;
+        content.innerHTML=`<div class="space-y-4"><div class="rounded-2xl border-2 border-orange-300 bg-gradient-to-br from-orange-50 via-purple-50 to-slate-100 p-4"><div class="text-xs font-black text-orange-700">🎃 2026 할로윈 스페셜</div><h3 class="mt-1 text-xl font-black text-slate-900">할로윈 비밀 선물</h3><p class="mt-2 text-sm text-slate-700">이벤트 코드를 입력하면 이로치 밀탱크를 만날 수 있어요.</p><div class="mt-3 rounded-xl bg-white/80 p-3 text-sm"><div class="font-black text-slate-800">✨ 이로치 밀탱크</div><div class="text-slate-600">최대 CP · IV 100% (공격/방어/HP 각 15)</div></div><label for="halloween-event-code" class="block mt-3 text-xs font-bold text-slate-600">이벤트 코드</label><div class="mt-1 flex gap-2"><input id="halloween-event-code" type="text" autocomplete="off" maxlength="20" placeholder="코드 입력" class="min-w-0 flex-1 rounded-xl border border-orange-200 bg-white px-3 py-3 font-bold" ${halloweenClaimed?'disabled':''}><button type="button" onclick="redeemHalloween2026Code()" ${halloweenClaimed?'disabled':''} class="rounded-xl bg-orange-500 px-4 py-3 font-black text-white disabled:bg-slate-300">${halloweenClaimed?'수령 완료':'교환'}</button></div>${halloweenClaimed?'<p class="mt-2 text-sm font-bold text-emerald-700">이미 할로윈 선물을 수령했어요!</p>':'<p class="mt-2 text-xs text-slate-500">계정당 한 번만 교환할 수 있어요.</p>'}</div><div class="rounded-2xl border-2 border-sky-300 bg-gradient-to-br from-sky-50 via-indigo-50 to-slate-100 p-4"><div class="text-xs font-black text-sky-800">🌌 2026년 11월 GO FEST 스페셜</div><h3 class="mt-1 text-xl font-black text-slate-900">전설의 만남</h3><p class="mt-2 text-sm text-slate-700">코드 교환 후 두 포켓몬을 차례로 만날 수 있어요.</p><div class="mt-3 rounded-xl bg-white/80 p-3 text-sm space-y-2"><div><div class="font-black text-slate-800">무한다이노 · 무한다이맥스 폼</div><div class="text-slate-600">최대 CP · IV 100% · 다이맥스포</div></div><div class="border-t border-slate-200 pt-2"><div class="font-black text-slate-800">✨ 이로치 레쿠쟈</div><div class="text-slate-600">최대 CP · IV 100%</div></div></div><label for="gofest-event-code" class="block mt-3 text-xs font-bold text-slate-600">이벤트 코드</label><div class="mt-1 flex gap-2"><input id="gofest-event-code" type="text" autocomplete="off" maxlength="20" placeholder="코드 입력" class="min-w-0 flex-1 rounded-xl border border-sky-200 bg-white px-3 py-3 font-bold" ${gofestClaimed?'disabled':''}><button type="button" onclick="redeemGofest2026Code()" ${gofestClaimed?'disabled':''} class="rounded-xl bg-sky-600 px-4 py-3 font-black text-white disabled:bg-slate-300">${gofestClaimed?'수령 완료':'교환'}</button></div>${gofestClaimed?'<p class="mt-2 text-sm font-bold text-emerald-700">GO FEST 선물을 이미 수령했어요!</p>':'<p class="mt-2 text-xs text-slate-500">계정당 한 번만 교환할 수 있어요.</p>'}<p class="mt-2 text-xs text-slate-500">두 포켓몬은 직접 포획해야 박스에 등록돼요.</p></div>${renderHyperTrainingEventCard(r.hyperTrainingEvent)}</div>`;return;
       }
       if(currentResearchTab==='main'){
         content.innerHTML='<div class="text-xs font-black uppercase tracking-wide text-slate-500 mb-3">메인 리서치 · 단계별 과제와 보상</div>'+MYTHICAL_RESEARCHES.map(m=>{const state=r.main[m.id],done=state.stage>=6,stage=Math.min(5,state.stage),task=MAIN_RESEARCH_TASKS[stage],progress=done?task.goal:Math.min(task.goal,Number(state.progress)||0),claimed=done||state.claimedStages.includes(stage);return `<div class="rounded-2xl border border-violet-200 p-4 mb-3"><div class="flex items-start justify-between gap-2"><div><div class="font-black text-slate-900">${m.name} · 메인 리서치</div><div class="text-xs text-violet-700 font-bold mt-1">${done?'완료':`단계 ${stage+1}/6 · ${m.stages[stage]}`}</div></div><span class="rounded-full bg-violet-50 px-2 py-1 text-xs font-black text-violet-700">${done?'완료':`${progress}/${task.goal}`}</span></div>${done?`<p class="text-sm text-emerald-700 font-bold mt-3">모든 단계를 완료했어요!</p>`:`<p class="text-sm text-slate-700 mt-3">${task.description}</p><div class="h-2 bg-slate-100 rounded-full overflow-hidden mt-2"><div class="h-full bg-violet-500" style="width:${Math.min(100,progress/task.goal*100)}%"></div></div><div class="flex flex-wrap justify-between items-center gap-2 mt-3"><span class="text-sm font-bold text-amber-700">🎁 ${task.reward.label}</span><button type="button" ${progress<task.goal||claimed?'disabled':''} onclick="claimMainResearchReward('${m.id}')" class="rounded-xl px-4 py-2 text-sm font-black ${progress>=task.goal&&!claimed?'bg-violet-600 text-white':'bg-slate-200 text-slate-400'}">${claimed?'수령 완료':progress>=task.goal?'보상 받기':'진행 중'}</button></div>`}</div>`;}).join('');return;
@@ -2042,6 +2066,14 @@
       const h=document.getElementById('research-task-list');if(!h)return;
       h.innerHTML=d.ids.map(id=>{const t=DAILY_RESEARCH_POOL.find(x=>x.id===id);if(!t)return '';const n=Number(d.progress[id])||0,claimed=!!d.claimed[id],done=n>=t.goal;return `<div class="rounded-2xl border border-slate-200 p-4"><div class="flex justify-between gap-3"><div><h3 class="font-black">${t.title}</h3><p class="text-sm text-slate-600">${t.description}</p></div><span class="text-xs font-black">${claimed?'완료':`${n}/${t.goal}`}</span></div><div class="h-2 bg-slate-100 rounded-full overflow-hidden mt-3"><div class="h-full bg-violet-500" style="width:${Math.min(100,n/t.goal*100)}%"></div></div><div class="flex justify-between items-center mt-3"><span class="text-sm font-bold text-amber-700">🎁 ${t.reward.label}</span><button type="button" ${(!done||claimed)?'disabled':''} onclick="claimResearchReward('${t.id}')" class="rounded-xl px-4 py-2 text-sm font-black ${done&&!claimed?'bg-violet-600 text-white':'bg-slate-200 text-slate-400'}">${claimed?'수령 완료':done?'보상 받기':'진행 중'}</button></div></div>`;}).join('');
     }
+    function renderHyperTrainingEventCard(e){
+      const expires=Number(e.startedAt)+30*24*60*60*1000,remaining=Math.max(0,expires-Date.now()),days=Math.ceil(remaining/86400000),expired=remaining<=0,done=e.catchProgress>=20&&e.battleProgress>=20,claimed=!!e.claimed;
+      return `<div class="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-100 p-4"><div class="text-xs font-black text-amber-800">🏅 30일 한정 특별 리서치</div><h3 class="mt-1 text-xl font-black text-slate-900">금뚜껑 획득 프로젝트</h3><p class="mt-1 text-xs text-slate-600">시작일부터 30일 동안 진행할 수 있어요. 남은 기간: <b>${expired?'기간 만료':days+'일'}</b></p><div class="mt-3 space-y-3 rounded-xl bg-white/80 p-3"><div><div class="flex justify-between text-sm font-bold"><span>⚔️ 배틀 승리</span><span>${e.battleProgress}/20</span></div><div class="h-2 mt-1 rounded-full bg-slate-200 overflow-hidden"><div class="h-full bg-amber-500" style="width:${e.battleProgress/20*100}%"></div></div></div><div><div class="flex justify-between text-sm font-bold"><span>🎯 포켓몬 포획</span><span>${e.catchProgress}/20</span></div><div class="h-2 mt-1 rounded-full bg-slate-200 overflow-hidden"><div class="h-full bg-emerald-500" style="width:${e.catchProgress/20*100}%"></div></div></div></div><div class="mt-3 rounded-xl bg-white/80 p-3 text-sm"><b>🎁 보상: 금뚜껑 1개</b><p class="text-xs text-slate-600 mt-1">가방에서 포켓몬을 선택해 특훈하면 공격·방어·HP IV를 각각 15까지 올릴 수 있어요.</p></div><button type="button" onclick="claimGoldBottleCapReward()" ${(!done||claimed||expired)?'disabled':''} class="mt-3 w-full rounded-xl px-4 py-3 font-black text-white ${done&&!claimed&&!expired?'bg-amber-600':'bg-slate-300'}">${claimed?'보상 수령 완료':expired?'이벤트 기간 만료':done?'금뚜껑 받기':'과제 진행 중'}</button></div>`;
+    }
+    function advanceHyperTrainingEvent(kind,amount=1){ensureResearchState();const e=gameState.player.research.hyperTrainingEvent;if(Date.now()>Number(e.startedAt)+30*86400000||e.claimed)return;if(kind==='catch')e.catchProgress=Math.min(20,e.catchProgress+amount);if(kind==='battle')e.battleProgress=Math.min(20,e.battleProgress+amount);saveGame(false);if(currentResearchTab==='event'&&!document.getElementById('research-modal')?.classList.contains('hidden'))renderResearch();}
+    function claimGoldBottleCapReward(){ensureResearchState();const e=gameState.player.research.hyperTrainingEvent;if(Date.now()>Number(e.startedAt)+30*86400000){showToast('금뚜껑 리서치 기간이 끝났어요.','alert-circle');renderResearch();return;}if(e.claimed||e.catchProgress<20||e.battleProgress<20){showToast('두 과제를 모두 완료해야 해요.','alert-circle');return;}e.claimed=true;gameState.inventory.goldBottleCap=(Number(gameState.inventory.goldBottleCap)||0)+1;updateHUD();renderBag();renderResearch();saveGame(false);showToast('금뚜껑 1개를 받았어요! 가방에서 특훈할 수 있어요.','gift');}
+    function useGoldBottleCap(){const count=Number(gameState.inventory.goldBottleCap)||0;if(count<=0){showToast('금뚜껑이 없습니다.','alert-circle');return;}const sel=document.getElementById('gold-cap-pokemon'),p=gameState.myPokemon[Number(sel&&sel.value)];if(!p){showToast('특훈할 포켓몬을 선택하세요.','alert-circle');return;}const before=[Number(p.ivAtk)||0,Number(p.ivDef)||0,Number(p.ivHp)||0];if(before.every(v=>v>=15)){showToast('이 포켓몬은 이미 모든 IV가 최대예요.','alert-circle');return;}if(!confirm(`${p.name}을(를) 금뚜껑으로 특훈할까요? 공격·방어·HP IV가 모두 15가 됩니다.`))return;p.ivAtk=15;p.ivDef=15;p.ivHp=15;p.ivPct=100;gameState.inventory.goldBottleCap=count-1;updateHUD();renderBag();renderPokemonBox();if(activeDetailPokemon===p)openDetailModal(p);saveGame(false);showToast(`${p.name} 특훈 완료! IV가 100%가 되었어요.`,'sparkles');}
+
     function redeemHalloween2026Code(){
       ensureResearchState();
       const r=gameState.player.research;
@@ -3025,7 +3057,7 @@
 
           // Reward XP & Candy
           addXP(150);
-          advanceResearch('catch1',1); advanceResearch('catch3',1); advanceMainResearch('catch',1);
+          advanceResearch('catch1',1); advanceResearch('catch3',1); advanceMainResearch('catch',1); advanceHyperTrainingEvent('catch',1);
           gameState.player.stardust += 100;
           gameState.player.candies[p.baseId] = (gameState.player.candies[p.baseId] || 0) + 3;
 
@@ -3084,7 +3116,7 @@
       document.getElementById('bag-count-greatball').innerText = `${gameState.inventory.greatball}개`;
       document.getElementById('bag-count-ultraball').innerText = `${gameState.inventory.ultraball}개`;
       document.getElementById('bag-count-berry').innerText = `${gameState.inventory.berry}개`;
-      const rareEl=document.getElementById('bag-count-rare-candy'); if(rareEl) rareEl.innerText=`${gameState.player.candies.rare||0}개`; const fastTmEl=document.getElementById('bag-count-fast-tm');if(fastTmEl)fastTmEl.innerText=`${gameState.inventory.fastTM||0}개`;const chargedTmEl=document.getElementById('bag-count-charged-tm');if(chargedTmEl)chargedTmEl.innerText=`${gameState.inventory.chargedTM||0}개`;const eliteFastEl=document.getElementById('bag-count-elite-fast-tm');if(eliteFastEl)eliteFastEl.innerText=`${gameState.inventory.eliteFastTM||0}개`;const eliteChargedEl=document.getElementById('bag-count-elite-charged-tm');if(eliteChargedEl)eliteChargedEl.innerText=`${gameState.inventory.eliteChargedTM||0}개`;
+      const rareEl=document.getElementById('bag-count-rare-candy'); if(rareEl) rareEl.innerText=`${gameState.player.candies.rare||0}개`; const fastTmEl=document.getElementById('bag-count-fast-tm');if(fastTmEl)fastTmEl.innerText=`${gameState.inventory.fastTM||0}개`;const chargedTmEl=document.getElementById('bag-count-charged-tm');if(chargedTmEl)chargedTmEl.innerText=`${gameState.inventory.chargedTM||0}개`;const eliteFastEl=document.getElementById('bag-count-elite-fast-tm');if(eliteFastEl)eliteFastEl.innerText=`${gameState.inventory.eliteFastTM||0}개`;const eliteChargedEl=document.getElementById('bag-count-elite-charged-tm');if(eliteChargedEl)eliteChargedEl.innerText=`${gameState.inventory.eliteChargedTM||0}개`;const goldCapEl=document.getElementById('bag-count-gold-cap');if(goldCapEl)goldCapEl.innerText=`${gameState.inventory.goldBottleCap||0}개`;
       if (window.__gameReady) saveGame(false);
     }
 
@@ -3389,6 +3421,7 @@
       updateHUD();
       const sel=document.getElementById('rare-candy-pokemon');
       const tmSel=document.getElementById('tm-pokemon');if(tmSel){const prev=tmSel.value;tmSel.innerHTML='';gameState.myPokemon.forEach((p,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=`${p.name} · CP ${p.cp}`;tmSel.appendChild(o);});if(prev&&Number(prev)<gameState.myPokemon.length)tmSel.value=prev;}
+      const capSel=document.getElementById('gold-cap-pokemon');if(capSel){const prev=capSel.value;capSel.innerHTML='';if(!gameState.myPokemon.length){capSel.innerHTML='<option value="">포켓몬이 없습니다</option>';}else{gameState.myPokemon.forEach((p,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=`${p.name} · CP ${p.cp} · IV ${p.ivPct||0}%`;capSel.appendChild(o);});if(prev&&Number(prev)<gameState.myPokemon.length)capSel.value=prev;}}
       if(sel){const prev=sel.value;sel.innerHTML='';if(!gameState.myPokemon.length){sel.innerHTML='<option value="">포켓몬이 없습니다</option>';}else{gameState.myPokemon.forEach((p,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=`${p.name} · CP ${p.cp}`;sel.appendChild(o);});if(prev&&Number(prev)<gameState.myPokemon.length)sel.value=prev;}}
     }
     function useRareCandy(){
@@ -3487,11 +3520,11 @@
     // Normalize a couple of values authored as strings above.
     for(const k in GO_CHARGED_POOLS) GO_CHARGED_POOLS[k]=GO_CHARGED_POOLS[k].map(m=>[m[0],Number(m[1])]);
     const GO_SPECIES_FAST={25:['전기쇼크','전광석화'],26:['전기쇼크','볼트체인지'],6:['회오리불꽃','날개치기'],9:['물대포','폭포오르기'],3:['덩굴채찍','잎날가르기'],150:['염동력','사이코커터'],149:['용의숨결','드래곤테일'],143:['핥기','사념의박치기']};
-    const GO_SPECIES_CHARGED={25:[['10만볼트',60],['와일드볼트',90],['번개',100]],26:[['방전',65],['와일드볼트',90]],6:[['블라스트번',110],['드래곤클로',50],['화염방사',55]],9:[['하이드로캐논',80],['하이드로펌프',80],['냉동빔',90]],3:[['하드플랜트',100],['오물폭탄',65],['솔라빔',80]],150:[['사이코브레이크',60],['섀도볼',55],['기합구슬',140]],149:[['용성군',150],['드래곤클로',50],['폭풍',110]],143:[['누르기',40],['지진',100],['헤비봄버',70]],493:[['심판의뭉치',100]],890:[['다이맥스포',120]]};
+    const GO_SPECIES_CHARGED={25:[['10만볼트',60],['와일드볼트',90],['번개',100]],26:[['방전',65],['와일드볼트',90]],6:[['블라스트번',110],['드래곤클로',50],['화염방사',55]],9:[['하이드로캐논',80],['하이드로펌프',80],['냉동빔',90]],3:[['하드플랜트',100],['오물폭탄',65],['솔라빔',80]],150:[['사이코브레이크',60],['섀도볼',55],['기합구슬',140]],149:[['용성군',150],['드래곤클로',50],['폭풍',110]],143:[['누르기',40],['지진',100],['헤비봄버',70]],493:[['심판의뭉치',100]]};
     function goTypeKey(p){const types=(p.type||'노말').split('/');return types.find(t=>GO_FAST_POOLS[t]||GO_CHARGED_POOLS[t])||'노말';}
     function chooseGOFast(p,exclude){const pool=[...(GO_SPECIES_FAST[p.baseId]||[]),...(GO_FAST_POOLS[goTypeKey(p)]||GO_FAST_POOLS['노말'])];const a=[...new Set(pool)].filter(x=>x!==exclude);return a[Math.floor(Math.random()*a.length)]||'몸통박치기';}
-    function chooseGOCharged(p,exclude=[]){const pool=[...(GO_SPECIES_CHARGED[p.baseId]||[]),...(GO_CHARGED_POOLS[goTypeKey(p)]||GO_CHARGED_POOLS['노말'])];const uniq=pool.filter((m,i)=>!exclude.includes(m[0])&&pool.findIndex(x=>x[0]===m[0])===i);const m=uniq[Math.floor(Math.random()*uniq.length)]||['누르기',40];return {name:m[0],cost:Math.max(35,Math.min(80,Math.round(Number(m[1])*.7))),power:Number(m[1]),fastEnergy:9};}
-    function ensureGOMoves(p){if(!p.fastMove)p.fastMove=chooseGOFast(p);if(!Array.isArray(p.chargedMoves)||!p.chargedMoves.length)p.chargedMoves=[chooseGOCharged(p)];p.chargedMoves=p.chargedMoves.slice(0,2);const sig=(Number(p.baseId)===890)?{name:'다이맥스포',cost:50,power:120,fastEnergy:9}:(Number(p.baseId)===888&&p.formeActive&&p.formeSlug==='zacian-crowned'?{name:'거수참',cost:50,power:120,fastEnergy:9}:null);if(sig&&!p.chargedMoves.some(m=>m.name===sig.name)){p.chargedMoves[0]=sig;}if(Number(p.baseId)===888&&(!p.formeActive||p.formeSlug!=='zacian-crowned'))p.chargedMoves=p.chargedMoves.filter(m=>m.name!=='거수참');if(!p.chargedMoves.length)p.chargedMoves=[chooseGOCharged(p)];return p;}
+    function chooseGOCharged(p,exclude=[]){const pool=[...(GO_SPECIES_CHARGED[p.baseId]||[]),...(GO_CHARGED_POOLS[goTypeKey(p)]||GO_CHARGED_POOLS['노말'])];const eliteNames=(ELITE_ONLY_CHARGED_MOVES[Number(p.baseId)]||[]).map(m=>m[0]);const uniq=pool.filter((m,i)=>!eliteNames.includes(m[0])&&!exclude.includes(m[0])&&pool.findIndex(x=>x[0]===m[0])===i);const m=uniq[Math.floor(Math.random()*uniq.length)]||['누르기',40];return {name:m[0],cost:Math.max(35,Math.min(80,Math.round(Number(m[1])*.7))),power:Number(m[1]),fastEnergy:9};}
+    function ensureGOMoves(p){if(!p.fastMove)p.fastMove=chooseGOFast(p);if(!Array.isArray(p.chargedMoves)||!p.chargedMoves.length)p.chargedMoves=[chooseGOCharged(p)];p.chargedMoves=p.chargedMoves.slice(0,2);if(!p.chargedMoves.length)p.chargedMoves=[chooseGOCharged(p)];return p;}
     function grantSecondMoveCost(p){return [144,145,146,150,151].includes(Number(p.baseId))?100:50;}
     function teachSecondChargedMove(){const p=activeDetailPokemon;if(!p)return;ensureGOMoves(p);if(p.chargedMoves.length>=2){showToast('이미 스페셜 어택을 2개 배웠습니다.','alert-circle');return;}const need=grantSecondMoveCost(p),have=Number(gameState.player.candies[p.baseId]||0);if(have<need){showToast(`사탕이 부족합니다. ${need}개 필요 (현재 ${have}개)`,'alert-circle');return;}gameState.player.candies[p.baseId]=have-need;p.chargedMoves.push(chooseGOCharged(p,p.chargedMoves.map(m=>m.name)));openDetailModal(p);updateHUD();saveGame(false);showToast(`${p.name}이(가) 두 번째 스페셜 어택을 배웠습니다!`,'sparkles');}
     function useTM(type){const count=Number(gameState.inventory[type]||0);if(count<=0){showToast(`${type==='fastTM'?'노말':'스페셜'} 기술머신이 없습니다.`,'alert-circle');return;}const sel=document.getElementById('tm-pokemon'),p=gameState.myPokemon[Number(sel&&sel.value)];if(!p){showToast('기술머신을 사용할 포켓몬을 선택하세요.','alert-circle');return;}ensureGOMoves(p);if(type==='fastTM'){p.fastMove=chooseGOFast(p,p.fastMove);}else{const answer=p.chargedMoves.length>1?prompt('변경할 스페셜 기술 번호를 입력하세요: 1 또는 2','1'):'1';if(answer===null)return;const idx=Number(answer)-1;if(idx<0||idx>=p.chargedMoves.length||!Number.isFinite(idx)){return;}p.chargedMoves[idx]=chooseGOCharged(p,p.chargedMoves.filter((_,i)=>i!==idx).map(m=>m.name));}gameState.inventory[type]--;updateHUD();renderBag();renderPokemonBox();if(activeDetailPokemon===p)openDetailModal(p);saveGame(false);showToast('기술머신을 사용해 기술을 변경했습니다!','sparkles');}
@@ -3524,7 +3557,7 @@
       700: [['사이코쇼크', 70]], 706: [['용성군', 150]], 717: [['데스윙', 120]],
       718: [['천룡의역린', 100]], 719: [['문포스', 110]], 720: [['사이코키네시스', 90]],
       721: [['화염방사', 55]], 724: [['하드플랜트', 100]], 727: [['블라스트번', 110]],
-      730: [['하이드로캐논', 80]], 800: [['섀도레이', 120]],
+      730: [['하이드로캐논', 80]], 800: [['섀도레이', 120]], 890: [['다이맥스포', 120]],
       483: [['시간의포효', 160]], // 디아루가
       484: [['공간절단', 160]] // 펄기아
     };
@@ -3821,7 +3854,7 @@
         }
         if(payload.kind==='switch' && payload.team==='self'){const next=Math.max(0,Math.min(pvpBattle.enemyTeam.length-1,Number(payload.index)||0));if(pvpBattle.enemyTeam[next]){pvpBattle.enemyIndex=next;pvpBattle.enemyMaxHp=pvpBattle.enemyTeamHp[next]||pvpMaxHp(pvpBattle.enemyTeam[next]);pvpBattle.enemyHp=pvpBattle.enemyMaxHp;pvpRender();pvpLog(`상대 ${pvpBattle.enemyTeam[next].name} 출전!`);}}
         if(payload.kind==='leave'){pvpBattle.started=false;pvpRender();pvpLog('상대가 방을 나갔어요.');}
-        if(payload.kind==='battle-end'){pvpBattle.started=false;pvpRender();pvpLog(payload.result==='win'?'승리!':'패배!');}
+        if(payload.kind==='battle-end'){pvpBattle.started=false;pvpRender();pvpLog(payload.result==='win'?'승리!':'패배!');if(payload.result==='lose'&&!pvpBattle.hyperWinCounted){pvpBattle.hyperWinCounted=true;advanceHyperTrainingEvent('battle',1);}}
       }).subscribe(status=>{if(status==='SUBSCRIBED'){setPvpRoomStatus(`방 ${activePvpRoomCode} · 실시간 대전 채널 연결 완료`);if(activePvpRoomChannel.__subResolve){activePvpRoomChannel.__subResolve(true);activePvpRoomChannel.__subResolve=null;}}else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){if(activePvpRoomChannel.__subResolve){activePvpRoomChannel.__subResolve(false);activePvpRoomChannel.__subResolve=null;}}});
       await new Promise(resolve=>{activePvpRoomChannel.__subResolve=resolve; if(activePvpRoomChannel.state==='joined')resolve(true); setTimeout(()=>{if(activePvpRoomChannel&&activePvpRoomChannel.__subResolve){activePvpRoomChannel.__subResolve(false);activePvpRoomChannel.__subResolve=null;}},8000);});
     }
@@ -4440,7 +4473,7 @@
       const gymChallenge=window.__gymChallenge;
       if(!gymChallenge) document.getElementById('battle-finish-btn').classList.remove('hidden'); else document.getElementById('battle-finish-btn').classList.add('hidden');
       document.getElementById('battle-log').textContent = `${message} ${won ? '🎉 승리! XP 250과 별의모래 300을 획득했다!' : '😵 패배… 포켓몬을 강화하고 다시 도전해 보자!'}`;
-      if (won) { addXP(250); gameState.player.stardust += 300; playSound('catch'); advanceMainResearch('battle',1); }
+      if (won) { addXP(250); gameState.player.stardust += 300; playSound('catch'); advanceMainResearch('battle',1); advanceHyperTrainingEvent('battle',1); }
       if(gymChallenge){
         if(won){const elapsed=Math.max(1,Math.ceil((Date.now()-gymChallenge.startedAt)/60000));const coins=Math.min(60,elapsed);gameState.player.pokecoins=(Number(gameState.player.pokecoins)||0)+coins;const g=gymChallenge.gym;if(g){g.defeated=true;gameState.mapElements.gyms=gameState.mapElements.gyms.filter(x=>x.id!==g.id);}const last=battleState&&battleState.enemyTeam&&battleState.enemyTeam[battleState.enemyTeam.length-1];const boss=last||makeGymBoss();const base=GEN1_POKEMON.find(x=>x.id===boss.baseId)||GEN1_POKEMON[0];const cp=calculateWildSpawnCP(base,boss.ivAtk||0,boss.ivDef||0,boss.ivHp||0);gymBossToCatch={...boss,cp,uniqueId:Date.now()+Math.random()};document.getElementById('battle-log').textContent+=` 체육관 보상: 포켓코인 ${coins}개! 관장의 ${boss.name}을(를) 포획할 수 있어요.`;setTimeout(()=>{const modal=document.getElementById('battle-modal');modal.classList.add('hidden');modal.classList.remove('flex');closeGymModal();if(gymBossToCatch){const b=gymBossToCatch;gymBossToCatch=null;startEncounter(b);}},900);}
         else {document.getElementById('battle-log').textContent+=' 이번 도전은 패배로 끝났습니다.';}
@@ -4452,8 +4485,10 @@
     /* ========================================================================
        9. INITIALIZATION
        ======================================================================== */
-    window.onload = function() {
-      lucide.createIcons();
+    function initializeGame() {
+      if (window.__gameInitialized) return;
+      window.__gameInitialized = true;
+      if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
       const restored = loadGame(false);
       if (!restored) {
         // Starter partner only on a brand-new game.
@@ -4499,7 +4534,20 @@
       requestAnimationFrame(gameLoop);
       // Save progress periodically as a safety net; user can also save manually.
       window.addEventListener('beforeunload', () => saveGame(false));
-    };
+    }
+    // Start as soon as the document is parsed; do not wait for remote CDNs or images.
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeGame, { once: true });
+    } else {
+      initializeGame();
+    }
+    window.addEventListener('resize', () => {
+      if (typeof canvas !== 'undefined' && canvas) {
+        const w = Math.max(1, window.innerWidth);
+        const h = Math.max(1, window.innerHeight);
+        if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; if (typeof renderMap === 'function') renderMap(); }
+      }
+    }, { passive: true });
   </script>
 
   <style id="mobile-scroll-profile-style">
