@@ -2073,6 +2073,13 @@
     function ensureResearchState(){
       if(!gameState.player.research||typeof gameState.player.research!=='object')gameState.player.research={progress:{},claimed:{},welcomeClaimed:false};
       const r=gameState.player.research;if(typeof r.welcomeClaimed!=='boolean')r.welcomeClaimed=false;
+      // 기존에 환영 보상을 받은 계정에도 새 보상(대단한 스페셜 기술머신 2개)을 1회 지급
+      if(r.welcomeClaimed && !r.welcomeEliteChargedTMGranted){
+        if(!gameState.inventory || typeof gameState.inventory!=='object')gameState.inventory={};
+        gameState.inventory.eliteChargedTM=(Number(gameState.inventory.eliteChargedTM)||0)+2;
+        r.welcomeEliteChargedTMGranted=true;
+        setTimeout(()=>{try{saveGame(false);updateHUD();}catch(e){}},0);
+      }
       if(!r.progress)r.progress={};if(!r.claimed)r.claimed={};if(!r.main||typeof r.main!=='object')r.main={};
       if(!r.hyperTrainingEvent||typeof r.hyperTrainingEvent!=='object')r.hyperTrainingEvent={startedAt:Date.now(),catchProgress:0,battleProgress:0,claimed:false};const he=r.hyperTrainingEvent;if(!Number(he.startedAt))he.startedAt=Date.now();he.catchProgress=Math.max(0,Math.min(20,Number(he.catchProgress)||0));he.battleProgress=Math.max(0,Math.min(20,Number(he.battleProgress)||0));he.claimed=!!he.claimed;
       MYTHICAL_RESEARCHES.forEach(m=>{if(!r.main[m.id]||typeof r.main[m.id]!=='object')r.main[m.id]={stage:0,progress:0,claimedStages:[]};const q=r.main[m.id];q.stage=Math.max(0,Math.min(6,Number(q.stage)||0));q.progress=Math.max(0,Number(q.progress)||0);if(!Array.isArray(q.claimedStages))q.claimedStages=[];});
@@ -2103,7 +2110,7 @@
       ensureResearchState();
       const r=gameState.player.research,d=r.daily;
       const welcome=document.getElementById('welcome-research-card');
-      if(welcome){const claimed=r.welcomeClaimed;welcome.innerHTML=`<div class="text-xs font-black text-amber-800">환영 리서치 · 무료</div><h3 class="mt-1 text-lg font-black text-slate-900">전설 포켓몬을 만나자!</h3><p class="mt-1 text-sm text-slate-700">랜덤 전설 포켓몬 · CP 1000 · IV 100%</p><button type="button" ${claimed?'disabled':''} onclick="claimWelcomeResearch()" class="mt-3 w-full rounded-xl px-4 py-3 font-black ${claimed?'bg-slate-200 text-slate-500':'bg-amber-500 text-amber-950'}">${claimed?'이미 보상을 받았어요':'무료 보상 받기'}</button>`;}
+      if(welcome){const claimed=r.welcomeClaimed;welcome.innerHTML=`<div class="text-xs font-black text-amber-800">환영 리서치 · 무료</div><h3 class="mt-1 text-lg font-black text-slate-900">전설 포켓몬을 만나자!</h3><p class="mt-1 text-sm text-slate-700">랜덤 전설 포켓몬 · CP 1000 · IV 100%</p><div class="mt-2 rounded-xl bg-white/80 border border-amber-200 p-2 text-sm font-black text-orange-700">🎁 추가 보상: 대단한 스페셜 기술머신 2개</div><button type="button" ${claimed?'disabled':''} onclick="claimWelcomeResearch()" class="mt-3 w-full rounded-xl px-4 py-3 font-black ${claimed?'bg-slate-200 text-slate-500':'bg-amber-500 text-amber-950'}">${claimed?'이미 보상을 받았어요':'무료 보상 받기'}</button>`;}
       ['daily','event','main'].forEach(t=>{const b=document.getElementById('research-tab-'+t);if(b){b.type='button';b.setAttribute('aria-pressed',String(currentResearchTab===t));b.className='rounded-xl p-2 font-black transition '+(currentResearchTab===t?'bg-violet-600 text-white shadow':'bg-slate-100 text-slate-500 hover:bg-violet-100');}});
       const panel=document.getElementById('research-stamp-panel');
       if(panel)panel.innerHTML=`<div class="font-black">데일리 도장 ${d.stamp||0}/6</div><div class="flex gap-1 my-2">${Array.from({length:6},(_,i)=>`<span class="flex-1 text-center rounded-lg p-2 ${i<(d.stamp||0)?'bg-amber-400':'bg-white border'}">${i<(d.stamp||0)?'★':'☆'}</span>`).join('')}</div><button type="button" onclick="claimResearchBox()" ${d.stamp<6||d.boxClaimed?'disabled':''} class="w-full rounded-xl p-2 font-black ${d.stamp>=6&&!d.boxClaimed?'bg-amber-500':'bg-slate-200 text-slate-400'}">${d.boxClaimed?'오늘의 리서치 박스 수령 완료':'리서치 박스 열기 (도장 6개)'}</button><p class="text-xs text-slate-500 mt-1">매일 밤 9시에 데일리 태스크가 갱신돼요.</p>`;
@@ -2193,8 +2200,12 @@
       const pokemon={uniqueId:Date.now()+Math.random(),baseId:base.id,name:base.name,type:base.type,cp:1000,ivAtk:15,ivDef:15,ivHp:15,ivPct:100,shiny:false,fromWelcomeResearch:true};
       if(typeof ensureGOMoves==='function')ensureGOMoves(pokemon);
       gameState.player.research.welcomeClaimed=true;
-      saveGame(false);renderResearch();closeModal('research-modal');startEncounter(pokemon);
-      showToast('환영 리서치! 전설 포켓몬을 포획해 보세요.','gift');
+      if(!gameState.player.research.welcomeEliteChargedTMGranted){
+        gameState.inventory.eliteChargedTM=(Number(gameState.inventory.eliteChargedTM)||0)+2;
+        gameState.player.research.welcomeEliteChargedTMGranted=true;
+      }
+      saveGame(false);updateHUD();renderBag();renderResearch();closeModal('research-modal');startEncounter(pokemon);
+      showToast('환영 보상 획득! 전설 포켓몬과 대단한 스페셜 기술머신 2개를 받았어요.','gift');
     }
 
     function claimResearchReward(id){ensureResearchState();const d=gameState.player.research.daily,t=DAILY_RESEARCH_POOL.find(x=>x.id===id);if(!t||!d.ids.includes(id))return;if(d.claimed[id]||Number(d.progress[id]||0)<t.goal){showToast('아직 완료하지 않은 리서치예요.','alert-circle');return;}d.claimed[id]=true;d.stamp=Math.min(6,(Number(d.stamp)||0)+1);if(t.reward.type==='pokeball')gameState.inventory.pokeball=(Number(gameState.inventory.pokeball)||0)+t.reward.amount;else if(t.reward.type==='berry')gameState.inventory.berry=(Number(gameState.inventory.berry)||0)+t.reward.amount;else if(t.reward.type==='stardust')gameState.player.stardust=(Number(gameState.player.stardust)||0)+t.reward.amount;else if(t.reward.type==='greatball')gameState.inventory.greatball=(Number(gameState.inventory.greatball)||0)+t.reward.amount;updateHUD();renderResearch();saveGame(false);showToast(`리서치 보상 획득! ${t.reward.label} · 도장 +1`,'gift');}
