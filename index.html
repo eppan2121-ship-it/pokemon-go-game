@@ -1766,6 +1766,60 @@
     const GEN7_EVOLUTION_LINKS = {722:723,723:724,725:726,726:727,728:729,729:730,731:732,732:733,734:735,736:737,737:738,739:740,742:743,744:745,747:748,749:750,751:752,753:754,755:756,757:758,759:760,761:762,762:763,767:768,769:770,772:773,782:783,783:784,789:790,790:791,803:804,808:809};
     GEN1_POKEMON.forEach(p => { if (GEN2_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN2_EVOLUTION_LINKS[p.id]; if (GEN4_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN4_EVOLUTION_LINKS[p.id]; if (GEN5_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN5_EVOLUTION_LINKS[p.id]; if (GEN6_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN6_EVOLUTION_LINKS[p.id]; if (GEN7_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN7_EVOLUTION_LINKS[p.id]; if (GEN8_EVOLUTION_LINKS[p.id]) p.evolveTo = GEN8_EVOLUTION_LINKS[p.id]; });
 
+    /* Single-file Showdown GIF cache: cache CORS-readable GIF blobs in IndexedDB.
+       This keeps the original animated Showdown art; no replacement sprite pack is used.
+       If a host disallows CORS, the normal <img> network path is still attempted. */
+    const SHOWDOWN_SPRITE_DB = 'pokemon-showdown-gif-cache-v1';
+    let __spriteDbPromise;
+    function openSpriteCacheDb() {
+      if (!('indexedDB' in window)) return Promise.resolve(null);
+      if (!__spriteDbPromise) __spriteDbPromise = new Promise(resolve => {
+        try {
+          const req = indexedDB.open(SHOWDOWN_SPRITE_DB, 1);
+          req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains('gif')) req.result.createObjectStore('gif'); };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => resolve(null);
+        } catch (_) { resolve(null); }
+      });
+      return __spriteDbPromise;
+    }
+    async function readCachedSprite(url) {
+      const db = await openSpriteCacheDb(); if (!db) return null;
+      return new Promise(resolve => { try { const tx=db.transaction('gif','readonly'); const r=tx.objectStore('gif').get(url); r.onsuccess=()=>resolve(r.result instanceof Blob ? r.result : null); r.onerror=()=>resolve(null); } catch (_) { resolve(null); } });
+    }
+    async function writeCachedSprite(url, blob) {
+      const db = await openSpriteCacheDb(); if (!db || !(blob instanceof Blob)) return;
+      return new Promise(resolve => { try { const tx=db.transaction('gif','readwrite'); tx.objectStore('gif').put(blob,url); tx.oncomplete=()=>resolve(); tx.onerror=()=>resolve(); } catch (_) { resolve(); } });
+    }
+    async function loadShowdownGif(img, url) {
+      if (!img || !url) return;
+      const requestId = String((Number(img.dataset.spriteRequestId)||0)+1);
+      img.dataset.spriteRequestId=requestId;
+      const stillCurrent=()=>img.dataset.spriteRequestId===requestId;
+      try {
+        const cached=await readCachedSprite(url);
+        if (cached && stillCurrent()) {
+          if (img.dataset.cachedObjectUrl) URL.revokeObjectURL(img.dataset.cachedObjectUrl);
+          const objectUrl=URL.createObjectURL(cached); img.dataset.cachedObjectUrl=objectUrl; img.src=objectUrl; return;
+        }
+      } catch (_) {}
+      // Cache fetch is deliberately bounded so blocked school networks do not stall the game.
+      try {
+        const controller = ('AbortController' in window) ? new AbortController() : null;
+        const timer=setTimeout(()=>{try{controller && controller.abort();}catch(_){}},4500);
+        const response=await fetch(url,{mode:'cors',credentials:'omit',signal:controller?controller.signal:undefined,cache:'force-cache'});
+        clearTimeout(timer);
+        if (response.ok) {
+          const blob=await response.blob();
+          if (blob && blob.size && stillCurrent()) {
+            await writeCachedSprite(url,blob);
+            if (stillCurrent()) { if(img.dataset.cachedObjectUrl) URL.revokeObjectURL(img.dataset.cachedObjectUrl); const objectUrl=URL.createObjectURL(blob); img.dataset.cachedObjectUrl=objectUrl; img.src=objectUrl; return; }
+          }
+        }
+      } catch (_) {}
+      if (stillCurrent()) img.src=url; // preserve native Showdown GIF loading when CORS cache is unavailable
+    }
+
     /* Sprite lookup: prefer animated Gen V pixel sprites, then static Gen V pixel sprites,
        then the repository's default pixel sprites. Avoid switching to modern 3D artwork. */
     function getPokemonSpriteUrl(id, shiny = false) {
@@ -1834,7 +1888,7 @@
         img.onerror = function() {
           megaCandidateIndex++;
           if (megaCandidateIndex < megaCandidates.length) {
-            this.src = megaCandidates[megaCandidateIndex];
+            loadShowdownGif(this, megaCandidates[megaCandidateIndex]);
           } else {
             this.onerror = null;
             this.style.visibility = 'hidden';
@@ -1845,7 +1899,7 @@
         // animation every 250ms makes Mega sprites look like they are trembling.
         if (img.dataset.spriteUrl !== megaUrl) {
           img.dataset.spriteUrl = megaUrl;
-          img.src = megaUrl;
+          loadShowdownGif(img, megaUrl);
         }
       } else {
         const normalUrl = getPokemonAnimatedUrl(spriteId, !!pokemon.shiny);
@@ -1853,7 +1907,7 @@
           setRetroFallback(img, spriteId, !!pokemon.shiny);
           img.style.visibility = 'visible';
           img.dataset.spriteUrl = normalUrl;
-          img.src = normalUrl;
+          loadShowdownGif(img, normalUrl);
         }
       }
       img.classList.add('pokemon-lively');
@@ -2055,9 +2109,11 @@
       if(panel)panel.innerHTML=`<div class="font-black">데일리 도장 ${d.stamp||0}/6</div><div class="flex gap-1 my-2">${Array.from({length:6},(_,i)=>`<span class="flex-1 text-center rounded-lg p-2 ${i<(d.stamp||0)?'bg-amber-400':'bg-white border'}">${i<(d.stamp||0)?'★':'☆'}</span>`).join('')}</div><button type="button" onclick="claimResearchBox()" ${d.stamp<6||d.boxClaimed?'disabled':''} class="w-full rounded-xl p-2 font-black ${d.stamp>=6&&!d.boxClaimed?'bg-amber-500':'bg-slate-200 text-slate-400'}">${d.boxClaimed?'오늘의 리서치 박스 수령 완료':'리서치 박스 열기 (도장 6개)'}</button><p class="text-xs text-slate-500 mt-1">매일 밤 9시에 데일리 태스크가 갱신돼요.</p>`;
       const content=document.getElementById('research-tab-content');if(!content)return;
       if(currentResearchTab==='event'){
-        const halloweenClaimed=!!r.halloween2026Claimed;
-        const gofestClaimed=!!r.gofest2026Claimed;
-        content.innerHTML=`<div class="space-y-4"><div class="rounded-2xl border-2 border-orange-300 bg-gradient-to-br from-orange-50 via-purple-50 to-slate-100 p-4"><div class="text-xs font-black text-orange-700">🎃 2026 할로윈 스페셜</div><h3 class="mt-1 text-xl font-black text-slate-900">할로윈 비밀 선물</h3><p class="mt-2 text-sm text-slate-700">이벤트 코드를 입력하면 이로치 밀탱크를 만날 수 있어요.</p><div class="mt-3 rounded-xl bg-white/80 p-3 text-sm"><div class="font-black text-slate-800">✨ 이로치 밀탱크</div><div class="text-slate-600">최대 CP · IV 100% (공격/방어/HP 각 15)</div></div><label for="halloween-event-code" class="block mt-3 text-xs font-bold text-slate-600">이벤트 코드</label><div class="mt-1 flex gap-2"><input id="halloween-event-code" type="text" autocomplete="off" maxlength="20" placeholder="코드 입력" class="min-w-0 flex-1 rounded-xl border border-orange-200 bg-white px-3 py-3 font-bold" ${halloweenClaimed?'disabled':''}><button type="button" onclick="redeemHalloween2026Code()" ${halloweenClaimed?'disabled':''} class="rounded-xl bg-orange-500 px-4 py-3 font-black text-white disabled:bg-slate-300">${halloweenClaimed?'수령 완료':'교환'}</button></div>${halloweenClaimed?'<p class="mt-2 text-sm font-bold text-emerald-700">이미 할로윈 선물을 수령했어요!</p>':'<p class="mt-2 text-xs text-slate-500">계정당 한 번만 교환할 수 있어요.</p>'}</div><div class="rounded-2xl border-2 border-sky-300 bg-gradient-to-br from-sky-50 via-indigo-50 to-slate-100 p-4"><div class="text-xs font-black text-sky-800">🌌 2026년 11월 GO FEST 스페셜</div><h3 class="mt-1 text-xl font-black text-slate-900">전설의 만남</h3><p class="mt-2 text-sm text-slate-700">코드 교환 후 두 포켓몬을 차례로 만날 수 있어요.</p><div class="mt-3 rounded-xl bg-white/80 p-3 text-sm space-y-2"><div><div class="font-black text-slate-800">무한다이노 · 무한다이맥스 폼</div><div class="text-slate-600">최대 CP · IV 100% · 다이맥스포</div></div><div class="border-t border-slate-200 pt-2"><div class="font-black text-slate-800">✨ 이로치 레쿠쟈</div><div class="text-slate-600">최대 CP · IV 100%</div></div></div><label for="gofest-event-code" class="block mt-3 text-xs font-bold text-slate-600">이벤트 코드</label><div class="mt-1 flex gap-2"><input id="gofest-event-code" type="text" autocomplete="off" maxlength="20" placeholder="코드 입력" class="min-w-0 flex-1 rounded-xl border border-sky-200 bg-white px-3 py-3 font-bold" ${gofestClaimed?'disabled':''}><button type="button" onclick="redeemGofest2026Code()" ${gofestClaimed?'disabled':''} class="rounded-xl bg-sky-600 px-4 py-3 font-black text-white disabled:bg-slate-300">${gofestClaimed?'수령 완료':'교환'}</button></div>${gofestClaimed?'<p class="mt-2 text-sm font-bold text-emerald-700">GO FEST 선물을 이미 수령했어요!</p>':'<p class="mt-2 text-xs text-slate-500">계정당 한 번만 교환할 수 있어요.</p>'}<p class="mt-2 text-xs text-slate-500">두 포켓몬은 직접 포획해야 박스에 등록돼요.</p></div>${renderHyperTrainingEventCard(r.hyperTrainingEvent)}</div>`;return;
+        const halloweenUses=getEventCodeUses(r,'2026Halloween');
+        const gofestUses=getEventCodeUses(r,'2026Gofest');
+        const halloweenClaimed=halloweenUses>=2;
+        const gofestClaimed=gofestUses>=2;
+        content.innerHTML=`<div class="space-y-4"><div class="rounded-2xl border-2 border-orange-300 bg-gradient-to-br from-orange-50 via-purple-50 to-slate-100 p-4"><div class="text-xs font-black text-orange-700">🎃 2026 할로윈 스페셜</div><h3 class="mt-1 text-xl font-black text-slate-900">할로윈 비밀 선물</h3><p class="mt-2 text-sm text-slate-700">이벤트 코드를 입력하면 이로치 밀탱크를 만날 수 있어요.</p><div class="mt-3 rounded-xl bg-white/80 p-3 text-sm"><div class="font-black text-slate-800">✨ 이로치 밀탱크</div><div class="text-slate-600">최대 CP · IV 100% (공격/방어/HP 각 15)</div></div><label for="halloween-event-code" class="block mt-3 text-xs font-bold text-slate-600">이벤트 코드</label><div class="mt-1 flex gap-2"><input id="halloween-event-code" type="text" autocomplete="off" maxlength="20" placeholder="코드 입력" class="min-w-0 flex-1 rounded-xl border border-orange-200 bg-white px-3 py-3 font-bold" ${halloweenClaimed?'disabled':''}><button type="button" onclick="redeemHalloween2026Code()" ${halloweenClaimed?'disabled':''} class="rounded-xl bg-orange-500 px-4 py-3 font-black text-white disabled:bg-slate-300">${halloweenClaimed?'2회 수령 완료':`교환 (${halloweenUses}/2)`}</button></div>${halloweenClaimed?'<p class="mt-2 text-sm font-bold text-emerald-700">이미 할로윈 선물을 수령했어요!</p>':'<p class="mt-2 text-xs text-slate-500">계정당 최대 2번 교환할 수 있어요.</p>'}</div><div class="rounded-2xl border-2 border-sky-300 bg-gradient-to-br from-sky-50 via-indigo-50 to-slate-100 p-4"><div class="text-xs font-black text-sky-800">🌌 2026년 11월 GO FEST 스페셜</div><h3 class="mt-1 text-xl font-black text-slate-900">전설의 만남</h3><p class="mt-2 text-sm text-slate-700">코드 교환 후 두 포켓몬을 차례로 만날 수 있어요.</p><div class="mt-3 rounded-xl bg-white/80 p-3 text-sm space-y-2"><div><div class="font-black text-slate-800">무한다이노 · 무한다이맥스 폼</div><div class="text-slate-600">최대 CP · IV 100% · 다이맥스포</div></div><div class="border-t border-slate-200 pt-2"><div class="font-black text-slate-800">✨ 이로치 레쿠쟈</div><div class="text-slate-600">최대 CP · IV 100%</div></div></div><label for="gofest-event-code" class="block mt-3 text-xs font-bold text-slate-600">이벤트 코드</label><div class="mt-1 flex gap-2"><input id="gofest-event-code" type="text" autocomplete="off" maxlength="20" placeholder="코드 입력" class="min-w-0 flex-1 rounded-xl border border-sky-200 bg-white px-3 py-3 font-bold" ${gofestClaimed?'disabled':''}><button type="button" onclick="redeemGofest2026Code()" ${gofestClaimed?'disabled':''} class="rounded-xl bg-sky-600 px-4 py-3 font-black text-white disabled:bg-slate-300">${gofestClaimed?'2회 수령 완료':`교환 (${gofestUses}/2)`}</button></div>${gofestClaimed?'<p class="mt-2 text-sm font-bold text-emerald-700">GO FEST 선물을 2번 모두 수령했어요!</p>':'<p class="mt-2 text-xs text-slate-500">계정당 최대 2번 교환할 수 있어요.</p>'}<p class="mt-2 text-xs text-slate-500">두 포켓몬은 직접 포획해야 박스에 등록돼요.</p></div>${renderHyperTrainingEventCard(r.hyperTrainingEvent)}</div>`;return;
       }
       if(currentResearchTab==='main'){
         content.innerHTML='<div class="text-xs font-black uppercase tracking-wide text-slate-500 mb-3">메인 리서치 · 단계별 과제와 보상</div>'+MYTHICAL_RESEARCHES.map(m=>{const state=r.main[m.id],done=state.stage>=6,stage=Math.min(5,state.stage),task=MAIN_RESEARCH_TASKS[stage],progress=done?task.goal:Math.min(task.goal,Number(state.progress)||0),claimed=done||state.claimedStages.includes(stage);return `<div class="rounded-2xl border border-violet-200 p-4 mb-3"><div class="flex items-start justify-between gap-2"><div><div class="font-black text-slate-900">${m.name} · 메인 리서치</div><div class="text-xs text-violet-700 font-bold mt-1">${done?'완료':`단계 ${stage+1}/6 · ${m.stages[stage]}`}</div></div><span class="rounded-full bg-violet-50 px-2 py-1 text-xs font-black text-violet-700">${done?'완료':`${progress}/${task.goal}`}</span></div>${done?`<p class="text-sm text-emerald-700 font-bold mt-3">모든 단계를 완료했어요!</p>`:`<p class="text-sm text-slate-700 mt-3">${task.description}</p><div class="h-2 bg-slate-100 rounded-full overflow-hidden mt-2"><div class="h-full bg-violet-500" style="width:${Math.min(100,progress/task.goal*100)}%"></div></div><div class="flex flex-wrap justify-between items-center gap-2 mt-3"><span class="text-sm font-bold text-amber-700">🎁 ${task.reward.label}</span><button type="button" ${progress<task.goal||claimed?'disabled':''} onclick="claimMainResearchReward('${m.id}')" class="rounded-xl px-4 py-2 text-sm font-black ${progress>=task.goal&&!claimed?'bg-violet-600 text-white':'bg-slate-200 text-slate-400'}">${claimed?'수령 완료':progress>=task.goal?'보상 받기':'진행 중'}</button></div>`}</div>`;}).join('');return;
@@ -2074,26 +2130,42 @@
     function claimGoldBottleCapReward(){ensureResearchState();const e=gameState.player.research.hyperTrainingEvent;if(Date.now()>Number(e.startedAt)+30*86400000){showToast('금뚜껑 리서치 기간이 끝났어요.','alert-circle');renderResearch();return;}if(e.claimed||e.catchProgress<20||e.battleProgress<20){showToast('두 과제를 모두 완료해야 해요.','alert-circle');return;}e.claimed=true;gameState.inventory.goldBottleCap=(Number(gameState.inventory.goldBottleCap)||0)+1;updateHUD();renderBag();renderResearch();saveGame(false);showToast('금뚜껑 1개를 받았어요! 가방에서 특훈할 수 있어요.','gift');}
     function useGoldBottleCap(){const count=Number(gameState.inventory.goldBottleCap)||0;if(count<=0){showToast('금뚜껑이 없습니다.','alert-circle');return;}const sel=document.getElementById('gold-cap-pokemon'),p=gameState.myPokemon[Number(sel&&sel.value)];if(!p){showToast('특훈할 포켓몬을 선택하세요.','alert-circle');return;}const before=[Number(p.ivAtk)||0,Number(p.ivDef)||0,Number(p.ivHp)||0];if(before.every(v=>v>=15)){showToast('이 포켓몬은 이미 모든 IV가 최대예요.','alert-circle');return;}if(!confirm(`${p.name}을(를) 금뚜껑으로 특훈할까요? 공격·방어·HP IV가 모두 15가 됩니다.`))return;p.ivAtk=15;p.ivDef=15;p.ivHp=15;p.ivPct=100;gameState.inventory.goldBottleCap=count-1;updateHUD();renderBag();renderPokemonBox();if(activeDetailPokemon===p)openDetailModal(p);saveGame(false);showToast(`${p.name} 특훈 완료! IV가 100%가 되었어요.`,'sparkles');}
 
+    // 이벤트 코드별 계정 사용 횟수. 저장 데이터에 포함되어 온라인 저장/불러오기로 기기 간 동기화됩니다.
+    function getEventCodeUses(research, code){
+      const key=String(code||'');
+      const uses=research && research.eventCodeUses && Number(research.eventCodeUses[key]);
+      if(Number.isFinite(uses) && uses>=0) return Math.min(2,Math.floor(uses));
+      // 이전 버전에서 이미 1회 수령한 기록을 보존합니다.
+      if(key==='2026Halloween' && research && research.halloween2026Claimed) return 1;
+      if(key==='2026Gofest' && research && research.gofest2026Claimed) return 1;
+      return 0;
+    }
+    function recordEventCodeUse(research, code){
+      if(!research.eventCodeUses || typeof research.eventCodeUses!=='object') research.eventCodeUses={};
+      research.eventCodeUses[String(code)]=getEventCodeUses(research,String(code))+1;
+    }
+
     function redeemHalloween2026Code(){
       ensureResearchState();
       const r=gameState.player.research;
-      if(r.halloween2026Claimed){showToast('할로윈 선물은 이미 수령했어요.','alert-circle');return;}
+      if(getEventCodeUses(r,'2026Halloween')>=2){showToast('이 코드는 계정당 최대 2번까지 교환할 수 있어요.','alert-circle');return;}
       const input=document.getElementById('halloween-event-code');
       const code=String(input?.value||'').trim();
       if(code!=='2026Halloween'){showToast('이벤트 코드가 올바르지 않아요.','alert-circle');return;}
       const base=GEN1_POKEMON.find(p=>Number(p.id)===241);
       if(!base){showToast('밀탱크 데이터를 찾지 못했어요.','alert-circle');return;}
       const maxCP=getOfficialMaxCP(base);
-      const pokemon={uniqueId:Date.now()+Math.random(),baseId:base.id,name:base.name,type:base.type,cp:maxCP,ivAtk:15,ivDef:15,ivHp:15,ivPct:100,shiny:true,fromHalloween2026:true,hpOverride:280,fastMove:'몸통박치기',chargedMoves:[{name:'심판의뭉치',cost:50,power:100,fastEnergy:9}]};
+      const pokemon={uniqueId:Date.now()+Math.random(),baseId:base.id,name:base.name,type:base.type,cp:maxCP,ivAtk:15,ivDef:15,ivHp:15,ivPct:100,shiny:true,fromHalloween2026:true};
       if(typeof ensureGOMoves==='function')ensureGOMoves(pokemon);
-      r.halloween2026Claimed=true;
+      recordEventCodeUse(r,'2026Halloween');
+      r.halloween2026Claimed=getEventCodeUses(r,'2026Halloween')>=2;
       saveGame(false);updateHUD();renderResearch();closeModal('research-modal');startEncounter(pokemon);
-      showToast('🎃 할로윈 스페셜! 최대 CP 이로치 밀탱크가 나타났어요!','gift');
+      showToast(`🎃 할로윈 스페셜! 최대 CP 이로치 밀탱크 등장! (계정 사용 ${getEventCodeUses(r,'2026Halloween')}/2회)`,'gift');
     }
     function redeemGofest2026Code(){
       ensureResearchState();
       const r=gameState.player.research;
-      if(r.gofest2026Claimed){showToast('GO FEST 선물은 이미 수령했어요.','alert-circle');return;}
+      if(getEventCodeUses(r,'2026Gofest')>=2){showToast('이 코드는 계정당 최대 2번까지 교환할 수 있어요.','alert-circle');return;}
       const input=document.getElementById('gofest-event-code');
       if(String(input?.value||'').trim()!=='2026Gofest'){showToast('이벤트 코드가 올바르지 않아요.','alert-circle');return;}
       const eternatus=GEN8_POKEMON.find(p=>Number(p.id)===890);
@@ -2103,10 +2175,11 @@
       const rayquazaGift={uniqueId:Date.now()+Math.random()+1,baseId:rayquaza.id,name:rayquaza.name,type:rayquaza.type,cp:getOfficialMaxCP(rayquaza),ivAtk:15,ivDef:15,ivHp:15,ivPct:100,shiny:true,fromGofest2026:true};
       if(typeof ensureGOMoves==='function')ensureGOMoves(rayquazaGift);
       gameState.pendingEventEncounters=[eternatusGift,rayquazaGift];
-      r.gofest2026Claimed=true;
+      recordEventCodeUse(r,'2026Gofest');
+      r.gofest2026Claimed=getEventCodeUses(r,'2026Gofest')>=2;
       saveGame(false);updateHUD();renderResearch();closeModal('research-modal');
       const first=gameState.pendingEventEncounters.shift();startEncounter(first);
-      showToast('🌌 GO FEST! 무한다이노가 나타났어요. 포획하면 이로치 레쿠쟈도 만날 수 있어요!','gift');
+      showToast(`🌌 GO FEST! 무한다이노 등장! 포획하면 이로치 레쿠쟈도 만날 수 있어요. (계정 사용 ${getEventCodeUses(r,'2026Gofest')}/2회)`,'gift');
     }
 
     function claimResearchBox(){ensureResearchState();const d=gameState.player.research.daily;if(d.stamp<6||d.boxClaimed)return;d.boxClaimed=true;gameState.player.stardust=(Number(gameState.player.stardust)||0)+2000;gameState.inventory.rareCandy=(Number(gameState.inventory.rareCandy)||0)+1;saveGame(false);updateHUD();renderResearch();showToast('리서치 박스 보상: 별의모래 2000개와 이상한사탕 1개!','gift');}
@@ -3048,7 +3121,6 @@
             ivDef: p.ivDef,
             ivHp: p.ivHp,
             shiny: !!p.shiny,
-            ...(p.fromHalloween2026 ? {fromHalloween2026:true,hpOverride:280} : {}),
             caughtAt: new Date().toLocaleTimeString()
           });
           ensureGOMoves(gameState.myPokemon[gameState.myPokemon.length-1]);
@@ -3273,7 +3345,7 @@
         let next = Number(this.dataset.formSpriteIndex || 0) + 1;
         if (next < urls.length) {
           this.dataset.formSpriteIndex = String(next);
-          this.src = urls[next];
+          loadShowdownGif(this, urls[next]);
         } else {
           this.onerror = null;
           this.style.visibility = 'hidden';
@@ -3283,7 +3355,7 @@
       };
       img.style.visibility = 'visible';
       img.dataset.spriteUrl = candidates[0];
-      img.src = candidates[0];
+      loadShowdownGif(img, candidates[0]);
     }
     window.handleFormSpriteError = function(img) {
       if (img && img.dataset.formSpriteSlug) {
@@ -3294,7 +3366,7 @@
         const next = Number(img.dataset.formSpriteIndex || 0) + 1;
         if (next < urls.length) {
           img.dataset.formSpriteIndex = String(next);
-          img.src = urls[next];
+          loadShowdownGif(img, urls[next]);
         } else {
           img.onerror = null;
           img.style.visibility = 'hidden';
@@ -4194,7 +4266,7 @@
       return {
         atk: Math.max(1, rawAtk * cpm),
         def: Math.max(1, rawDef * cpm),
-        hp: p.fromHalloween2026 && Number(p.hpOverride)===280 ? 280 : Math.max(10, Math.floor(rawSta * cpm)),
+        hp: Math.max(10, Math.floor(rawSta * cpm)),
         cpm
       };
     }
