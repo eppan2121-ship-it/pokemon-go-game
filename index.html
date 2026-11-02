@@ -4148,14 +4148,34 @@
           try { if (typeof window.__restoreMegaProgress === 'function') window.__restoreMegaProgress(data.megaProgress); } catch(e) {}
         }
         Object.assign(gameState.player, data.player); Object.assign(gameState.inventory, data.inventory || {}); gameState.gymDaily=data.gymDaily||{date:new Date().toISOString().slice(0,10),used:0}; if(gameState.player.pokecoins==null)gameState.player.pokecoins=0; if(gameState.inventory.gymPass==null)gameState.inventory.gymPass=2;
-        gameState.pokedexCaught = new Set(data.pokedexCaught || []); gameState.myPokemon = data.myPokemon.map(p => { const species = GEN1_POKEMON.find(x => x.name === p.name); const ivAtk = Math.max(0, Math.min(15, Number(p.ivAtk) || 0)); const ivDef = Math.max(0, Math.min(15, Number(p.ivDef) || 0)); const ivHp = Math.max(0, Math.min(15, Number(p.ivHp) || 0)); return {...p, ...(species ? {baseId: species.id, type: species.type} : {}), ivAtk, ivDef, ivHp, ivPct: Math.round((ivAtk + ivDef + ivHp) / 45 * 100)}; });
+        gameState.pokedexCaught = new Set(data.pokedexCaught || []);
+        // Reset all previously changed alternate forms to each Pokémon's base form.
+        // This removes persisted form-change state from owned Pokémon and saved map spawns,
+        // while preserving CP, IVs, moves, shiny status, Mega state and all other progress.
+        let clearedSavedForms = false;
+        const clearSavedFormState = (pokemon) => {
+          if (!pokemon || typeof pokemon !== 'object') return pokemon;
+          if (pokemon.formeActive || pokemon.formeSlug || pokemon.formeLabel) clearedSavedForms = true;
+          const clean = {...pokemon};
+          delete clean.formeActive;
+          delete clean.formeSlug;
+          delete clean.formeLabel;
+          delete clean.formHistory;
+          delete clean.formeHistory;
+          delete clean.formChangeHistory;
+          return clean;
+        };
+        gameState.myPokemon = data.myPokemon.map(p => { p = clearSavedFormState(p); const species = GEN1_POKEMON.find(x => x.name === p.name); const ivAtk = Math.max(0, Math.min(15, Number(p.ivAtk) || 0)); const ivDef = Math.max(0, Math.min(15, Number(p.ivDef) || 0)); const ivHp = Math.max(0, Math.min(15, Number(p.ivHp) || 0)); return {...p, ...(species ? {baseId: species.id, type: species.type} : {}), ivAtk, ivDef, ivHp, ivPct: Math.round((ivAtk + ivDef + ivHp) / 45 * 100)}; });
         // Restore/expire Mega state only AFTER the saved Pokémon array is installed.
         // Previously this ran before gameState.myPokemon was replaced, so expired CP and active flags could remain stale.
         try { if (typeof syncMegaExpiry === 'function') syncMegaExpiry(false); } catch(e) {}
         const savedMap = data.mapElements || {};
-        gameState.mapElements.pokemon = (savedMap.pokemon || []).map(p => { const species = GEN1_POKEMON.find(x => x.name === p.name); if (species) p = {...p, baseId: species.id, type: species.type}; const ivAtk = Math.max(0, Math.min(15, Number(p.ivAtk) || 0)); const ivDef = Math.max(0, Math.min(15, Number(p.ivDef) || 0)); const ivHp = Math.max(0, Math.min(15, Number(p.ivHp) || 0)); p = {...p, ivAtk, ivDef, ivHp, ivPct: Math.round((ivAtk + ivDef + ivHp) / 45 * 100)}; const img = new Image(); img.src = getPokemonAnimatedUrl(p.baseId, !!p.shiny); img.onerror = () => { img.onerror = null; img.src = getPokemonSpriteUrl(p.baseId, !!p.shiny); }; return {...p, img}; });
+        gameState.mapElements.pokemon = (savedMap.pokemon || []).map(p => { p = clearSavedFormState(p); const species = GEN1_POKEMON.find(x => x.name === p.name); if (species) p = {...p, baseId: species.id, type: species.type}; const ivAtk = Math.max(0, Math.min(15, Number(p.ivAtk) || 0)); const ivDef = Math.max(0, Math.min(15, Number(p.ivDef) || 0)); const ivHp = Math.max(0, Math.min(15, Number(p.ivHp) || 0)); p = {...p, ivAtk, ivDef, ivHp, ivPct: Math.round((ivAtk + ivDef + ivHp) / 45 * 100)}; const img = new Image(); img.src = getPokemonAnimatedUrl(p.baseId, !!p.shiny); img.onerror = () => { img.onerror = null; img.src = getPokemonSpriteUrl(p.baseId, !!p.shiny); }; return {...p, img}; });
         gameState.mapElements.pokestops = savedMap.pokestops || []; gameState.mapElements.gyms = savedMap.gyms || [];
         updateHUD(); renderPokemonBox(); renderPokedexGrid();
+        // Persist the cleanup locally and to Supabase when signed in, so cleared forms
+        // do not return on the next load from another device.
+        if (clearedSavedForms) { try { saveGame(false); } catch(e) {} }
         if (showMessage) showToast(`계정 코드 ${code}의 저장 데이터를 불러왔습니다 📂`, 'check-circle'); return true;
       } catch (err) { if (showMessage) showToast('저장 데이터를 읽지 못했습니다.', 'alert-circle'); return false; }
     }
