@@ -2084,7 +2084,7 @@
       const base=GEN1_POKEMON.find(p=>Number(p.id)===241);
       if(!base){showToast('밀탱크 데이터를 찾지 못했어요.','alert-circle');return;}
       const maxCP=getOfficialMaxCP(base);
-      const pokemon={uniqueId:Date.now()+Math.random(),baseId:base.id,name:base.name,type:base.type,cp:maxCP,ivAtk:15,ivDef:15,ivHp:15,ivPct:100,shiny:true,fromHalloween2026:true};
+      const pokemon={uniqueId:Date.now()+Math.random(),baseId:base.id,name:base.name,type:base.type,cp:maxCP,ivAtk:15,ivDef:15,ivHp:15,ivPct:100,shiny:true,fromHalloween2026:true,hpOverride:280,fastMove:'몸통박치기',chargedMoves:[{name:'심판의뭉치',cost:50,power:100,fastEnergy:9}]};
       if(typeof ensureGOMoves==='function')ensureGOMoves(pokemon);
       r.halloween2026Claimed=true;
       saveGame(false);updateHUD();renderResearch();closeModal('research-modal');startEncounter(pokemon);
@@ -3048,6 +3048,7 @@
             ivDef: p.ivDef,
             ivHp: p.ivHp,
             shiny: !!p.shiny,
+            ...(p.fromHalloween2026 ? {fromHalloween2026:true,hpOverride:280} : {}),
             caughtAt: new Date().toLocaleTimeString()
           });
           ensureGOMoves(gameState.myPokemon[gameState.myPokemon.length-1]);
@@ -4193,7 +4194,7 @@
       return {
         atk: Math.max(1, rawAtk * cpm),
         def: Math.max(1, rawDef * cpm),
-        hp: Math.max(10, Math.floor(rawSta * cpm)),
+        hp: p.fromHalloween2026 && Number(p.hpOverride)===280 ? 280 : Math.max(10, Math.floor(rawSta * cpm)),
         cpm
       };
     }
